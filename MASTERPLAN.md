@@ -4,7 +4,7 @@
 
 ## Project Status
 
-**Current state:** Sprints 0–3 complete. Sprint 0 scaffolded the full project. Sprint 1 added PWA infrastructure. Sprint 2 deployed all 9 database tables to Supabase. Sprint 3 implemented the camera capture pipeline: `compressImage` utility (Canvas API, max 1920px, 80% JPEG), `useCameraCapture` hook (file input with `capture="environment"` for cross-platform support), `CameraCapture` full-screen overlay, and `PhotoPreview` with retake. Camera FAB integrated into App.tsx. TypeScript and ESLint pass with zero errors. Next: Sprint 4 (GPS Geolocation & Reverse Geocoding).
+**Current state:** Sprints 0–4 complete. Sprint 0 scaffolded the project. Sprint 1 added PWA infrastructure. Sprint 2 deployed all 9 database tables to Supabase. Sprint 3 implemented camera capture. Sprint 4 added GPS geolocation (`useGeolocation` hook with 5s/8s timeout timers, visibility pause/resume), Mapbox reverse geocoding (offline-safe), Turf.js council boundary detection, and IndexedDB boundary caching with 7-day refresh. TypeScript and ESLint pass with zero errors. Next: Sprint 5 (Basic Report Submission).
 
 ## PWA-First Commitment
 
@@ -109,13 +109,13 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 **Inputs:** Sprint 2 complete (councils table seeded)
 **Outputs:** `useGeolocation` hook, reverse geocoding utility, council boundary detection with Turf.js
 **Subtasks:**
-- [ ] S4.1 — Implement `useGeolocation` hook (Geolocation API with timeout, accuracy, error handling)
-- [ ] S4.2 — Implement reverse geocoding using Mapbox Geocoding API (lat/lng → address, suburb, postcode)
-- [ ] S4.3 — Implement council detection using Turf.js `booleanPointInPolygon` against cached council boundaries
-- [ ] S4.4 — Handle GPS timeout (5s warning, 8s fallback to map picker)
-- [ ] S4.5 — Handle GPS unavailable (map picker fallback)
-- [ ] S4.6 — Handle reverse geocode failure (store raw coordinates, geocode later)
-- [ ] S4.7 — Cache council boundary GeoJSON in IndexedDB (weekly refresh)
+- [x] S4.1 — Implement `useGeolocation` hook (Geolocation API with timeout, accuracy, error handling) ✅ (March 2026 — watchPosition with first-fix-then-stop, visibility pause/resume, setManualPosition for fallback)
+- [x] S4.2 — Implement reverse geocoding using Mapbox Geocoding API (lat/lng → address, suburb, postcode) ✅ (March 2026 — REST endpoint, extracts suburb from locality/place context, offline returns null)
+- [x] S4.3 — Implement council detection using Turf.js `booleanPointInPolygon` against cached council boundaries ✅ (March 2026 — pure function, GeoJSON [lng, lat] order, returns council_id/name/slug)
+- [x] S4.4 — Handle GPS timeout (5s warning, 8s fallback to map picker) ✅ (March 2026 — timedOut flag at 5s, fallbackTriggered at 8s)
+- [x] S4.5 — Handle GPS unavailable (map picker fallback) ✅ (March 2026 — setManualPosition callback, fallbackTriggered flag for UI)
+- [x] S4.6 — Handle reverse geocode failure (store raw coordinates, geocode later) ✅ (March 2026 — returns null on offline/failure, report stores raw lat/lng regardless)
+- [x] S4.7 — Cache council boundary GeoJSON in IndexedDB (weekly refresh) ✅ (March 2026 — idb library, ripple-cache DB, 7-day staleness check, Supabase joined query)
 **Test criteria:** GPS coordinates captured within 5 seconds on mobile. Reverse geocode returns valid Melbourne address. Council correctly identified from coordinates. Map picker fallback works when GPS denied. Offline: raw coordinates stored, reverse geocode skipped.
 **Notes:** GPS works offline (device GPS, no API needed). Reverse geocoding requires network — skip when offline, geocode on reconnect. Council boundaries need to be loaded from Supabase and cached. Start geolocation when camera opens (parallel to photo capture) to reduce wait time.
 
