@@ -10,7 +10,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-in%20development-orange" alt="Status: In Development" />
-  <img src="https://img.shields.io/badge/phase-0%20|%20sprint%201-blue" alt="Phase: 0, Sprint 1" />
+  <img src="https://img.shields.io/badge/phase-0%20|%20sprint%202%20done-blue" alt="Phase: 0, Sprint 2 Done" />
   <img src="https://img.shields.io/badge/pilot-Melbourne-E85D04" alt="Pilot: Melbourne" />
   <img src="https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey" alt="License" />
 </p>
@@ -244,7 +244,7 @@ All tables have **Row Level Security** enabled. Anonymous users can read and sub
 ### Phase 0 — Foundation
 - [x] **Sprint 0:** Project scaffolding (Vite + React + TypeScript + Tailwind + PWA config)
 - [x] **Sprint 1:** PWA infrastructure (Service Worker, offline fallback, install prompt)
-- [ ] **Sprint 2:** Supabase infrastructure (schema, migrations, RLS, seed data)
+- [x] **Sprint 2:** Supabase infrastructure (schema, migrations, RLS, seed data)
 - [ ] **Sprint 3:** Camera API & photo capture
 - [ ] **Sprint 4:** GPS geolocation & reverse geocoding
 - [ ] **Sprint 5:** Basic report submission (end-to-end flow)
@@ -277,7 +277,7 @@ All tables have **Row Level Security** enabled. Anonymous users can read and sub
 
 ## Current Status
 
-**Sprint 1 complete.** PWA infrastructure is in place — Service Worker registered with precaching and offline fallback, install prompt hook with iOS detection, online/offline status banner. Build produces valid `manifest.webmanifest` and Service Worker. Next: Sprint 2 (Supabase infrastructure).
+**Sprint 2 complete.** Supabase project created (Oceania/Sydney region). All 9 database tables deployed with RLS policies, indexes, and triggers. 5 Melbourne councils seeded with placeholder boundaries. Priority score calculation function implements the PRD formula. Next: Sprint 3 (Camera API & photo capture).
 
 ---
 

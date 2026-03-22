@@ -1,0 +1,32 @@
+-- Supabase Storage Bucket Configuration (reference only)
+-- Apply this via Supabase Dashboard > Storage > Create Bucket
+-- or via Supabase CLI / Management API
+--
+-- This file documents the storage configuration but is NOT run as a migration.
+-- Supabase Storage buckets are managed through the dashboard or API.
+
+-- Bucket: reports
+-- Purpose: Store report photos (original, additional, fix confirmation)
+-- Path pattern: reports/{year}/{month}/{uuid}.jpg
+--
+-- Configuration:
+--   Name: reports
+--   Public: true (photos show public infrastructure — public read URLs)
+--   File size limit: 5MB
+--   Allowed MIME types: image/jpeg, image/png, image/webp
+--
+-- RLS Policies (applied via Dashboard > Storage > Policies):
+--
+-- SELECT (public read):
+--   Allows public access to all files in the bucket.
+--   Policy: true
+--
+-- INSERT (public write for report submission):
+--   Allows anonymous uploads for report photos.
+--   Policy: true
+--   Note: File size and type validated client-side before upload.
+--         Edge Function submit-report handles the actual upload with server-side validation.
+--
+-- DELETE (service_role only):
+--   Only service role can delete photos (moderation).
+--   Policy: auth.role() = 'service_role'
