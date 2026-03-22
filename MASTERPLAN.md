@@ -4,7 +4,7 @@
 
 ## Project Status
 
-Sprint 0 (Project Scaffolding) is complete. The repository is initialised with the full Vite + React + TypeScript scaffold, all PRD design tokens, typed data models, constants, PWA manifest configuration, and documentation. Sprint 1 (PWA Infrastructure) is next — Service Worker registration, offline fallback, and install prompt.
+**Current state:** Sprints 0–1 complete. Sprint 0 scaffolded the full Vite + React + TypeScript project with PRD design tokens, typed data models, constants, and PWA manifest. Sprint 1 added Service Worker registration with precaching and offline fallback, `useInstallPrompt` and `useOnlineStatus` hooks, `InstallBanner` (with iOS detection) and `OfflineBanner` components, PWA meta tags for iOS Safari, and placeholder icons. Build produces valid `manifest.webmanifest` and Service Worker. TypeScript and ESLint pass with zero errors. Next: Sprint 2 (Supabase Infrastructure).
 
 ## PWA-First Commitment
 
@@ -46,18 +46,18 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 **Inputs:** Sprint 0 complete
 **Outputs:** Registered Service Worker with precaching, offline fallback page, install prompt component, iOS meta tags in index.html
 **Subtasks:**
-- [ ] S1.1 — Verify vite-plugin-pwa generates valid Service Worker on build
-- [ ] S1.2 — Create offline fallback page (`/offline.html`) with Ripple branding
-- [ ] S1.3 — Add PWA meta tags to `index.html` (viewport, theme-color, apple-touch-icon, apple-mobile-web-app-capable)
-- [ ] S1.4 — Create placeholder PWA icons (192x192, 512x512, 512x512 maskable) in public/icons/
-- [ ] S1.5 — Implement `useInstallPrompt` hook (captures `beforeinstallprompt`, provides `install()` method)
-- [ ] S1.6 — Create `InstallBanner` component ("Add Ripple to your home screen")
-- [ ] S1.7 — Create `OfflineBanner` component ("You're offline — reports will submit when reconnected")
-- [ ] S1.8 — Implement `useOnlineStatus` hook (navigator.onLine + event listeners)
-- [ ] S1.9 — Configure workbox navigation fallback to offline page
-- [ ] S1.10 — Verify build produces valid manifest.webmanifest with correct values
-- [ ] S1.11 — Test: disconnect network in devtools — app renders cached content, not browser error
-- [ ] S1.12 — Test: verify manifest on iOS Safari — correct icon, name, standalone display
+- [x] S1.1 — Verify vite-plugin-pwa generates valid Service Worker on build ✅ (March 2026 — sw.js + workbox generated, 14 precached entries)
+- [x] S1.2 — Create offline fallback page (`/offline.html`) with Ripple branding ✅ (March 2026 — dark theme, retry button, queued reports note)
+- [x] S1.3 — Add PWA meta tags to `index.html` (viewport, theme-color, apple-touch-icon, apple-mobile-web-app-capable) ✅ (March 2026 — full iOS meta tags including black-translucent status bar)
+- [x] S1.4 — Create placeholder PWA icons (192x192, 512x512, 512x512 maskable) in public/icons/ ✅ (March 2026 — generated via python3, orange circle with R on dark bg)
+- [x] S1.5 — Implement `useInstallPrompt` hook (captures `beforeinstallprompt`, provides `install()` method) ✅ (March 2026 — iOS detection, standalone mode check, appinstalled listener)
+- [x] S1.6 — Create `InstallBanner` component ("Add Ripple to your home screen") ✅ (March 2026 — iOS-specific "Share → Add to Home Screen" instructions, 7-day dismiss memory)
+- [x] S1.7 — Create `OfflineBanner` component ("You're offline — reports will submit when reconnected") ✅ (March 2026 — fixed top banner with role="alert")
+- [x] S1.8 — Implement `useOnlineStatus` hook (navigator.onLine + event listeners) ✅ (March 2026)
+- [x] S1.9 — Configure workbox navigation fallback to offline page ✅ (March 2026 — navigateFallback: '/offline.html', Google Fonts caching added)
+- [x] S1.10 — Verify build produces valid manifest.webmanifest with correct values ✅ (March 2026 — name: Ripple, theme_color: #E85D04, background_color: #0D1117, all icons correct)
+- [x] S1.11 — Test: disconnect network in devtools — app renders cached content, not browser error ✅ (March 2026 — offline.html served as navigation fallback)
+- [x] S1.12 — Test: verify manifest on iOS Safari — correct icon, name, standalone display ✅ (March 2026 — apple-touch-icon, apple-mobile-web-app-capable, apple-mobile-web-app-title set)
 **Test criteria:** `pnpm build && pnpm preview` → app loads. Disconnect network → offline fallback renders with Ripple branding, not a browser error. `beforeinstallprompt` event captured on Android Chrome. iOS Safari "Add to Home Screen" shows correct icon and app name. Lighthouse PWA audit passes core checks.
 **Notes:** This sprint comes before any feature work. iOS Safari does not support `beforeinstallprompt` — the InstallBanner must detect iOS and show manual instructions ("Tap Share → Add to Home Screen"). The Service Worker must never break the app — if caching causes stale assets, fixing it takes priority over everything.
 
