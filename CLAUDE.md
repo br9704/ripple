@@ -228,6 +228,10 @@ A sprint is done when **all of the following are completed in this exact order**
 
 Documentation is updated before the commit, not after. The commit message should reflect a working, documented state — not "will document later." The MASTERPLAN update is always its own commit so the git history cleanly separates what was built from what was tracked.
 
+**4. Post-sprint manual action reminder**
+- [ ] After every sprint is pushed, remind the user of any manual steps they need to take. Examples: test the app locally (`pnpm dev`), add API keys, configure Supabase settings, create storage buckets, deploy Edge Functions, verify on mobile, etc.
+- [ ] List these as a clear checklist so the user knows exactly what to do before the next sprint begins.
+
 ---
 
 *This file is maintained by Bruno Jaamaa. Do not modify without instruction.*
