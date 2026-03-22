@@ -70,6 +70,15 @@ export default {
         card: '0 2px 8px rgba(0,0,0,0.3)',
         glow: '0 0 20px rgba(232,93,4,0.5)',
       },
+      animation: {
+        'pulse-slow': 'pulse-slow 2s ease-in-out infinite',
+      },
+      keyframes: {
+        'pulse-slow': {
+          '0%, 100%': { transform: 'translate(-50%, 0) scale(1)' },
+          '50%': { transform: 'translate(-50%, 0) scale(1.05)' },
+        },
+      },
     },
   },
   plugins: [],

@@ -10,7 +10,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-in%20development-orange" alt="Status: In Development" />
-  <img src="https://img.shields.io/badge/phase-0%20complete%20|%20sprint%205%20done-blue" alt="Phase: 0 Complete, Sprint 5 Done" />
+  <img src="https://img.shields.io/badge/phase-1%20|%20sprint%206%20done-blue" alt="Phase: 1, Sprint 6 Done" />
   <img src="https://img.shields.io/badge/pilot-Melbourne-E85D04" alt="Pilot: Melbourne" />
   <img src="https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey" alt="License" />
 </p>
@@ -250,7 +250,7 @@ All tables have **Row Level Security** enabled. Anonymous users can read and sub
 - [x] **Sprint 5:** Basic report submission (end-to-end flow)
 
 ### Phase 1 — MVP
-- [ ] **Sprint 6:** Live community map (Mapbox, pins, clustering, real-time)
+- [x] **Sprint 6:** Live community map (Mapbox, pins, clustering, real-time)
 - [ ] **Sprint 7:** AI image classification (TensorFlow.js + MobileNetV2)
 - [ ] **Sprint 8:** Community upvoting ("I see this too")
 - [ ] **Sprint 9:** Map filters & heatmap
@@ -277,7 +277,7 @@ All tables have **Row Level Security** enabled. Anonymous users can read and sub
 
 ## Current Status
 
-**Sprint 5 complete — Phase 0 done.** Full end-to-end report submission flow: camera → category picker → note → GPS location → reverse geocode → council detection → submit to Supabase Edge Function → success screen. React Router with `/` and `/report` routes. Offline queue via IndexedDB (reports queued offline, submitted on reconnect). Rate limiting (10 reports/hour). Supabase Edge Function `submit-report` handles validation, photo upload to Storage, DB insert, and duplicate detection. Next: Sprint 6 (live community map — Phase 1 MVP begins).
+**Sprint 6 complete.** Live community map with Mapbox GL JS (dark-v11 style). Category-coloured report pins with clustering. ReportCard bottom sheet with Framer Motion slide-up and drag-to-dismiss. Supabase Realtime subscription for live pin updates. App shell: header with blur backdrop, tab bar navigation (Map/Feed/My Reports), camera FAB with pulse animation. Locate-me map control. Next: Sprint 7 (AI image classification).
 
 ---
 

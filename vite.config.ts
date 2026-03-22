@@ -23,6 +23,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB — Mapbox GL JS is ~2.2MB
         navigateFallback: '/offline.html',
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
