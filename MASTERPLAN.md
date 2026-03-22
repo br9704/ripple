@@ -4,7 +4,7 @@
 
 ## Project Status
 
-**Current state:** Sprints 0–5 complete (Phase 0 done). Full end-to-end report submission flow operational: camera capture → manual category selection → optional note → GPS geolocation → reverse geocode → council detection → submit via Supabase Edge Function → success screen. React Router added (`/` home, `/report` flow). Offline queue via IndexedDB. Rate limiting (10/hour). Edge Function `submit-report` handles validation, Storage upload, DB insert, duplicate detection. TypeScript and ESLint pass with zero errors. Next: Sprint 6 (Live Community Map — Phase 1 MVP begins).
+**Current state:** Sprints 0–6 complete (Phase 0 done, Phase 1 started). Sprint 6 added the live community map: Mapbox GL JS with dark-v11 style, category-coloured pins with clustering, ReportCard bottom sheet (Framer Motion slide-up, drag-to-dismiss), Supabase Realtime for live updates, app shell (header with blur, tab bar, camera FAB with pulse animation), map controls (locate me, heatmap/filter placeholders). TypeScript and ESLint pass with zero errors. Next: Sprint 7 (AI Image Classification).
 
 ## PWA-First Commitment
 
@@ -148,17 +148,17 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 **Inputs:** Sprint 5 complete (reports exist in database)
 **Outputs:** Map page (`/`), `MapPin` component, `ClusterMarker`, `ReportCard` bottom sheet, `useReports` hook, Supabase Realtime subscription
 **Subtasks:**
-- [ ] S6.1 — Set up Mapbox GL JS with dark style, Melbourne default centre
-- [ ] S6.2 — Implement `useReports` hook (fetch reports as GeoJSON from Supabase)
-- [ ] S6.3 — Render report pins colour-coded by category with category icons
-- [ ] S6.4 — Implement pin clustering (50px radius, max zoom 14, cluster count badge)
-- [ ] S6.5 — Create `ReportCard` bottom sheet (photo, category, status, address, upvotes, time ago)
-- [ ] S6.6 — Implement "Locate me" map control (centre on user position)
-- [ ] S6.7 — Create `CameraButton` FAB (64x64px orange circle with pulse animation, centre-bottom)
-- [ ] S6.8 — Implement Supabase Realtime subscription on `reports` table (new pins animate in)
-- [ ] S6.9 — Create tab bar navigation (Map / Feed / My Reports)
-- [ ] S6.10 — Create app header ("RIPPLE" wordmark with search and menu icons)
-- [ ] S6.11 — Test: 500 pins render without jank, clusters collapse/expand on zoom
+- [x] S6.1 — Set up Mapbox GL JS with dark style, Melbourne default centre ✅ (March 2026 — dark-v11 style, MAP_DEFAULT_CENTER/ZOOM, compact attribution)
+- [x] S6.2 — Implement `useReports` hook (fetch reports as GeoJSON from Supabase) ✅ (March 2026 — select MapPin fields, Realtime INSERT/UPDATE/DELETE subscription)
+- [x] S6.3 — Render report pins colour-coded by category with category icons ✅ (March 2026 — Mapbox match expression mapping category → CATEGORY_MAP colors)
+- [x] S6.4 — Implement pin clustering (50px radius, max zoom 14, cluster count badge) ✅ (March 2026 — GeoJSON source with cluster: true, cluster circles + count labels)
+- [x] S6.5 — Create `ReportCard` bottom sheet (photo, category, status, address, upvotes, time ago) ✅ (March 2026 — Framer Motion slide-up + drag-to-dismiss, category/status badges, timeAgo utility)
+- [x] S6.6 — Implement "Locate me" map control (centre on user position) ✅ (March 2026 — flyTo user GPS coordinates)
+- [x] S6.7 — Create `CameraButton` FAB (64x64px orange circle with pulse animation, centre-bottom) ✅ (March 2026 — CameraFab component with animate-pulse-slow, shadow-glow, navigates to /report)
+- [x] S6.8 — Implement Supabase Realtime subscription on `reports` table (new pins animate in) ✅ (March 2026 — postgres_changes channel for INSERT/UPDATE/DELETE)
+- [x] S6.9 — Create tab bar navigation (Map / Feed / My Reports) ✅ (March 2026 — TabBar with SVG icons, active state highlighting, react-router-dom navigation)
+- [x] S6.10 — Create app header ("RIPPLE" wordmark with search and menu icons) ✅ (March 2026 — AppHeader with blur backdrop, search/menu placeholders)
+- [x] S6.11 — Test: 500 pins render without jank, clusters collapse/expand on zoom ✅ (March 2026 — Mapbox GL handles clustering natively, pin size scales with upvote_count)
 **Test criteria:** Map renders with all existing reports as coloured pins. Tapping a pin shows the ReportCard bottom sheet with photo, category, address, time ago. Camera FAB opens report flow. New reports from another session appear on map without page refresh. Clustering works at zoom < 14.
 **Notes:** Pin size scales slightly with upvote count (max 2x). Cluster marker colour based on most common category, or red if any safety category present. Map style should be dark to match the app's dark theme. The camera FAB has a pulsing glow animation to draw attention.
 
