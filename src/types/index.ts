@@ -49,6 +49,12 @@ export interface CouncilBoundary {
   updated_at: string
 }
 
+// ── Council Boundary with Council metadata (for client-side detection) ──
+export interface CouncilBoundaryWithCouncil extends CouncilBoundary {
+  council_name: string
+  council_slug: string
+}
+
 // ── Report ──
 export interface Report {
   id: string
