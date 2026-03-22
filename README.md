@@ -10,7 +10,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-in%20development-orange" alt="Status: In Development" />
-  <img src="https://img.shields.io/badge/phase-0%20|%20sprint%204%20done-blue" alt="Phase: 0, Sprint 4 Done" />
+  <img src="https://img.shields.io/badge/phase-0%20complete%20|%20sprint%205%20done-blue" alt="Phase: 0 Complete, Sprint 5 Done" />
   <img src="https://img.shields.io/badge/pilot-Melbourne-E85D04" alt="Pilot: Melbourne" />
   <img src="https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey" alt="License" />
 </p>
@@ -247,7 +247,7 @@ All tables have **Row Level Security** enabled. Anonymous users can read and sub
 - [x] **Sprint 2:** Supabase infrastructure (schema, migrations, RLS, seed data)
 - [x] **Sprint 3:** Camera API & photo capture
 - [x] **Sprint 4:** GPS geolocation & reverse geocoding
-- [ ] **Sprint 5:** Basic report submission (end-to-end flow)
+- [x] **Sprint 5:** Basic report submission (end-to-end flow)
 
 ### Phase 1 — MVP
 - [ ] **Sprint 6:** Live community map (Mapbox, pins, clustering, real-time)
@@ -277,7 +277,7 @@ All tables have **Row Level Security** enabled. Anonymous users can read and sub
 
 ## Current Status
 
-**Sprint 4 complete.** GPS geolocation with 5s warning / 8s fallback timers via `useGeolocation` hook. Mapbox Geocoding API reverse geocoding with offline graceful degradation. Turf.js council boundary detection (`booleanPointInPolygon`). IndexedDB boundary cache with 7-day refresh via `idb` library. Manual position override for map picker fallback. Next: Sprint 5 (basic report submission).
+**Sprint 5 complete — Phase 0 done.** Full end-to-end report submission flow: camera → category picker → note → GPS location → reverse geocode → council detection → submit to Supabase Edge Function → success screen. React Router with `/` and `/report` routes. Offline queue via IndexedDB (reports queued offline, submitted on reconnect). Rate limiting (10 reports/hour). Supabase Edge Function `submit-report` handles validation, photo upload to Storage, DB insert, and duplicate detection. Next: Sprint 6 (live community map — Phase 1 MVP begins).
 
 ---
 
