@@ -10,7 +10,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-in%20development-orange" alt="Status: In Development" />
-  <img src="https://img.shields.io/badge/phase-0%20|%20sprint%202%20done-blue" alt="Phase: 0, Sprint 2 Done" />
+  <img src="https://img.shields.io/badge/phase-0%20|%20sprint%203%20done-blue" alt="Phase: 0, Sprint 3 Done" />
   <img src="https://img.shields.io/badge/pilot-Melbourne-E85D04" alt="Pilot: Melbourne" />
   <img src="https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey" alt="License" />
 </p>
@@ -245,7 +245,7 @@ All tables have **Row Level Security** enabled. Anonymous users can read and sub
 - [x] **Sprint 0:** Project scaffolding (Vite + React + TypeScript + Tailwind + PWA config)
 - [x] **Sprint 1:** PWA infrastructure (Service Worker, offline fallback, install prompt)
 - [x] **Sprint 2:** Supabase infrastructure (schema, migrations, RLS, seed data)
-- [ ] **Sprint 3:** Camera API & photo capture
+- [x] **Sprint 3:** Camera API & photo capture
 - [ ] **Sprint 4:** GPS geolocation & reverse geocoding
 - [ ] **Sprint 5:** Basic report submission (end-to-end flow)
 
@@ -277,7 +277,7 @@ All tables have **Row Level Security** enabled. Anonymous users can read and sub
 
 ## Current Status
 
-**Sprint 2 complete.** Supabase project created (Oceania/Sydney region). All 9 database tables deployed with RLS policies, indexes, and triggers. 5 Melbourne councils seeded with placeholder boundaries. Priority score calculation function implements the PRD formula. Next: Sprint 3 (Camera API & photo capture).
+**Sprint 3 complete.** Camera capture pipeline working across all platforms. `compressImage` utility resizes to max 1920px at 80% JPEG quality using Canvas API. `useCameraCapture` hook abstracts iOS Safari / Android Chrome / desktop differences via file input with `capture="environment"`. `PhotoPreview` component with retake option. Camera FAB with shutter button and full-screen capture overlay. Next: Sprint 4 (GPS geolocation & reverse geocoding).
 
 ---
 
