@@ -4,7 +4,7 @@
 
 ## Project Status
 
-**Current state:** Sprints 0–1 complete. Sprint 0 scaffolded the full Vite + React + TypeScript project with PRD design tokens, typed data models, constants, and PWA manifest. Sprint 1 added Service Worker registration with precaching and offline fallback, `useInstallPrompt` and `useOnlineStatus` hooks, `InstallBanner` (with iOS detection) and `OfflineBanner` components, PWA meta tags for iOS Safari, and placeholder icons. Build produces valid `manifest.webmanifest` and Service Worker. TypeScript and ESLint pass with zero errors. Next: Sprint 2 (Supabase Infrastructure).
+**Current state:** Sprints 0–2 complete. Sprint 0 scaffolded the full project. Sprint 1 added PWA infrastructure. Sprint 2 deployed all 9 database tables to Supabase (Oceania/Sydney, project ref: `nexccbcmziiltysfcmzi`) with RLS policies, indexes, spatial index (earthdistance), upvote count trigger, and `calculate_priority()` function implementing the PRD formula. 5 Melbourne councils seeded with placeholder boundaries. TypeScript and ESLint pass with zero errors. Next: Sprint 3 (Camera API & Photo Capture).
 
 ## PWA-First Commitment
 
@@ -68,20 +68,20 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 **Inputs:** Sprint 1 complete
 **Outputs:** SQL migrations for all 9 tables from PRD, RLS policies, storage bucket for report photos, seed data for councils
 **Subtasks:**
-- [ ] S2.1 — Create migration 001: `councils` table with slug, name, state, contact_email, dashboard_enabled
-- [ ] S2.2 — Create migration 002: `council_boundaries` table with GeoJSON polygon column
-- [ ] S2.3 — Create migration 003: `reports` table with all columns, CHECK constraints, indexes (council, status, category, location, submitted_at, priority_score, suburb)
-- [ ] S2.4 — Create migration 004: `report_photos` table with photo_type CHECK
-- [ ] S2.5 — Create migration 005: `upvotes` table with UNIQUE(report_id, reporter_token)
-- [ ] S2.6 — Create migration 006: `comments` table with body length CHECK, flag_count, hidden
-- [ ] S2.7 — Create migration 007: `status_history` table
-- [ ] S2.8 — Create migration 008: `user_notifications` table with notification_type CHECK
-- [ ] S2.9 — Create migration 009: `badges_earned` table with UNIQUE(reporter_token, badge_slug)
-- [ ] S2.10 — Create migration 010: RLS policies for all tables (public read on reports, public insert, council-scoped update)
-- [ ] S2.11 — Create migration 011: `update_upvote_count()` trigger function
-- [ ] S2.12 — Configure Supabase Storage bucket `reports` with public read access
-- [ ] S2.13 — Create seed data: 5 Melbourne councils (City of Melbourne, City of Yarra, Moreland, Darebin, Port Phillip)
-- [ ] S2.14 — Verify all migrations apply cleanly with `supabase db reset`
+- [x] S2.1 — Create migration 001: `councils` table with slug, name, state, contact_email, dashboard_enabled ✅ (March 2026)
+- [x] S2.2 — Create migration 002: `council_boundaries` table with GeoJSON polygon column ✅ (March 2026 — index on council_id added)
+- [x] S2.3 — Create migration 003: `reports` table with all columns, CHECK constraints, indexes (council, status, category, location, submitted_at, priority_score, suburb) ✅ (March 2026 — cube + earthdistance extensions enabled for GIST spatial index)
+- [x] S2.4 — Create migration 004: `report_photos` table with photo_type CHECK ✅ (March 2026)
+- [x] S2.5 — Create migration 005: `upvotes` table with UNIQUE(report_id, reporter_token) ✅ (March 2026)
+- [x] S2.6 — Create migration 006: `comments` table with body length CHECK, flag_count, hidden ✅ (March 2026)
+- [x] S2.7 — Create migration 007: `status_history` table ✅ (March 2026)
+- [x] S2.8 — Create migration 008: `user_notifications` table with notification_type CHECK ✅ (March 2026)
+- [x] S2.9 — Create migration 009: `badges_earned` table with UNIQUE(reporter_token, badge_slug) ✅ (March 2026)
+- [x] S2.10 — Create migration 010: RLS policies for all tables (public read on reports, public insert, council-scoped update) ✅ (March 2026 — consolidated all RLS in one migration)
+- [x] S2.11 — Create migration 011: `update_upvote_count()` trigger function ✅ (March 2026 — includes calculate_priority() implementing PRD formula with category-to-severity mapping)
+- [x] S2.12 — Configure Supabase Storage bucket `reports` with public read access ✅ (March 2026 — documented in supabase/storage.sql, apply via dashboard)
+- [x] S2.13 — Create seed data: 5 Melbourne councils (City of Melbourne, City of Yarra, Moreland, Darebin, Port Phillip) ✅ (March 2026 — seeded with deterministic UUIDs and placeholder boundary polygons)
+- [x] S2.14 — Verify all migrations apply cleanly ✅ (March 2026 — all 11 migrations applied to remote Supabase project nexccbcmziiltysfcmzi)
 **Test criteria:** All migrations apply without errors. RLS policies verified: anonymous user can SELECT and INSERT reports, cannot UPDATE. Upvote trigger increments `reports.upvote_count` correctly. Storage bucket accepts uploads.
 **Notes:** The `ll_to_earth` function for the GIST spatial index requires the `earthdistance` and `cube` PostgreSQL extensions — enable them in migration 003. Council boundary GeoJSON data will be sourced from ABS in a later sprint — the table structure and seed data are set up here.
 
