@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#E85D04" />
+    <title>Ripple — Offline</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: #0D1117;
+        color: #F0F6FC;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 24px;
+        text-align: center;
+      }
+      .container {
+        max-width: 320px;
+      }
+      .icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+      h1 {
+        font-family: 'Syne', 'Inter', sans-serif;
+        color: #E85D04;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      p {
+        color: #8B949E;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 24px;
+      }
+      .retry-btn {
+        display: inline-block;
+        background: #E85D04;
+        color: #F0F6FC;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.2s;
+      }
+      .retry-btn:hover, .retry-btn:active {
+        background: #F48C06;
+      }
+      .note {
+        color: #484F58;
+        font-size: 11px;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon" aria-hidden="true">📡</div>
+      <h1>Ripple</h1>
+      <p>You're offline right now. Don't worry — any reports you've queued will submit automatically when you reconnect.</p>
+      <button class="retry-btn" onclick="window.location.reload()">Try again</button>
+      <p class="note">Your queued reports are safe.</p>
+    </div>
+  </body>
+</html>

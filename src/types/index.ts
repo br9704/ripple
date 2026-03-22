@@ -44,7 +44,7 @@ export interface Council {
 export interface CouncilBoundary {
   id: string
   council_id: string
-  polygon: GeoJSON.MultiPolygon
+  polygon: Record<string, unknown>
   source: string
   updated_at: string
 }
