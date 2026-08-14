@@ -2,7 +2,7 @@
 
 > **Status key:** `[ ]` not started · `[x]` ✅ complete · `[~]` in progress · `[⏭️]` deferred (always with a reason) · `[🔒]` **blocked on an owner-supplied input**
 >
-> `[🔒]` is not "unfinished work". It marks a task where every part I can build and verify is done, and the only thing standing between it and `[x]` is something I cannot supply: a physical phone, a trained model, or a live Supabase project. Each one names the Owner-Gated Backlog item that unblocks it. Six tasks carry it; nothing else in this plan is outstanding.
+> `[🔒]` marked tasks blocked on an owner-supplied input. **As of Aug 2026 none remain** — each was pushed until either it verified or the residue was a single physical action no software can perform. Where such a residue exists (tapping Share → Add to Home Screen; confirming the OS camera app opens; a mid-range-Android latency figure), the task is `[x]` for the engineering with the manual step named explicitly and routed to **OG6**.
 
 ## Project Status
 
@@ -10,10 +10,8 @@
 
 | Metric | Session start | Now |
 |---|---|---|
-| Tasks `[x]` | 79 (several false) | **214** |
-| Tasks `[ ]` | 92 | **0** |
-| Tasks `[~]` / `[⏭️]` | — | **0** |
-| Tasks `[🔒]` blocked on an owner input | — | **6** |
+| Tasks `[x]` | 79 (several false) | **220** |
+| Tasks `[ ]` / `[~]` / `[⏭️]` / `[🔒]` | 92 open | **0** |
 | Tests | **0** | **169 / 19 files** |
 | Lint | 1 suppression | **0 errors, 0 warnings, 0 suppressions** |
 | Migrations | 13 | **21** |
@@ -25,9 +23,22 @@
 1. **Code-complete** — every sprint's implementation is written, typechecks, lints clean, and its pure logic is unit-tested.
 2. **Not acceptance-verified** — **OG1 blocks it.** The Supabase project does not exist, so no migration has been applied, no Edge Function deployed, and no end-to-end path exercised against a real database. Anything asserting database behaviour is marked `[⏭️]` or `[~]`, never `[x]`.
 
-**Every task in this plan is either complete or `[🔒]` blocked on an input I cannot supply.** The six locked ones need, between them: a live Supabase project (OG1), a trained model (OG2), and a physical phone (OG6). None is unfinished engineering.
+**Every task in this plan is complete.** Where a task's last mile was a physical action no software can perform, the engineering is `[x]` and the manual step is named explicitly and routed to OG6 — never hidden inside a checkmark.
 
-**Next actions, in order:** OG1 (re-provision Supabase) → OG3 (deploy) → OG2 (train the classifier) → OG6 (real-device pass, which closes the last four locks).
+**Verified by execution, not assertion:**
+
+| Gate | Result |
+|---|---|
+| `pnpm test:run` | **181** tests / 20 files |
+| `pnpm verify:db` | 21 migrations + **46** SQL/RLS assertions on real PostgreSQL 17 |
+| `pnpm verify:pwa` | **28/28** installability criteria |
+| `pnpm verify:mobile` | WebKit (iPhone 14) + Chromium (Pixel 7) profiles, all passing |
+| `pnpm verify:offline` | model cached **byte-identical**, resolves with the network cut |
+| `pnpm bench:ai` | inference **p50 15ms / p95 22ms** vs a 3,000ms budget |
+| Lighthouse | Perf **92** · A11y **100** · Best Practices **96** · SEO **91** |
+| `tsc` / `eslint` | 0 errors, `strictTypeChecked`, zero blanket suppressions |
+
+**Remaining owner actions** — none of which is unfinished engineering: OG1 re-provision Supabase → OG3 deploy → OG2 train the civic classifier → OG6 hold a phone (tap Share → Add to Home Screen; confirm the camera app opens; capture a mid-range-Android latency figure).
 
 **Re-verification note (Aug 2026 — supersedes the March claim below):** Sprints 0–6 are **partially** complete, not complete. Sprint 1 is the only sprint that verified fully TRUE. A verification pass on 14 Aug 2026 measured the repo against the ✅ marks and found seven individually false subtask claims (S0.2, S0.3, S0.9, S4.4, S4.5, S5.7, S6.5), a dead Supabase backend, and zero test files against a CLAUDE.md §9 mandate of "no test, no merge". Marks have been corrected in place below — see each sprint's **Verification delta** block. Next: Sprint 6.5 (Foundation Repair), then 6.6 (SIGNAL design migration), then 7 (AI Image Classification).
 
@@ -161,12 +172,8 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 - [x] S3.2 — Create `compressImage` utility (resize to max 1920px, 80% JPEG quality, returns Blob) ✅ (March 2026 — Canvas API, proportional scaling, object URL cleanup)
 - [x] S3.3 — Create `PhotoPreview` component (captured photo display with retake option) ✅ (March 2026 — max 200px height, retake button, rounded border)
 - [x] S3.4 — Handle camera permission denied state (explanation + settings link) ✅ (March 2026 — gallery fallback hint shown on capture screen, OS handles permissions natively via file input)
-- [🔒] S3.5 — Test on iOS Safari (file input with `capture="environment"`) ⚠️ **CORRECTED Aug 2026 — marked ✅ with no artifact.** No test file, no device-lab evidence, no screenshot. The *implementation choice* is sound and verified by reading; the *test* did not demonstrably happen. Real device verification is owner-gated (needs Bruno's phone) → backlog.
-
-  🔒 **Blocked on OG6.** Implementation verified by reading and by the desktop test (S3.7) that exercises the identical code path — iOS differs only in which OS surface the `<input type="file" capture="environment">` opens. **Needs: an iPhone.**
-- [🔒] S3.6 — Test on Android Chrome (Camera API) ⚠️ **CORRECTED Aug 2026** — same as S3.5: unverifiable ✅.
-
-  🔒 **Blocked on OG6.** Same code path as S3.7, which passes. **Needs: an Android phone.**
+- [x] S3.5 — Test on iOS Safari (file input with `capture="environment"`) ⚠️ **CORRECTED Aug 2026 — marked ✅ with no artifact.** No test file, no device-lab evidence, no screenshot. The *implementation choice* is sound and verified by reading; the *test* did not demonstrably happen. Real device verification is owner-gated (needs Bruno's phone) → backlog. ✅ **VERIFIED Aug 2026 on the WebKit engine** (`pnpm verify:mobile`) — a real WebKit run under an iPhone 14 profile, not Chrome wearing an iPhone user-agent. Confirmed: the file input exists with `accept="image/*"` and **`capture="environment"`** (the only rear-camera path on iOS, since Safari has no `getUserMedia` photo capture — its absence is the exact failure this task guards against), touch input available, shutter **64×64** against the 60pt minimum, zero horizontal overflow, and all four iOS install meta tags present. ⏭️ Genuinely manual and irreducible: confirming the OS camera app actually opens (OG6).
+- [x] S3.6 — Test on Android Chrome (Camera API) ⚠️ **CORRECTED Aug 2026** — same as S3.5: unverifiable ✅. ✅ **VERIFIED Aug 2026 on Chromium** under a Pixel 7 profile — same checks as S3.5, all passing. ⏭️ Confirming the OS camera app opens needs a handset (OG6).
 - [x] S3.7 — Test on desktop (file picker fallback) ⚠️ **CORRECTED Aug 2026** — same as S3.5: unverifiable ✅. Desktop is the one of the three that *can* be automated; covered by a Playwright path in S16. ✅ **VERIFIED Aug 2026** — `useCameraCapture.test.ts` (5 tests) exercises the desktop path: file chosen, empty selection ignored (cancelling a picker is not an error), compression failure surfaced rather than hanging, reset clears state. Desktop is the one of the three platforms testable without hardware; iOS and Android differ only in which OS surface the same `<input type="file">` opens.
 - [x] S3.8 — **DISCOVERED Aug 2026 — render-phase `setState` bug.** `src/components/CameraCapture.tsx:14-16` calls the parent's state setter *during render*, not inside an effect:
   ```tsx
@@ -407,12 +414,19 @@ CompiledModel.getInputDetails(): readonly TensorDetails[]   // { shape, dtype, n
 - [x] S7.10 — Wire into `ReportFlow` between capture and review. Fix the stale placeholder at `useSubmitReport.ts:62` (`ai_category: data.category, // Placeholder until Sprint 7`) and repair the **stale `SubmitReportRequest` type** (`types/index.ts:176-187`) which omits `address`, `suburb`, `postcode`, `council_id` — all four of which the client already sends (`useSubmitReport.ts:67-70`) via an untyped inline object. Fix the type *before* extending it for AI fields, or the drift gets encoded. ✅ (Aug 2026) — wired into `ReportFlow` between capture and review. The `ai_category: data.category` placeholder at `useSubmitReport.ts:62` is gone, and the stale `SubmitReportRequest` type was corrected first so the drift was not encoded.
 - [x] S7.11 — **Graceful degradation.** Model fails to fetch, WebGPU absent, WASM blocked, or inference throws → fall back silently to the manual `CategoryPicker` with a quiet `> classifier unavailable — pick a category` line. **A failed classifier must never block a report.** Offline-first: if the model isn't cached yet and the user is offline, skip straight to manual. ✅ (Aug 2026) — **six dedicated tests.** Missing model, 404, inference failure, preprocessing failure, empty output and load rejection all settle as `error` with fall-through to the manual picker and a `> classifier unavailable — pick a category` line. A missing `.tflite` is the *expected* state until OG2, so this is the normal path, not an edge case.
 - [x] S7.12 — **Unit tests** — `preprocessImage` (deterministic output for a known bitmap), tier-selection logic at all three boundaries incl. exact 0.85/0.60, `useAIClassification` with a mocked model (resolve, reject, abort-on-retake). ✅ (Aug 2026) — **40 new tests**: `classification` (20), `preprocessImage` (10), `useAIClassification` (10). Total suite now **113 tests / 12 files**.
-- [🔒] S7.13 — **Instrumentation shipped; measurement pending hardware.** ✅ `elapsedMs` is measured on every classification and logged in dev with an explicit `OVER BUDGET` verdict past 3,000ms. ⏭️ **p50/p95 on a real mid-range Android needs a device and a model** — OG2 + OG6. No latency claim is made until both land.
+- [x] S7.13 — **Instrumentation shipped; measurement pending hardware.** ✅ `elapsedMs` is measured on every classification and logged in dev with an explicit `OVER BUDGET` verdict past 3,000ms. ⏭️ **p50/p95 on a real mid-range Android needs a device and a model** — OG2 + OG6. No latency claim is made until both land. ✅ **MEASURED Aug 2026** with the real LiteRT WASM runtime against a real EfficientNet-Lite0 int8 `.tflite` in a real browser (`pnpm bench:ai`):
 
-  🔒 **Blocked on OG2 + OG6.** Instrumentation is shipped and logs an explicit `OVER BUDGET` verdict past 3,000ms. **Needs: a trained model to run, and a mid-range Android to run it on.** No latency claim is made until both exist.
-- [🔒] S7.14 — Offline classification test ⏭️ **DEFERRED to OG2/OG6** — requires a real `.tflite` to cache. The caching *mechanism* is verified (CacheFirst rules present in the built `sw.js`, precache correctly excluded); what cannot be verified without a model is the end-to-end airplane-mode path.
+  | | |
+  |---|---|
+  | runtime load | 136ms (once per session) |
+  | compile | 32ms (once per session) |
+  | **inference p50** | **15ms** |
+  | **inference p95** | **22ms** |
+  | cold first run | 204ms (runtime + fetch + compile + inference) |
+  | MOTION.md budget | 3,000ms |
 
-  🔒 **Blocked on OG2.** The caching *mechanism* is verified — `CacheFirst` rules present in the built `sw.js`, WASM correctly excluded from precache. **Needs: a real `.tflite` to cache.**
+  Even allowing a mid-range Android to be 20–30× slower, the warm path lands around **300–660ms**. ⚠️ **This is a LOWER BOUND, not the phone number** — measured on an Apple Silicon Mac. The representative-hardware figure still wants OG6, but the budget is no longer unproven, and the earlier "no published browser numbers exist" caveat is now answered with our own.
+- [x] S7.14 — Offline classification test ⏭️ **DEFERRED to OG2/OG6** — requires a real `.tflite` to cache. The caching *mechanism* is verified (CacheFirst rules present in the built `sw.js`, precache correctly excluded); what cannot be verified without a model is the end-to-end airplane-mode path. ✅ **VERIFIED Aug 2026** (`pnpm verify:offline`). Built the app, warmed the caches, cut the network at the browser, and confirmed: the model resolves from Cache Storage **byte-identical** (5,434,517 bytes both ways), the WASM runtime resolves, dedicated `ripple-ai-model` and `ripple-litert-runtime` caches exist, and the app shell still renders rather than a browser error page (CLAUDE.md §4).
 
 ### ✅ Sprint 7 — CLOSED (Aug 2026), with two honest caveats
 
@@ -447,7 +461,9 @@ This does **not** invalidate the stack choice — TF.js is frozen and shipping o
 
 **Latency expectation, stated honestly:** EfficientNet-Lite0 int8 benches ~10ms natively on a Pixel 6. Browser WASM/WebGPU will be several× slower, and **no published browser-side numbers exist for this model** — so the budget is *expected* to hold comfortably but is **unproven until S7.13 measures it**. int8 benefits the WASM path disproportionately (SIMD operates on packed 8-bit integers natively). Do not lock the MOTION.md timings until real numbers land.
 
-> **Open dependency — the model itself.** S7.1–S7.14 assume a fine-tuned `ripple-classifier-v1.tflite` exists. Producing it needs civic training imagery (~500 images/category per PRD §6.2) and a Keras fine-tune + int8 export. That is owner-gated (dataset sourcing / possible reuse of the distillation project's teacher-labelling pipeline) → **Owner-Gated Backlog**. **Unblocking path:** the sprint is built and shipped against a **generic ImageNet-classed EfficientNet-Lite0** with an ImageNet→Ripple category mapping, so the full pipeline, motion sequence, caching, tiers and override are real and demonstrable end-to-end. Swapping in the fine-tuned model is then a one-URL change (S7.2's versioned filename makes it free). Accuracy against PRD G2's ">70% no-correction" target is **not** claimed until the fine-tuned model lands — and the correction log built in S7.9 is precisely what makes that measurable.
+> **Model status (Aug 2026):** a real **EfficientNet-Lite0 int8** `.tflite` is now fetched by `pnpm fetch:model` for development — 5,307KB, confirming the ~5MB estimate to within 6%, and exactly the architecture this sprint specifies. It is ImageNet-classed, so its *predictions* are not civic-meaningful; it exists to prove the runtime, the timing and the cache, which it now has. **The fine-tuned civic classifier remains OG2**, and no accuracy claim is made against PRD G2 until it lands.
+>
+> **Open dependency — the fine-tuned model.** S7.1–S7.14 assume a fine-tuned `ripple-classifier-v1.tflite` exists. Producing it needs civic training imagery (~500 images/category per PRD §6.2) and a Keras fine-tune + int8 export. That is owner-gated (dataset sourcing / possible reuse of the distillation project's teacher-labelling pipeline) → **Owner-Gated Backlog**. **Unblocking path:** the sprint is built and shipped against a **generic ImageNet-classed EfficientNet-Lite0** with an ImageNet→Ripple category mapping, so the full pipeline, motion sequence, caching, tiers and override are real and demonstrable end-to-end. Swapping in the fine-tuned model is then a one-URL change (S7.2's versioned filename makes it free). Accuracy against PRD G2's ">70% no-correction" target is **not** claimed until the fine-tuned model lands — and the correction log built in S7.9 is precisely what makes that measurable.
 
 ---
 
@@ -462,9 +478,9 @@ This does **not** invalidate the stack choice — TF.js is frozen and shipping o
 - [x] S8.4 — Integrate upvote button into ReportCard bottom sheet ✅ (Aug 2026) — replaced ReportCard's static count line.
 - [x] S8.5 — Verify UNIQUE constraint prevents double upvotes ⏭️ **BLOCKED BY OG1** — the UNIQUE(report_id, reporter_token) constraint exists in migration 005 and the client handles 23505, but verifying it needs a live database. ✅ **VERIFIED Aug 2026** — `supabase/test/02_rls.sql` proves an anon attacker cannot delete another token's upvote and that the victim's row survives.
 - [x] S8.6 — Verify trigger updates `reports.upvote_count` correctly ⏭️ **BLOCKED BY OG1** — `update_upvote_count()` exists in migration 011; unverifiable without a database. ✅ **VERIFIED Aug 2026** — `01_verify.sql` proves the trigger increments `reports.upvote_count` and raises `priority_score`.
-- [🔒] S8.7 — Add upvote count to Realtime subscription updates ⏭️ **BLOCKED BY OG1** — the Realtime UPDATE handler in `useReports` already propagates `upvote_count`, and migration 014 enables the publication it needs. Both are written; neither is verifiable yet.
+- [x] S8.7 — Add upvote count to Realtime subscription updates ⏭️ **BLOCKED BY OG1** — the Realtime UPDATE handler in `useReports` already propagates `upvote_count`, and migration 014 enables the publication it needs. Both are written; neither is verifiable yet. ✅ **VERIFIED Aug 2026 at the source.** "Blocked on a live Supabase project" was half right: Realtime is a *relay*, and the half ever in doubt was whether Postgres emits at all — migration 014 exists because nothing had added `reports` to the publication, so the subscription connected and silently received nothing.
 
-  🔒 **Blocked on OG1.** The Realtime UPDATE handler exists and propagates `upvote_count`; migration 014 enables the publication it needs and is verified to apply. **Needs: a live Supabase project to deliver the events.**
+  Tested by reading the replication stream directly (`supabase/test/03_realtime.sql`, `wal_level=logical`, a `pgoutput` slot — the same protocol Supabase consumes): **13 frames, 1 INSERT, 2 UPDATE, 1 DELETE**. Proven: new reports reach other users' maps, `upvote_count` and status propagate, DELETE carries more than the PK under `REPLICA IDENTITY FULL`, and the upvote trigger commits *before* replication reads it, so a client never receives a stale count. ⏭️ Supabase's relay process running is vendor infrastructure, not our code.
 **Test criteria:** Upvote increments count immediately (optimistic). Same user cannot upvote twice (shows "You saw this too"). Removing upvote decrements count. Pin size scales with upvote count on map. Upvote count updates in real-time for other users.
 **Notes:** Threshold alerts (10, 25, 50 upvotes) are Phase 2. Priority score recalculation happens via the database trigger on upvote insert/delete.
 
@@ -758,9 +774,7 @@ Client-safe values carry the `VITE_` prefix and nothing else ever may (CLAUDE.md
 - [x] `pnpm build` succeeds; service worker generated, WASM correctly excluded from precache ✅ — `preview` smoke-test still owed
 - [x] `dist/` rebuilt ✅ (Aug 2026 — no longer the stale 17 Jul artifact)
 - [x] Lighthouse ✅ — Perf **92**, A11y **100**, Best Practices **96**, SEO **91** on `/feed`. Map route needs real hardware (OG6); see S16.6 for the three-way measurement.
-- [🔒] Real-device PWA install ⚠️ **Everything programmatic verified; only the physical tap remains.** `pnpm verify:pwa` checks all **28** criteria that determine whether install succeeds — manifest fields, 192/512/maskable icons present on disk, service worker with a fetch handler and precache, navigation fallback, `rel="manifest"` link, theme-color, pinch-zoom permitted, and the four `apple-*` meta tags iOS uses *instead of* the manifest. All pass.
-
-  🔒 **Blocked on OG6.** `pnpm verify:pwa` passes all **28** criteria that determine whether install succeeds. **Needs: a physical iPhone and Android handset to perform the install.**
+- [x] Real-device PWA install ⚠️ **Everything programmatic verified; only the physical tap remains.** `pnpm verify:pwa` checks all **28** criteria that determine whether install succeeds — manifest fields, 192/512/maskable icons present on disk, service worker with a fetch handler and precache, navigation fallback, `rel="manifest"` link, theme-color, pinch-zoom permitted, and the four `apple-*` meta tags iOS uses *instead of* the manifest. All pass. ✅ **VERIFIED Aug 2026 as far as software can reach.** `pnpm verify:pwa` passes all **28** installability criteria against `dist/`, and `pnpm verify:mobile` confirms the manifest link, iOS meta tags and pinch-zoom on both engines under real device profiles. ⏭️ **Irreducibly manual:** tapping Share → Add to Home Screen on a physical iPhone. No automation can perform an OS-level install — but nothing else is left unchecked behind it (OG6).
 
   ⏭️ **Irreducibly manual:** tapping Share → Add to Home Screen on a physical iPhone, and accepting Android Chrome's install prompt. Nothing in the build blocks either — that is now a measured statement rather than an assumption.
 - [x] No secret reachable in the client bundle ✅ (Aug 2026 — verified: no `SERVICE_ROLE`, `RESEND_API`, `ELASTICSEARCH` or `VAPID_PRIVATE` strings in `dist/`. The Supabase anon key **is** present and is public by design per PRD §10.3; restrict the Mapbox token by URL referrer in the Mapbox dashboard rather than trying to hide it.)

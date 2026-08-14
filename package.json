@@ -16,10 +16,11 @@
     "predev": "node scripts/sync-litert-wasm.mjs",
     "verify:db": "./scripts/verify-db.sh",
     "verify:pwa": "node scripts/verify-pwa.mjs",
-    "verify": "pnpm test:run && pnpm lint && tsc --noEmit && pnpm build && pnpm verify:pwa",
+    "verify": "pnpm test:run && pnpm lint && tsc --noEmit && pnpm build && pnpm verify:pwa && pnpm verify:mobile",
     "fetch:model": "node scripts/fetch-dev-model.mjs",
     "bench:ai": "node scripts/bench-inference.mjs",
-    "verify:offline": "node scripts/verify-offline.mjs"
+    "verify:offline": "node scripts/verify-offline.mjs",
+    "verify:mobile": "node scripts/verify-mobile.mjs"
   },
   "dependencies": {
     "@litertjs/core": "^2.5.3",

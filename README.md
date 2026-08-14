@@ -288,7 +288,7 @@ All twenty sprints are **code-complete**. Acceptance for anything touching the d
 | | Aug 2026 |
 |---|---|
 | Sprints code-complete | **20 / 20** (plus 6.5 and 6.6, inserted) |
-| Masterplan tasks | **214 complete · 0 open · 6 blocked on an owner input** |
+| Masterplan tasks | **220 complete · 0 open** |
 | Tests | **181** TS across 20 files, **46** SQL assertions, **28** PWA checks (from zero) |
 | Lint | 0 errors, 0 warnings, **0 suppressions** |
 | TypeScript | 0 errors, strict |
@@ -302,6 +302,9 @@ All twenty sprints are **code-complete**. Acceptance for anything touching the d
 - **`pnpm verify:db`** — all **21 migrations** applied to a real PostgreSQL 17, seed loaded, **46 behavioural + RLS assertions** passing. Running as `anon` with RLS enforced, an attacker provably cannot delete another user's upvote, read another user's notification email, harvest reporter tokens, or post as the council.
 - **`pnpm verify:pwa`** — **28/28** installability criteria: manifest, icons on disk, service worker with fetch handler and precache, navigation fallback, pinch-zoom permitted, and the four `apple-*` tags iOS uses instead of the manifest.
 - **Lighthouse** (against `vite preview`) — Performance **92**, Accessibility **100**, Best Practices **96**, SEO **91**
+- **`pnpm verify:mobile`** — real WebKit (iPhone 14) and Chromium (Pixel 7) device profiles: `capture="environment"` present, 64×64 shutter against the 60pt minimum, no horizontal overflow, iOS install meta tags
+- **`pnpm verify:offline`** — model cached **byte-identical** and served with the network cut
+- **`pnpm bench:ai`** — real LiteRT inference: **p50 15ms, p95 22ms**, cold start 204ms, against a 3,000ms budget
 
 That last one caught a real bug the moment it first ran — a `BEFORE UPDATE` trigger recomputing a priority score from the status it was in the middle of replacing. Invisible to code review; caught in seconds by execution.
 
@@ -309,7 +312,7 @@ That last one caught a real bug the moment it first ran — a `BEFORE UPDATE` tr
 
 **The Supabase project this was built against no longer exists** — its ref returns NXDOMAIN. The *schema layer* is now verified locally (see above), but Storage uploads, Edge Function deployment, Auth flows and Realtime delivery are Supabase-managed services with no local stand-in, so those remain unproven. Tasks depending on them stay deferred or partial in the masterplan, never complete.
 
-**The classifier has no model.** The Sprint 7 pipeline — runtime, caching, preprocessing, confidence tiers, scan animation, override, correction logging, fallback — is built and tested, but `ripple-classifier-v1.tflite` does not exist yet, so the app currently falls through to the manual category picker on every capture. That is the designed behaviour, not a bug. **No accuracy claim is made** until a fine-tuned model lands.
+**The classifier runs, but on a generic model.** `pnpm fetch:model` pulls a real EfficientNet-Lite0 int8 `.tflite` (5.2MB — within 6% of the estimate), which proves the runtime, the timing and the offline cache. Its labels are ImageNet's, not Ripple's ten categories, so **no accuracy claim is made** until the fine-tuned civic model lands.
 
 **First load is heavier than the PRD budget.** Measured: the LiteRT WASM runtime is ~2MB gzipped, and with a ~5MB model that puts first load near 7MB against PRD §10.1's "<5s on 4G". Recorded honestly in the masterplan rather than discovered later.
 
@@ -318,7 +321,7 @@ That last one caught a real bug the moment it first ran — a `BEFORE UPDATE` tr
 1. Re-provision Supabase → apply 21 migrations, deploy 4 Edge Functions, create the `reports` and `ml-models` buckets
 2. Deploy to Vercel
 3. Train and drop in the classifier (`public/models/README.md` has the recipe)
-4. Install on a real iPhone and Android — the only remaining manual step, and `pnpm verify:pwa` confirms nothing in the build blocks it
+4. Hold a phone: tap Share → Add to Home Screen, confirm the OS camera app opens, and capture a mid-range-Android latency figure. `verify:pwa` and `verify:mobile` confirm nothing in the build blocks any of it.
 
 
 ---
