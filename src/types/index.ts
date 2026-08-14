@@ -161,6 +161,8 @@ export interface MapPin {
   address: string | null
   suburb: string | null
   submitted_at: string
+  /** City this report belongs to, denormalised from its council (S20.3). */
+  city_id?: string | null
   /**
    * Thumbnail for the pin detail card (PRD §6.3 lists the photo first).
    * Joined from report_photos where photo_type = 'original'; null when the

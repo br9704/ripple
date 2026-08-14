@@ -38,8 +38,8 @@ export function getConfidenceTier(confidence: number): ConfidenceTier {
  * classifier reads as a broken one.
  */
 export function topPredictions(
-  scores: ReadonlyArray<number>,
-  labels: ReadonlyArray<ReportCategory>,
+  scores: readonly number[],
+  labels: readonly ReportCategory[],
   n = 2
 ): Prediction[] {
   const pairs: Prediction[] = []
@@ -69,7 +69,7 @@ export function topPredictions(
  * 0.94 into a mushy 0.31 and silently demoting every result a tier.
  * `looksLikeProbabilities` is the guard against that.
  */
-export function softmax(logits: ReadonlyArray<number>): number[] {
+export function softmax(logits: readonly number[]): number[] {
   if (logits.length === 0) return []
   const max = Math.max(...logits)
   const exps = logits.map((v) => Math.exp(v - max))
@@ -78,7 +78,7 @@ export function softmax(logits: ReadonlyArray<number>): number[] {
 }
 
 /** True when the vector already looks like a probability distribution. */
-export function looksLikeProbabilities(values: ReadonlyArray<number>): boolean {
+export function looksLikeProbabilities(values: readonly number[]): boolean {
   if (values.length === 0) return false
   if (values.some((v) => !Number.isFinite(v) || v < 0 || v > 1)) return false
   const sum = values.reduce((a, b) => a + b, 0)
@@ -86,6 +86,6 @@ export function looksLikeProbabilities(values: ReadonlyArray<number>): boolean {
 }
 
 /** Normalises raw model output into probabilities, softmaxing only if needed. */
-export function toProbabilities(raw: ReadonlyArray<number>): number[] {
+export function toProbabilities(raw: readonly number[]): number[] {
   return looksLikeProbabilities(raw) ? [...raw] : softmax(raw)
 }

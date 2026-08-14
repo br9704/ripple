@@ -3,6 +3,7 @@ import { useCouncilAuth } from '@/hooks/useCouncilAuth'
 import { supabase } from '@/lib/supabase'
 import { toCsv, downloadCsv } from '@/lib/csvExport'
 import { TypingLine } from '@/components/TypingLine'
+import { CouncilAlerts } from '@/components/CouncilAlerts'
 import { CATEGORY_MAP } from '@/constants/categories'
 import { STATUSES, STATUS_MAP } from '@/constants/statuses'
 import { timeAgo } from '@/lib/mapHelpers'
@@ -182,6 +183,8 @@ function Dashboard({
         </button>
       </header>
 
+      <CouncilAlerts reports={reports} />
+
       {selected.size > 0 && (
         <div className="mb-3 flex flex-wrap items-center gap-2 border border-action px-3 py-2">
           <span className="font-mono text-xs tabular-nums text-action">
@@ -192,7 +195,7 @@ function Dashboard({
               key={s.key}
               type="button"
               disabled={busy}
-              onClick={() => void applyStatus(s.key)}
+              onClick={() => { void applyStatus(s.key) }}
               className="border border-border-bright px-2 py-1 font-mono text-xs text-text-secondary hover:text-text-primary disabled:opacity-40"
             >
               → {s.label}
@@ -204,7 +207,7 @@ function Dashboard({
       <div className="mb-3 flex gap-2">
         <button
           type="button"
-          onClick={exportCsv}
+          onClick={() => { exportCsv() }}
           className="border border-border-bright px-2 py-1 font-mono text-xs text-text-secondary hover:text-text-primary"
         >
           [export csv{selected.size > 0 ? ` (${selected.size})` : ''}]
@@ -239,7 +242,7 @@ function Dashboard({
                   {r.address ?? r.suburb ?? '—'}
                 </p>
                 <p className="font-mono text-xs tabular-nums text-text-tertiary">
-                  priority {Number(r.priority_score).toFixed(0)} · +{r.upvote_count} ·{' '}
+                  priority {r.priority_score.toFixed(0)} · +{r.upvote_count} ·{' '}
                   {timeAgo(r.submitted_at)} ·{' '}
                   <span style={{ color: STATUS_MAP[r.status]?.color }}>
                     {STATUS_MAP[r.status]?.label ?? r.status}
@@ -285,8 +288,10 @@ function SignIn({
           <button
             type="button"
             disabled={!isValidEmail(email)}
-            onClick={async () => {
-              if (await onSubmit(email)) setSent(true)
+            onClick={() => {
+              void onSubmit(email).then((sentOk) => {
+                if (sentOk) setSent(true)
+              })
             }}
             className="w-full border border-action px-3 py-2 font-mono text-xs text-action transition-colors hover:bg-action hover:text-bg-primary disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-action"
           >

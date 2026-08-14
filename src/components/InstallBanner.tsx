@@ -50,7 +50,7 @@ export function InstallBanner() {
       <div className="flex items-center gap-2">
         {!isIOSDevice && (
           <button
-            onClick={handleInstall}
+            onClick={() => { void handleInstall() }}
             className="rounded-md bg-action px-3 py-2 text-xs font-semibold text-bg-primary transition-colors hover:bg-action-hover active:bg-action-hover"
           >
             Install

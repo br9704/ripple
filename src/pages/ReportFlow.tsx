@@ -78,7 +78,7 @@ export function ReportFlow() {
 
   // Fetch council boundaries on mount
   useEffect(() => {
-    fetchAndCacheBoundaries().then(setBoundaries)
+    void fetchAndCacheBoundaries().then(setBoundaries)
   }, [])
 
   // Reverse geocode when GPS resolves (async — must be in effect)
@@ -86,7 +86,7 @@ export function ReportFlow() {
     if (geo.lat === null || geo.lng === null) return
     let cancelled = false
 
-    reverseGeocode(geo.lat, geo.lng).then((result) => {
+    void reverseGeocode(geo.lat, geo.lng).then((result) => {
       if (cancelled || !result) return
       setAddress(result.address)
       setSuburb(result.suburb)
@@ -127,7 +127,7 @@ export function ReportFlow() {
       postcode,
       council_id: councilId,
       note,
-      notify_email: notifyEmail.trim() || undefined,
+      notify_email: notifyEmail.trim() === '' ? undefined : notifyEmail.trim(),
       reporter_token: reporterToken,
     }
 
@@ -197,7 +197,7 @@ export function ReportFlow() {
   if (step === 'camera') {
     return (
       <CameraCapture
-        onClose={() => navigate('/')}
+        onClose={() => { void navigate('/') }}
         onPhotoCaptured={handlePhotoCaptured}
       />
     )
@@ -275,7 +275,7 @@ export function ReportFlow() {
             </p>
             <button
               type="button"
-              onClick={() => setIsPickingLocation(true)}
+              onClick={() => { setIsPickingLocation(true) }}
               className="mt-2 font-mono text-xs text-action underline-offset-4 hover:underline"
             >
               [ set the location manually → ]
@@ -327,7 +327,7 @@ export function ReportFlow() {
         {/* Manual picker: always reachable, and shown by default whenever the
             AI has not produced a usable answer. PRD §6.2 requires the category
             selector to be available at any confidence level. */}
-        {(showPicker || ai.error || (!ai.tier && !ai.isClassifying && !ai.isModelLoading)) && (
+        {(showPicker || ai.error !== null || (!ai.tier && !ai.isClassifying && !ai.isModelLoading)) && (
           <div>
             <h2 className="mb-2 font-mono text-xs text-text-secondary">select category</h2>
             <CategoryPicker
@@ -361,7 +361,7 @@ export function ReportFlow() {
       <div className="border-t border-border px-4 py-4">
         <button
           type="button"
-          onClick={handleSubmit}
+          onClick={() => { void handleSubmit() }}
           disabled={!canSubmit}
           className={`w-full rounded-lg px-4 py-3.5 text-sm font-semibold transition-colors ${
             canSubmit

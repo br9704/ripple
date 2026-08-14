@@ -254,7 +254,11 @@ function MapComponent({ reports, onPinClick, showHeatmap = false, ref }: MapComp
         const clusterId = features[0]?.properties?.cluster_id
         if (clusterId === undefined) return
 
-        const source = map.getSource(SOURCE_ID) as mapboxgl.GeoJSONSource
+        // getSource() returns a union of every source type; only GeoJSONSource
+        // has getClusterExpansionZoom, so the narrowing is load-bearing rather
+        // than decorative.
+        const source: mapboxgl.GeoJSONSource | undefined = map.getSource(SOURCE_ID)
+        if (!source) return
         source.getClusterExpansionZoom(clusterId, (err?: Error | null, zoom?: number | null) => {
           if (err || zoom == null) return
           const geometry = features[0].geometry
@@ -306,7 +310,7 @@ function MapComponent({ reports, onPinClick, showHeatmap = false, ref }: MapComp
     const map = mapRef.current
     if (!map) return
 
-    const source = map.getSource(SOURCE_ID) as mapboxgl.GeoJSONSource | undefined
+    const source: mapboxgl.GeoJSONSource | undefined = map.getSource(SOURCE_ID)
     if (source) {
       source.setData(reportsToGeoJSON(reports))
     }
@@ -333,7 +337,7 @@ function MapComponent({ reports, onPinClick, showHeatmap = false, ref }: MapComp
   // 'load' has added the layers.
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !map.getLayer(HEATMAP_LAYER)) return
+    if (!map?.getLayer(HEATMAP_LAYER)) return
 
     map.setLayoutProperty(HEATMAP_LAYER, 'visibility', showHeatmap ? 'visible' : 'none')
     for (const id of [CLUSTER_LAYER, CLUSTER_COUNT_LAYER, UNCLUSTERED_LAYER, GLYPH_LAYER]) {

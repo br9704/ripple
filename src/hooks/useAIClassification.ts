@@ -41,19 +41,19 @@ let loading: Promise<LoadedClassifier> | null = null
 
 function getClassifier(onProgress?: (f: number | null) => void): Promise<LoadedClassifier> {
   if (cached) return Promise.resolve(cached)
-  if (!loading) {
-    loading = loadClassifier({ onProgress: (p) => onProgress?.(p.fraction) })
-      .then((c) => {
-        cached = c
-        return c
-      })
-      .catch((err) => {
-        // Do not poison later attempts — the user may reach the camera again
-        // on a better connection.
-        loading = null
-        throw err
-      })
-  }
+
+  loading ??= loadClassifier({ onProgress: (p) => onProgress?.(p.fraction) })
+    .then((c) => {
+      cached = c
+      return c
+    })
+    .catch((err: unknown) => {
+      // Do not poison later attempts — the user may reach the camera again on
+      // a better connection.
+      loading = null
+      throw err
+    })
+
   return loading
 }
 

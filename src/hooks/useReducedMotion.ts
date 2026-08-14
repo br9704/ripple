@@ -28,8 +28,14 @@ export function useReducedMotion(): boolean {
       mql.addEventListener('change', onChange)
       return () => mql.removeEventListener('change', onChange)
     }
+    // Safari <14 has only the deprecated form, and dropping it would silently
+    // disable reduced-motion support on those devices.
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- deliberate
     mql.addListener(onChange)
-    return () => mql.removeListener(onChange)
+    return () => {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- pairs with addListener
+      mql.removeListener(onChange)
+    }
   }, [])
 
   return reduced

@@ -22,7 +22,10 @@ export function toCsv(rows: Record<string, unknown>[], columns?: string[]): stri
 function escapeCell(value: unknown): string {
   if (value === null || value === undefined) return ''
 
-  const s = String(value)
+  // Objects would stringify to '[object Object]', which is meaningless in a
+  // spreadsheet; JSON at least preserves the content for a human reading it.
+  const s =
+    typeof value === 'object' ? JSON.stringify(value) : String(value as string | number | boolean)
 
   // Defuse spreadsheet formula injection: a cell starting with = + - or @ is
   // executed by Excel and Sheets on open. Councils will open these files, and a

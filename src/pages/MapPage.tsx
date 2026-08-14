@@ -31,7 +31,7 @@ export function MapPage() {
   const [selectedReport, setSelectedReport] = useState<MapPin | null>(null)
   const [showFilters, setShowFilters] = useState(false)
 
-  const { categories, statuses, dateRange, minUpvotes, showHeatmap, toggleHeatmap } =
+  const { categories, statuses, dateRange, minUpvotes, cityId, showHeatmap, toggleHeatmap } =
     useFilterStore()
 
   /**
@@ -51,8 +51,8 @@ export function MapPage() {
   }, [categories, statuses, dateRange, minUpvotes])
 
   const criteria = useMemo(
-    () => ({ categories, statuses, dateRange, minUpvotes }),
-    [categories, statuses, dateRange, minUpvotes]
+    () => ({ categories, statuses, dateRange, minUpvotes, cityId }),
+    [categories, statuses, dateRange, minUpvotes, cityId]
   )
 
   const visibleReports = useMemo(() => applyFilters(reports, criteria), [reports, criteria])

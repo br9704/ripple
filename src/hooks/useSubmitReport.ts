@@ -114,8 +114,8 @@ export function useSubmitReport() {
         suburb: data.suburb,
         postcode: data.postcode,
         council_id: data.council_id,
-        note: data.note || undefined,
-        notify_email: data.notify_email || undefined,
+        note: (data.note ?? '') || undefined,
+        notify_email: data.notify_email ?? undefined,
         reporter_token: data.reporter_token,
         photo_base64: photoBase64,
       }

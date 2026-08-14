@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-deprecated, @typescript-eslint/unbound-method --
+   This suite deliberately spies on document.createElement to stub canvas, which
+   jsdom does not implement. The deprecation warning is about the DOM API, not
+   about this usage. */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { compressImage } from './compressImage'
 import { PHOTO_MAX_WIDTH, PHOTO_JPEG_QUALITY } from '@/constants/config'

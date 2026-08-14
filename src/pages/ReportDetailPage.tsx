@@ -6,6 +6,7 @@ import { UpvoteButton } from '@/components/UpvoteButton'
 import { StatusTimeline } from '@/components/StatusTimeline'
 import { CommentThread } from '@/components/CommentThread'
 import { FixConfirmation } from '@/components/FixConfirmation'
+import { ConfirmationPhotos } from '@/components/ConfirmationPhotos'
 import { TypingLine } from '@/components/TypingLine'
 import { useReport } from '@/hooks/useReport'
 import { shareReport, formatReportId, type ShareOutcome } from '@/lib/share'
@@ -116,6 +117,11 @@ export function ReportDetailPage() {
               submittedAt={report.submitted_at}
             />
 
+            <ConfirmationPhotos
+              original={report.photos.find((p) => p.photo_type === 'original')}
+              confirmations={report.photos.filter((p) => p.photo_type === 'fixed_confirmation')}
+            />
+
             <FixConfirmation
               reportId={report.id}
               status={report.status}
@@ -133,7 +139,7 @@ export function ReportDetailPage() {
               </span>
               <button
                 type="button"
-                onClick={handleShare}
+                onClick={() => { void handleShare() }}
                 className="border border-border-bright px-3 py-1.5 font-mono text-xs text-text-secondary transition-colors hover:text-text-primary"
               >
                 {shareResult === 'copied'

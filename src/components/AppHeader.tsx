@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { CitySelector } from '@/components/CitySelector'
 
 export function AppHeader() {
   const navigate = useNavigate()
@@ -7,7 +8,7 @@ export function AppHeader() {
     <header className="fixed left-0 right-0 top-0 z-40 flex h-[52px] items-center justify-between border-b border-border bg-bg-primary/85 px-4 backdrop-blur-md">
       <button
         type="button"
-        onClick={() => navigate('/')}
+        onClick={() => { void navigate('/') }}
         className="font-display text-lg font-bold tracking-wide text-action"
         aria-label="Ripple — go to map"
       >
@@ -15,11 +16,12 @@ export function AppHeader() {
       </button>
 
       <div className="flex items-center gap-2">
+        <CitySelector />
         {/* Wired in Sprint 12. Until then this button had no onClick at all —
             it looked enabled and did nothing. */}
         <button
           type="button"
-          onClick={() => navigate('/search')}
+          onClick={() => { void navigate('/search') }}
           aria-label="Search reports"
           className="flex h-9 w-9 items-center justify-center text-text-secondary transition-colors hover:text-text-primary"
         >

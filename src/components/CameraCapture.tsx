@@ -48,7 +48,7 @@ export function CameraCapture({ onClose, onPhotoCaptured }: CameraCaptureProps) 
         type="file"
         accept="image/*"
         capture="environment"
-        onChange={handleFileChange}
+        onChange={(e) => { void handleFileChange(e) }}
         className="hidden"
         aria-hidden="true"
       />
@@ -56,7 +56,7 @@ export function CameraCapture({ onClose, onPhotoCaptured }: CameraCaptureProps) 
       {/* Main content area */}
       <div className="flex flex-1 flex-col items-center justify-center px-6">
         {preview ? (
-          <PhotoPreview previewUrl={preview} onRetake={retake} />
+          <PhotoPreview previewUrl={preview} onRetake={() => { retake() }} />
         ) : (
           <>
             {/* Camera prompt */}

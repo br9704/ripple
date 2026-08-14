@@ -4,6 +4,7 @@ import { TabBar } from '@/components/TabBar'
 import { CameraFab } from '@/components/CameraFab'
 import { ReportFeed } from '@/components/ReportFeed'
 import { TypingLine } from '@/components/TypingLine'
+import { NotificationSettings } from '@/components/NotificationSettings'
 import { supabase } from '@/lib/supabase'
 import { getReporterToken } from '@/lib/reporterToken'
 import { sortReports } from '@/lib/reportSort'
@@ -74,6 +75,10 @@ export function MyReportsPage() {
           <p className="mt-1 font-mono text-xs text-text-tertiary">
             &gt; kept on this device only — no account, no tracking
           </p>
+        </div>
+
+        <div className="px-4 py-3">
+          <NotificationSettings />
         </div>
 
         {isLoading ? (

@@ -84,7 +84,7 @@ export function FixConfirmation({
         type="file"
         accept="image/*"
         capture="environment"
-        onChange={handleFileChange}
+        onChange={(e) => { void handleFileChange(e) }}
         className="hidden"
         aria-hidden="true"
       />
@@ -92,7 +92,7 @@ export function FixConfirmation({
       {photo ? (
         <button
           type="button"
-          onClick={() => void submit()}
+          onClick={() => { void submit() }}
           disabled={state === 'sending'}
           className="w-full border border-action px-3 py-2 font-mono text-xs text-action transition-colors hover:bg-action hover:text-bg-primary disabled:opacity-40"
         >
@@ -101,7 +101,7 @@ export function FixConfirmation({
       ) : (
         <button
           type="button"
-          onClick={capture}
+          onClick={() => { capture() }}
           disabled={isProcessing}
           className="w-full border border-border-bright px-3 py-2 font-mono text-xs text-text-secondary transition-colors hover:text-text-primary disabled:opacity-40"
         >

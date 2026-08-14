@@ -18,7 +18,7 @@ export function TabBar() {
           <button
             key={tab.key}
             type="button"
-            onClick={() => navigate(tab.path)}
+            onClick={() => { void navigate(tab.path) }}
             className={`flex flex-col items-center gap-0.5 px-4 py-1.5 text-xs transition-colors ${
               isActive ? 'text-action' : 'text-text-tertiary'
             }`}

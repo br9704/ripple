@@ -155,8 +155,8 @@ function readInputSpec(model: CompiledModel): { inputSize: number; quantised: bo
     const first = details[0]
     const shape = first?.shape ?? []
     // NHWC [1, H, W, 3] is the norm for TFLite vision models.
-    const size = shape.length >= 3 ? Number(shape[1]) : NaN
-    const dtype = String(first?.dtype ?? '').toLowerCase()
+    const size = shape.length >= 3 ? shape[1] : NaN
+    const dtype = (first?.dtype ?? '').toLowerCase()
 
     return {
       inputSize: Number.isFinite(size) && size > 0 ? size : DEFAULT_INPUT_SIZE,

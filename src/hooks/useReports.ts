@@ -49,7 +49,7 @@ export function useReports() {
       setIsLoading(false)
     }
 
-    fetchReports()
+    void fetchReports()
 
     // Realtime subscription
     const channel = supabase
@@ -103,7 +103,7 @@ export function useReports() {
 
     return () => {
       cancelled = true
-      supabase.removeChannel(channel)
+      void supabase.removeChannel(channel)
     }
   }, [])
 

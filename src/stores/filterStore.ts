@@ -4,6 +4,9 @@ import type { ReportCategory, ReportStatus } from '@/types'
 export type DateRange = '7d' | '30d' | '90d' | 'all'
 
 export interface FilterState {
+  /** Active city (S20.3/S20.4). Null means "all cities", which is the state a
+      single-city deployment stays in. */
+  cityId: string | null
   categories: ReportCategory[]
   statuses: ReportStatus[]
   dateRange: DateRange
@@ -17,6 +20,7 @@ export interface FilterState {
   setMinUpvotes: (n: number) => void
   setNearMe: (v: boolean) => void
   toggleHeatmap: () => void
+  setCity: (id: string | null) => void
   reset: () => void
 }
 
@@ -27,6 +31,7 @@ const INITIAL_FILTERS = {
   dateRange: 'all' as DateRange,
   minUpvotes: 0,
   nearMe: false,
+  cityId: null as string | null,
 }
 
 /**
@@ -66,6 +71,7 @@ export const useFilterStore = create<FilterState>((set) => ({
   setMinUpvotes: (minUpvotes) => set({ minUpvotes }),
   setNearMe: (nearMe) => set({ nearMe }),
   toggleHeatmap: () => set((s) => ({ showHeatmap: !s.showHeatmap })),
+  setCity: (cityId) => set({ cityId }),
 
   // `set` merges partials, so omitting showHeatmap leaves it untouched. The
   // heatmap is a view mode, not a filter: clearing filters should not change

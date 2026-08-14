@@ -18,7 +18,7 @@ export function CameraFab() {
   return (
     <button
       type="button"
-      onClick={() => navigate('/report')}
+      onClick={() => { void navigate('/report') }}
       aria-label="Report an issue"
       className="fixed bottom-[72px] left-1/2 z-50 flex h-[60px] min-w-[160px] -translate-x-1/2 items-center justify-center gap-2 border border-action bg-bg-primary px-6 font-mono text-sm tracking-wide text-action transition-colors duration-150 ease-signal hover:bg-action hover:text-bg-primary active:bg-action active:text-bg-primary"
     >

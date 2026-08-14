@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById('root') ?? (() => { throw new Error('#root missing from index.html') })()).render(
   <StrictMode>
     <BrowserRouter>
       <ErrorBoundary>

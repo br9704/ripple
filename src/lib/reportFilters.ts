@@ -7,6 +7,8 @@ export interface ReportFilterCriteria {
   statuses: ReportStatus[]
   dateRange: DateRange
   minUpvotes: number
+  /** Null means "all cities" (S20.3). */
+  cityId?: string | null
 }
 
 const RANGE_DAYS: Record<Exclude<DateRange, 'all'>, number> = {
@@ -36,6 +38,10 @@ export function applyFilters(
     dateRange === 'all' ? null : now - RANGE_DAYS[dateRange] * 24 * 60 * 60 * 1000
 
   return reports.filter((r) => {
+    // City isolation: filtering, not separate databases. A per-city database
+    // would multiply the operational surface by the number of cities for a
+    // product that currently has one.
+    if (criteria.cityId && r.city_id && r.city_id !== criteria.cityId) return false
     if (categories.length > 0 && !categories.includes(r.category)) return false
     if (statuses.length > 0 && !statuses.includes(r.status)) return false
     if (minUpvotes > 0 && r.upvote_count < minUpvotes) return false
