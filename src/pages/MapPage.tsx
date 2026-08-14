@@ -8,6 +8,7 @@ import { CameraFab } from '@/components/CameraFab'
 import { MapControls } from '@/components/MapControls'
 import { useReports } from '@/hooks/useReports'
 import { FilterPanel } from '@/components/FilterPanel'
+import { MapKeyboardList } from '@/components/MapKeyboardList'
 import { useFilterStore } from '@/stores/filterStore'
 import { applyFilters, countActiveFilters, countReportsSince } from '@/lib/reportFilters'
 import { TypingLine } from '@/components/TypingLine'
@@ -74,6 +75,10 @@ export function MapPage() {
           />
         )}
       </div>
+
+      {/* Canvas pins are invisible to assistive tech — this is the
+          keyboard/screen-reader equivalent (PRD §10.2). */}
+      <MapKeyboardList reports={visibleReports} onSelect={handlePinClick} />
 
       {/* Map controls */}
       <MapControls
