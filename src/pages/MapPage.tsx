@@ -11,6 +11,8 @@ import { FilterPanel } from '@/components/FilterPanel'
 import { MapKeyboardList } from '@/components/MapKeyboardList'
 import { useFilterStore } from '@/stores/filterStore'
 import { applyFilters, countActiveFilters, countReportsSince } from '@/lib/reportFilters'
+import { encodeFilters } from '@/lib/shareableFilters'
+import { shareReport } from '@/lib/share'
 import { TypingLine } from '@/components/TypingLine'
 import type { MapPin } from '@/types'
 
@@ -21,6 +23,22 @@ export function MapPage() {
 
   const { categories, statuses, dateRange, minUpvotes, showHeatmap, toggleHeatmap } =
     useFilterStore()
+
+  /**
+   * Share the current filtered view (S20.1).
+   *
+   * This is what turns "47 reports in Fitzroy North, 18 of them accessibility
+   * issues" from an anecdote into a link a councillor can open — PRD §3.5.
+   */
+  const shareView = useCallback(() => {
+    const params = encodeFilters({ categories, statuses, dateRange, minUpvotes })
+    const qs = params.toString()
+    void shareReport({
+      title: 'Ripple — community reports',
+      text: 'Reports in this area',
+      url: `${window.location.origin}/${qs ? `?${qs}` : ''}`,
+    })
+  }, [categories, statuses, dateRange, minUpvotes])
 
   const criteria = useMemo(
     () => ({ categories, statuses, dateRange, minUpvotes }),
@@ -96,6 +114,18 @@ export function MapPage() {
             {reportsThisWeek} {reportsThisWeek === 1 ? 'report' : 'reports'} this week
           </span>
         </div>
+      )}
+
+      {/* Share this filtered view — only worth offering once it is actually
+          filtered, otherwise it is just a link to the homepage. */}
+      {activeFilterCount > 0 && (
+        <button
+          type="button"
+          onClick={shareView}
+          className="absolute bottom-[104px] left-4 z-30 border border-border-bright bg-bg-primary/90 px-2 py-1 font-mono text-xs text-text-secondary transition-colors hover:text-text-primary"
+        >
+          [share this view]
+        </button>
       )}
 
       {/* Camera FAB */}
