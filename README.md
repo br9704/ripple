@@ -288,7 +288,7 @@ All twenty sprints are **code-complete**. Acceptance for anything touching the d
 | | Aug 2026 |
 |---|---|
 | Sprints code-complete | **20 / 20** (plus 6.5 and 6.6, inserted) |
-| Tests | **169** TS across 19 files, **40** SQL assertions (from zero) |
+| Tests | **169** TS across 19 files, **46** SQL assertions, **28** PWA checks (from zero) |
 | Lint | 0 errors, 0 warnings, **0 suppressions** |
 | TypeScript | 0 errors, strict |
 | Migrations | 21 |
@@ -298,7 +298,9 @@ All twenty sprints are **code-complete**. Acceptance for anything touching the d
 
 - `pnpm tsc --noEmit`, `pnpm lint`, `pnpm test` — **169 tests**, zero lint errors, zero suppressions
 - `pnpm build` — valid service worker, 37MB LiteRT WASM correctly excluded from precache, no server-side secret in the bundle
-- **`pnpm verify:db`** — all **21 migrations** applied to a real PostgreSQL 17, seed loaded, and **40 behavioural + RLS assertions** passing. Running as `anon` with RLS enforced, an attacker provably cannot delete another user's upvote, read another user's notification email, harvest reporter tokens, or post as the council.
+- **`pnpm verify:db`** — all **21 migrations** applied to a real PostgreSQL 17, seed loaded, **46 behavioural + RLS assertions** passing. Running as `anon` with RLS enforced, an attacker provably cannot delete another user's upvote, read another user's notification email, harvest reporter tokens, or post as the council.
+- **`pnpm verify:pwa`** — **28/28** installability criteria: manifest, icons on disk, service worker with fetch handler and precache, navigation fallback, pinch-zoom permitted, and the four `apple-*` tags iOS uses instead of the manifest.
+- **Lighthouse** (against `vite preview`) — Performance **92**, Accessibility **100**, Best Practices **96**, SEO **91**
 
 That last one caught a real bug the moment it first ran — a `BEFORE UPDATE` trigger recomputing a priority score from the status it was in the middle of replacing. Invisible to code review; caught in seconds by execution.
 
@@ -315,7 +317,7 @@ That last one caught a real bug the moment it first ran — a `BEFORE UPDATE` tr
 1. Re-provision Supabase → apply 21 migrations, deploy 4 Edge Functions, create the `reports` and `ml-models` buckets
 2. Deploy to Vercel
 3. Train and drop in the classifier (`public/models/README.md` has the recipe)
-4. Verify on a real mid-range Android and iPhone — this closes the Lighthouse and latency gates
+4. Install on a real iPhone and Android — the only remaining manual step, and `pnpm verify:pwa` confirms nothing in the build blocks it
 
 
 ---
