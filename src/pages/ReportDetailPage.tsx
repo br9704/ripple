@@ -4,12 +4,15 @@ import { AppHeader } from '@/components/AppHeader'
 import { TabBar } from '@/components/TabBar'
 import { UpvoteButton } from '@/components/UpvoteButton'
 import { StatusTimeline } from '@/components/StatusTimeline'
+import { CommentThread } from '@/components/CommentThread'
+import { FixConfirmation } from '@/components/FixConfirmation'
 import { TypingLine } from '@/components/TypingLine'
 import { useReport } from '@/hooks/useReport'
 import { shareReport, formatReportId, type ShareOutcome } from '@/lib/share'
 import { CATEGORY_MAP } from '@/constants/categories'
 import { STATUS_MAP } from '@/constants/statuses'
 import { timeAgo } from '@/lib/mapHelpers'
+import { getReporterToken } from '@/lib/reporterToken'
 
 /**
  * Full report view at a shareable URL (PRD §12.8).
@@ -112,6 +115,17 @@ export function ReportDetailPage() {
               currentStatus={report.status}
               submittedAt={report.submitted_at}
             />
+
+            <FixConfirmation
+              reportId={report.id}
+              status={report.status}
+              isOwnReport={report.reporter_token === getReporterToken()}
+              confirmationCount={
+                report.photos.filter((p) => p.photo_type === 'fixed_confirmation').length
+              }
+            />
+
+            <CommentThread reportId={report.id} />
 
             <footer className="flex items-center justify-between border-t border-border pt-4">
               <span className="font-mono text-xs text-text-tertiary">
