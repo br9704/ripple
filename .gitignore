@@ -6,3 +6,6 @@ dist-ssr
 .DS_Store
 *.local
 *.log
+
+# LiteRT WASM runtime — synced from node_modules by scripts/sync-litert-wasm.mjs
+public/litert-wasm/

@@ -8,7 +8,38 @@ export const DUPLICATE_LOOKBACK_DAYS = 30
 // ── Photo Processing ──
 export const PHOTO_MAX_WIDTH = 1920
 export const PHOTO_JPEG_QUALITY = 0.8
-export const TFJS_INPUT_SIZE = 224
+
+// ── On-device AI (LiteRT.js) ──
+/**
+ * Fallback input edge. The real value is read from the model's own
+ * getInputDetails() at load time — EfficientNet-Lite0 and MobileNetV3-Small
+ * disagree on this, and guessing produces a tensor the runtime rejects.
+ * (Renamed from TFJS_INPUT_SIZE; TensorFlow.js was retired in Sprint 7.)
+ */
+export const AI_INPUT_SIZE = 224
+
+/**
+ * Versioned model URL. The version lives in the filename so a new model is a
+ * new URL — cache invalidation is then free, and swapping the generic backbone
+ * for the fine-tuned civic classifier is a one-line change.
+ */
+export const AI_MODEL_VERSION = 'v1'
+export const AI_MODEL_URL = `/models/ripple-classifier-${AI_MODEL_VERSION}.tflite`
+
+/** Served from our own origin — a CDN dependency would break offline use. */
+export const AI_WASM_PATH = '/litert-wasm/'
+
+/**
+ * Expected inference time, used to pace the progress bar to 90%.
+ * Unproven in-browser: no published numbers exist for EfficientNet-Lite0 int8
+ * under WASM/WebGPU, so this is a starting estimate to be replaced by the real
+ * p50 from S7.13. The bar HOLDS at 90% rather than completing, so an estimate
+ * that is too low degrades honestly instead of faking progress.
+ */
+export const AI_EXPECTED_INFERENCE_MS = 900
+
+/** Hard ceiling from MOTION.md: capture → result must not exceed this. */
+export const AI_BUDGET_MS = 3000
 
 // ── AI Confidence Thresholds ──
 export const AI_CONFIDENCE_HIGH = 0.85

@@ -10,9 +10,13 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "sync:wasm": "node scripts/sync-litert-wasm.mjs",
+    "prebuild": "node scripts/sync-litert-wasm.mjs",
+    "predev": "node scripts/sync-litert-wasm.mjs"
   },
   "dependencies": {
+    "@litertjs/core": "^2.5.3",
     "@supabase/supabase-js": "^2.99.3",
     "@turf/turf": "^7.3.4",
     "framer-motion": "^12.38.0",

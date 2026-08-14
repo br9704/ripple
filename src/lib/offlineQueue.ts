@@ -18,6 +18,10 @@ export interface QueuedReport {
   reporter_token: string
   photo_base64: string
   queuedAt: number
+  /** What the on-device model predicted, if it ran before the report queued. */
+  ai_category?: ReportCategory | null
+  ai_confidence?: number
+  user_corrected_ai?: boolean
 }
 
 export type QueuedReportInput = Omit<QueuedReport, 'id' | 'queuedAt'>
@@ -61,9 +65,13 @@ export async function removeFromQueue(id: number): Promise<void> {
 export function queuedReportToPayload(report: QueuedReport) {
   return {
     category: report.category,
-    ai_category: report.category,
-    ai_confidence: 0,
-    user_corrected_ai: false,
+    // Omitted rather than defaulted to `category`. Writing the final category
+    // in as the "prediction" would fabricate a model output that never
+    // happened, and this field feeds the S7.9 correction log — which is a
+    // training dataset, so a phantom row there is worse than a missing one.
+    ai_category: report.ai_category ?? undefined,
+    ai_confidence: report.ai_confidence ?? 0,
+    user_corrected_ai: report.user_corrected_ai ?? false,
     lat: report.lat,
     lng: report.lng,
     address: report.address,

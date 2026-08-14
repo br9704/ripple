@@ -6,6 +6,9 @@ import { CategoryPicker } from '@/components/CategoryPicker'
 import { NoteInput } from '@/components/NoteInput'
 import { LocationStatus } from '@/components/LocationStatus'
 import { LocationPicker } from '@/components/LocationPicker'
+import { AIResultCard } from '@/components/AIResultCard'
+import { ScanOverlay } from '@/components/ScanOverlay'
+import { useAIClassification } from '@/hooks/useAIClassification'
 import { SubmissionSuccess } from '@/components/SubmissionSuccess'
 import type { DuplicateNearby } from '@/components/DuplicateAlert'
 import { useGeolocation } from '@/hooks/useGeolocation'
@@ -47,6 +50,11 @@ export function ReportFlow() {
   const [submittedCategory, setSubmittedCategory] = useState<ReportCategory>('other')
   const [submittedCouncil, setSubmittedCouncil] = useState<string | null>(null)
   const [duplicateNearby, setDuplicateNearby] = useState<DuplicateNearby | null>(null)
+  const [showPicker, setShowPicker] = useState(false)
+
+  // On-device classification. Runs as soon as a photo exists; never blocks the
+  // report — see the graceful-degradation contract in useAIClassification.
+  const ai = useAIClassification(photo)
 
   // Council detection — derived from coordinates + boundaries (pure, no side effects)
   const detectedCouncil = useMemo(() => {
@@ -56,6 +64,12 @@ export function ReportFlow() {
 
   const councilId = detectedCouncil?.council_id ?? null
   const councilName = detectedCouncil?.council_name ?? null
+
+  // The AI proposes; the user disposes. An explicit choice always wins.
+  const effectiveCategory = selectedCategory ?? ai.category
+  const userCorrectedAI =
+    ai.category !== null && selectedCategory !== null && selectedCategory !== ai.category
+
 
   // Fetch council boundaries on mount
   useEffect(() => {
@@ -92,12 +106,15 @@ export function ReportFlow() {
   }, [])
 
   const handleSubmit = useCallback(async () => {
-    if (!photo || !selectedCategory) return
+    if (!photo || !effectiveCategory) return
     if (geo.lat === null || geo.lng === null) return
 
     const reportData = {
       photo,
-      category: selectedCategory,
+      category: effectiveCategory,
+      ai_category: ai.category,
+      ai_confidence: ai.confidence,
+      user_corrected_ai: userCorrectedAI,
       lat: geo.lat,
       lng: geo.lng,
       address,
@@ -110,14 +127,17 @@ export function ReportFlow() {
 
     // Store for success screen
     setSubmittedAddress(address)
-    setSubmittedCategory(selectedCategory)
+    setSubmittedCategory(effectiveCategory)
     setSubmittedCouncil(councilName)
 
     if (!isOnline) {
       // Queue for later submission
       const photoBase64 = await blobToBase64(photo)
       await queueReport({
-        category: selectedCategory,
+        category: effectiveCategory,
+        ai_category: ai.category,
+        ai_confidence: ai.confidence,
+        user_corrected_ai: userCorrectedAI,
         lat: geo.lat,
         lng: geo.lng,
         address,
@@ -140,7 +160,7 @@ export function ReportFlow() {
       setDuplicateNearby(result.duplicate_nearby ?? null)
       setStep('success')
     }
-  }, [photo, selectedCategory, geo.lat, geo.lng, address, suburb, postcode, councilId, councilName, note, reporterToken, isOnline, submit, queueReport])
+  }, [photo, effectiveCategory, ai.category, ai.confidence, userCorrectedAI, geo.lat, geo.lng, address, suburb, postcode, councilId, councilName, note, reporterToken, isOnline, submit, queueReport])
 
   const handleReportAnother = useCallback(() => {
     setPhoto(null)
@@ -162,7 +182,7 @@ export function ReportFlow() {
     [geo]
   )
 
-  const canSubmit = !!photo && !!selectedCategory && geo.lat !== null && geo.lng !== null && !isSubmitting
+  const canSubmit = !!photo && !!effectiveCategory && geo.lat !== null && geo.lng !== null && !isSubmitting
 
   // GPS has no fix and has stopped trying — the user needs a way through.
   const needsManualLocation = !geo.isLocating && geo.lat === null
@@ -267,11 +287,50 @@ export function ReportFlow() {
           </button>
         )}
 
-        {/* Category selection */}
-        <div>
-          <h2 className="mb-2 text-sm font-medium text-text-secondary">Select category</h2>
-          <CategoryPicker selected={selectedCategory} onSelect={setSelectedCategory} />
-        </div>
+        {/* ── Classification ──
+            While the model runs, the scan sequence occupies this space. When it
+            settles, the result card takes over. If classification is
+            unavailable for any reason, we fall straight through to the manual
+            picker — a broken classifier must never block a report (S7.11). */}
+        {preview && (ai.isClassifying || ai.isModelLoading) && (
+          <ScanOverlay
+            previewUrl={preview}
+            isModelLoading={ai.isModelLoading}
+            loadProgress={ai.loadProgress}
+          />
+        )}
+
+        {!ai.isClassifying && !ai.isModelLoading && ai.tier && ai.top2.length > 0 && (
+          <AIResultCard
+            top2={ai.top2}
+            tier={ai.tier}
+            selected={effectiveCategory}
+            onSelect={setSelectedCategory}
+            onOpenPicker={() => setShowPicker(true)}
+          />
+        )}
+
+        {ai.error && !ai.isClassifying && (
+          <p className="font-mono text-xs text-text-tertiary">
+            &gt; classifier unavailable — pick a category
+          </p>
+        )}
+
+        {/* Manual picker: always reachable, and shown by default whenever the
+            AI has not produced a usable answer. PRD §6.2 requires the category
+            selector to be available at any confidence level. */}
+        {(showPicker || ai.error || (!ai.tier && !ai.isClassifying && !ai.isModelLoading)) && (
+          <div>
+            <h2 className="mb-2 font-mono text-xs text-text-secondary">select category</h2>
+            <CategoryPicker
+              selected={effectiveCategory}
+              onSelect={(c) => {
+                setSelectedCategory(c)
+                setShowPicker(false)
+              }}
+            />
+          </div>
+        )}
 
         {/* Note input */}
         <div>

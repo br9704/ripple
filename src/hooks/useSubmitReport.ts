@@ -9,6 +9,11 @@ const RATE_LIMIT_KEY = 'ripple_report_timestamps'
 export interface ReportSubmitData {
   photo: Blob
   category: ReportCategory
+  /** What the on-device model predicted, if it ran at all. */
+  ai_category?: ReportCategory | null
+  ai_confidence?: number
+  /** True when the user picked something other than the AI's answer. */
+  user_corrected_ai?: boolean
   lat: number
   lng: number
   address: string | null
@@ -94,9 +99,13 @@ export function useSubmitReport() {
 
       const payload = {
         category: data.category,
-        ai_category: data.category, // Placeholder until Sprint 7 (AI classification)
-        ai_confidence: 0,
-        user_corrected_ai: false,
+        // Null when the classifier did not run (offline first use, load
+        // failure, unsupported device). The Edge Function defaults it to the
+        // final category, so the correction log never records a phantom
+        // prediction the model did not actually make.
+        ai_category: data.ai_category ?? undefined,
+        ai_confidence: data.ai_confidence ?? 0,
+        user_corrected_ai: data.user_corrected_ai ?? false,
         lat: data.lat,
         lng: data.lng,
         address: data.address,
