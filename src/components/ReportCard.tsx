@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { UpvoteButton } from '@/components/UpvoteButton'
 import { CATEGORY_MAP } from '@/constants/categories'
 import { STATUS_MAP } from '@/constants/statuses'
 import { timeAgo } from '@/lib/mapHelpers'
@@ -97,13 +98,8 @@ export function ReportCard({ report, onClose }: ReportCardProps) {
             </p>
           </div>
 
-          {/* Upvotes */}
-          <div className="flex items-center gap-2 border border-border px-3 py-2">
-            <span className="font-mono text-sm" aria-hidden="true">+</span>
-            <span className="text-sm text-text-secondary">
-              {report.upvote_count} {report.upvote_count === 1 ? 'person' : 'people'} saw this too
-            </span>
-          </div>
+          {/* Upvotes — S8. Replaces the static count with the real control. */}
+          <UpvoteButton reportId={report.id} initialCount={report.upvote_count} />
 
           {/* Report ID */}
           <p className="text-xs font-mono text-text-tertiary">
