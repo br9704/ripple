@@ -5,6 +5,7 @@ import { PhotoPreview } from '@/components/PhotoPreview'
 import { CategoryPicker } from '@/components/CategoryPicker'
 import { NoteInput } from '@/components/NoteInput'
 import { LocationStatus } from '@/components/LocationStatus'
+import { LocationPicker } from '@/components/LocationPicker'
 import { SubmissionSuccess } from '@/components/SubmissionSuccess'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useReporterToken } from '@/hooks/useReporterToken'
@@ -32,6 +33,7 @@ export function ReportFlow() {
   const [preview, setPreview] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<ReportCategory | null>(null)
   const [note, setNote] = useState('')
+  const [isPickingLocation, setIsPickingLocation] = useState(false)
 
   // Location enrichment
   const [address, setAddress] = useState<string | null>(null)
@@ -147,7 +149,18 @@ export function ReportFlow() {
     setStep('camera')
   }, [])
 
+  const handlePickLocation = useCallback(
+    (lat: number, lng: number) => {
+      geo.setManualPosition(lat, lng)
+      setIsPickingLocation(false)
+    },
+    [geo]
+  )
+
   const canSubmit = !!photo && !!selectedCategory && geo.lat !== null && geo.lng !== null && !isSubmitting
+
+  // GPS has no fix and has stopped trying — the user needs a way through.
+  const needsManualLocation = !geo.isLocating && geo.lat === null
 
   // Camera step
   if (step === 'camera') {
@@ -155,6 +168,17 @@ export function ReportFlow() {
       <CameraCapture
         onClose={() => navigate('/')}
         onPhotoCaptured={handlePhotoCaptured}
+      />
+    )
+  }
+
+  if (isPickingLocation) {
+    return (
+      <LocationPicker
+        initialLat={geo.lat}
+        initialLng={geo.lng}
+        onConfirm={handlePickLocation}
+        onCancel={() => setIsPickingLocation(false)}
       />
     )
   }
@@ -207,6 +231,35 @@ export function ReportFlow() {
           councilName={councilName}
           error={geo.error}
         />
+
+        {/* GPS gave up. Without this the submit button stays disabled forever
+            with nothing on screen to explain why. */}
+        {needsManualLocation && (
+          <div className="border border-border px-4 py-3">
+            <p className="font-mono text-xs text-text-secondary">
+              &gt; {geo.error ? 'location unavailable' : 'could not get a GPS fix'}
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsPickingLocation(true)}
+              className="mt-2 font-mono text-xs text-action underline-offset-4 hover:underline"
+            >
+              [ set the location manually → ]
+            </button>
+          </div>
+        )}
+
+        {/* Always available, even on a good fix — urban-canyon GPS is often
+            tens of metres out, and PRD §15 calls for manual adjustment. */}
+        {!needsManualLocation && geo.lat !== null && (
+          <button
+            type="button"
+            onClick={() => setIsPickingLocation(true)}
+            className="font-mono text-xs text-text-secondary underline-offset-4 transition-colors hover:text-text-primary hover:underline"
+          >
+            [ adjust location ]
+          </button>
+        )}
 
         {/* Category selection */}
         <div>

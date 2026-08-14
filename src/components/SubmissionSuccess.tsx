@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { CATEGORY_MAP } from '@/constants/categories'
 import type { ReportCategory } from '@/types'
 
@@ -62,12 +63,21 @@ export function SubmissionSuccess({
         </p>
       )}
 
-      {/* Actions */}
+      {/* Actions.
+          "View on map" was specified in MASTERPLAN S5.7 but never built, which
+          left this screen a dead end: with no TabBar rendered in ReportFlow,
+          the browser back button was the only way out after submitting. */}
       <div className="mt-8 flex flex-col gap-3 w-full max-w-xs">
+        <Link
+          to="/"
+          className="w-full rounded-lg bg-action px-4 py-3 text-center text-sm font-semibold text-text-primary transition-colors hover:bg-action-hover"
+        >
+          View on map
+        </Link>
         <button
           type="button"
           onClick={onReportAnother}
-          className="w-full rounded-lg bg-action px-4 py-3 text-sm font-semibold text-text-primary transition-colors hover:bg-action-hover active:bg-action-hover"
+          className="w-full rounded-lg border border-border px-4 py-3 text-sm font-semibold text-text-secondary transition-colors hover:text-text-primary"
         >
           Report another issue
         </button>
