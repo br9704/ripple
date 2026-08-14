@@ -11,6 +11,7 @@ const UNCLUSTERED_LAYER = 'unclustered-reports'
 const CLUSTER_LAYER = 'clusters'
 const CLUSTER_COUNT_LAYER = 'cluster-count'
 const GLYPH_LAYER = 'report-glyphs'
+const HEATMAP_LAYER = 'reports-heatmap'
 const SOURCE_ID = 'reports'
 
 // ── SIGNAL palette (mirrors src/index.css; Mapbox paint properties cannot
@@ -63,10 +64,12 @@ export interface MapHandle {
 interface MapComponentProps {
   reports: MapPin[]
   onPinClick: (reportId: string) => void
+  /** Heatmap replaces pins as the view mode, per PRD §6.3. */
+  showHeatmap?: boolean
   ref?: Ref<MapHandle>
 }
 
-function MapComponent({ reports, onPinClick, ref }: MapComponentProps) {
+function MapComponent({ reports, onPinClick, showHeatmap = false, ref }: MapComponentProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const onPinClickRef = useRef(onPinClick)
@@ -113,6 +116,38 @@ function MapComponent({ reports, onPinClick, ref }: MapComponentProps) {
         cluster: true,
         clusterRadius: MAP_CLUSTER_RADIUS,
         clusterMaxZoom: MAP_CLUSTER_MAX_ZOOM,
+      })
+
+      // Heatmap. Intensity is upvotes × severity × recency per PRD §6.3, with
+      // severity baked into the GeoJSON as `severity_weight` (see mapHelpers)
+      // because Mapbox expressions cannot do a table lookup.
+      map.addLayer({
+        id: HEATMAP_LAYER,
+        type: 'heatmap',
+        source: SOURCE_ID,
+        layout: { visibility: 'none' },
+        paint: {
+          'heatmap-weight': [
+            'interpolate', ['linear'], ['get', 'heat_weight'],
+            0, 0,
+            50, 1,
+          ],
+          'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 16, 3],
+          // PRD §6.3 specifies this scale explicitly: light yellow → orange → red.
+          // It is the one place in the app outside safety pins where colour
+          // beyond amber is sanctioned, because a density ramp cannot be
+          // encoded by shape.
+          'heatmap-color': [
+            'interpolate', ['linear'], ['heatmap-density'],
+            0, 'rgba(5,5,5,0)',
+            0.2, 'rgba(254,251,152,0.35)',
+            0.5, 'rgba(253,141,60,0.55)',
+            1, 'rgba(189,0,38,0.75)',
+          ],
+          'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 12, 16, 40],
+          // Fade rather than snap when filters change (MOTION.md:85).
+          'heatmap-opacity': 0.85,
+        },
       })
 
       // Cluster "chips" — square, hairline-bordered, unfilled. Instrument
@@ -276,6 +311,20 @@ function MapComponent({ reports, onPinClick, ref }: MapComponentProps) {
       { enableHighAccuracy: true, timeout: 5000 }
     )
   }, [])
+
+  // Heatmap vs pins. Guarded on layer existence because this can fire before
+  // 'load' has added the layers.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !map.getLayer(HEATMAP_LAYER)) return
+
+    map.setLayoutProperty(HEATMAP_LAYER, 'visibility', showHeatmap ? 'visible' : 'none')
+    for (const id of [CLUSTER_LAYER, CLUSTER_COUNT_LAYER, UNCLUSTERED_LAYER, GLYPH_LAYER]) {
+      if (map.getLayer(id)) {
+        map.setLayoutProperty(id, 'visibility', showHeatmap ? 'none' : 'visible')
+      }
+    }
+  }, [showHeatmap])
 
   // Replaces the previous escape hatch, where MapPage reached in with
   // document.querySelector('[data-locate-me]').click() against a hidden button.
