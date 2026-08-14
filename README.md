@@ -288,7 +288,8 @@ All twenty sprints are **code-complete**. Acceptance for anything touching the d
 | | Aug 2026 |
 |---|---|
 | Sprints code-complete | **20 / 20** (plus 6.5 and 6.6, inserted) |
-| Tests | **169** TS across 19 files, **46** SQL assertions, **28** PWA checks (from zero) |
+| Masterplan tasks | **214 complete · 0 open · 6 blocked on an owner input** |
+| Tests | **181** TS across 20 files, **46** SQL assertions, **28** PWA checks (from zero) |
 | Lint | 0 errors, 0 warnings, **0 suppressions** |
 | TypeScript | 0 errors, strict |
 | Migrations | 21 |
@@ -296,7 +297,7 @@ All twenty sprints are **code-complete**. Acceptance for anything touching the d
 
 ### What is proven
 
-- `pnpm tsc --noEmit`, `pnpm lint`, `pnpm test` — **169 tests**, zero lint errors, zero suppressions
+- `pnpm tsc --noEmit`, `pnpm lint`, `pnpm test` — **181 tests**, zero lint errors under `strictTypeChecked` type-aware linting
 - `pnpm build` — valid service worker, 37MB LiteRT WASM correctly excluded from precache, no server-side secret in the bundle
 - **`pnpm verify:db`** — all **21 migrations** applied to a real PostgreSQL 17, seed loaded, **46 behavioural + RLS assertions** passing. Running as `anon` with RLS enforced, an attacker provably cannot delete another user's upvote, read another user's notification email, harvest reporter tokens, or post as the council.
 - **`pnpm verify:pwa`** — **28/28** installability criteria: manifest, icons on disk, service worker with fetch handler and precache, navigation fallback, pinch-zoom permitted, and the four `apple-*` tags iOS uses instead of the manifest.

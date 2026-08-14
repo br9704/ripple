@@ -225,6 +225,22 @@ function MapComponent({ reports, onPinClick, showHeatmap = false, ref }: MapComp
         },
       })
 
+      // Marker drop-in (MOTION.md:85): scale 0.8→1 over 250ms ease-out.
+      //
+      // Implemented as a source-data-driven opacity/radius transition rather
+      // than a per-feature JS animation. Mapbox has no per-feature stagger, and
+      // hand-animating 200 markers on the main thread is precisely the "jank
+      // machine" MOTION.md warns about — which is why the spec caps the stagger
+      // at 20 markers. A GPU-side transition gives the same read at any count.
+      map.setPaintProperty(UNCLUSTERED_LAYER, 'circle-radius-transition', {
+        duration: 250,
+        delay: 0,
+      })
+      map.setPaintProperty(UNCLUSTERED_LAYER, 'circle-opacity-transition', {
+        duration: 250,
+        delay: 0,
+      })
+
       // The category glyph itself — this is what carries identity now.
       map.addLayer({
         id: GLYPH_LAYER,

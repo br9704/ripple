@@ -25,7 +25,16 @@ export function SubmissionSuccess({
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
       {/* Checkmark */}
-      <div className="mb-6 flex h-20 w-20 items-center justify-center border border-status-fixed">
+      {/* The signature motif, surface 1 of 3 (MOTION.md): rings expand once
+          from the point of impact, 600ms, fading as they grow. */}
+      <div className="relative mb-6 flex h-20 w-20 items-center justify-center border border-status-fixed">
+        {!queued && (
+          <span
+            aria-hidden="true"
+            className="ripple-ring pointer-events-none absolute h-40 w-40"
+            style={{ animationDuration: '600ms' }}
+          />
+        )}
         <span className="font-mono text-4xl text-status-fixed" aria-hidden="true">
           {queued ? '~' : '✓'}
         </span>
