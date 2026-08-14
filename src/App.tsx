@@ -8,6 +8,7 @@ import { ReportFlow } from '@/pages/ReportFlow'
 import { FeedPage } from '@/pages/FeedPage'
 import { MyReportsPage } from '@/pages/MyReportsPage'
 import { ReportDetailPage } from '@/pages/ReportDetailPage'
+import { SearchPage } from '@/pages/SearchPage'
 
 export default function App() {
   return (
@@ -20,27 +21,11 @@ export default function App() {
         <Route path="/report/:id" element={<ReportDetailPage />} />
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/my-reports" element={<MyReportsPage />} />
-        <Route path="/search" element={<ComingSoon title="Search" sprint="Sprint 12" />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <InstallBanner />
     </OfflineQueueProvider>
-  )
-}
-
-/**
- * Placeholder for routes whose sprint has not landed yet.
- * SIGNAL forbids dead links — an unbuilt destination says so plainly.
- */
-function ComingSoon({ title, sprint }: { title: string; sprint: string }) {
-  return (
-    <div className="flex h-screen flex-col items-center justify-center gap-3 bg-bg-primary px-6">
-      <span className="font-mono text-sm text-text-secondary">{title}</span>
-      <span className="font-mono text-xs text-text-tertiary">[coming soon — {sprint}]</span>
-      <Link to="/" className="mt-4 font-mono text-xs text-action underline-offset-4 hover:underline">
-        [← back to map]
-      </Link>
-    </div>
   )
 }
 
