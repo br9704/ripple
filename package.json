@@ -16,7 +16,10 @@
     "predev": "node scripts/sync-litert-wasm.mjs",
     "verify:db": "./scripts/verify-db.sh",
     "verify:pwa": "node scripts/verify-pwa.mjs",
-    "verify": "pnpm test:run && pnpm lint && tsc --noEmit && pnpm build && pnpm verify:pwa"
+    "verify": "pnpm test:run && pnpm lint && tsc --noEmit && pnpm build && pnpm verify:pwa",
+    "fetch:model": "node scripts/fetch-dev-model.mjs",
+    "bench:ai": "node scripts/bench-inference.mjs",
+    "verify:offline": "node scripts/verify-offline.mjs"
   },
   "dependencies": {
     "@litertjs/core": "^2.5.3",
@@ -47,6 +50,7 @@
     "fake-indexeddb": "^6.2.5",
     "globals": "^17.4.0",
     "jsdom": "^30.0.1",
+    "playwright": "^1.62.1",
     "postcss": "^8.5.8",
     "prettier": "^3.8.1",
     "tailwindcss": "^3.4.19",

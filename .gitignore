@@ -9,3 +9,10 @@ dist-ssr
 
 # LiteRT WASM runtime — synced from node_modules by scripts/sync-litert-wasm.mjs
 public/litert-wasm/
+
+# Dev classifier — fetched by scripts/fetch-dev-model.mjs, not committed (5MB)
+public/models/*.tflite
+
+# LiteRT ESM copies used only by the benchmark harness
+public/litert-wasm/dist/
+public/litert-wasm/wasm-utils/
