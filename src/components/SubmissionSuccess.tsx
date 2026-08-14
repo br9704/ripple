@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { DuplicateAlert, type DuplicateNearby } from '@/components/DuplicateAlert'
 import { CATEGORY_MAP } from '@/constants/categories'
 import type { ReportCategory } from '@/types'
 
@@ -8,6 +9,7 @@ interface SubmissionSuccessProps {
   councilName: string | null
   onReportAnother: () => void
   queued?: boolean
+  duplicate?: DuplicateNearby | null
 }
 
 export function SubmissionSuccess({
@@ -16,6 +18,7 @@ export function SubmissionSuccess({
   councilName,
   onReportAnother,
   queued = false,
+  duplicate = null,
 }: SubmissionSuccessProps) {
   const cat = CATEGORY_MAP[category]
 
@@ -62,6 +65,8 @@ export function SubmissionSuccess({
           Your report is now visible to the community.
         </p>
       )}
+
+      {duplicate && <DuplicateAlert duplicate={duplicate} />}
 
       {/* Actions.
           "View on map" was specified in MASTERPLAN S5.7 but never built, which

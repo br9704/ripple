@@ -7,6 +7,7 @@ import { NoteInput } from '@/components/NoteInput'
 import { LocationStatus } from '@/components/LocationStatus'
 import { LocationPicker } from '@/components/LocationPicker'
 import { SubmissionSuccess } from '@/components/SubmissionSuccess'
+import type { DuplicateNearby } from '@/components/DuplicateAlert'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useReporterToken } from '@/hooks/useReporterToken'
 import { useSubmitReport } from '@/hooks/useSubmitReport'
@@ -45,6 +46,7 @@ export function ReportFlow() {
   const [submittedAddress, setSubmittedAddress] = useState<string | null>(null)
   const [submittedCategory, setSubmittedCategory] = useState<ReportCategory>('other')
   const [submittedCouncil, setSubmittedCouncil] = useState<string | null>(null)
+  const [duplicateNearby, setDuplicateNearby] = useState<DuplicateNearby | null>(null)
 
   // Council detection — derived from coordinates + boundaries (pure, no side effects)
   const detectedCouncil = useMemo(() => {
@@ -134,6 +136,8 @@ export function ReportFlow() {
     if (result) {
       setSubmittedAddress(result.address ?? address)
       setSubmittedCouncil(result.council_name ?? councilName)
+      // The server has always returned this; the client used to discard it.
+      setDuplicateNearby(result.duplicate_nearby ?? null)
       setStep('success')
     }
   }, [photo, selectedCategory, geo.lat, geo.lng, address, suburb, postcode, councilId, councilName, note, reporterToken, isOnline, submit, queueReport])
@@ -146,6 +150,7 @@ export function ReportFlow() {
     setAddress(null)
     setSuburb(null)
     setPostcode(null)
+    setDuplicateNearby(null)
     setStep('camera')
   }, [])
 
@@ -193,6 +198,7 @@ export function ReportFlow() {
           councilName={submittedCouncil}
           onReportAnother={handleReportAnother}
           queued={step === 'queued'}
+          duplicate={duplicateNearby}
         />
       </div>
     )
