@@ -21,6 +21,8 @@ export interface ReportSubmitData {
   postcode: string | null
   council_id: string | null
   note: string
+  /** Opt-in only — absent unless the user typed one (PRD §13.1). */
+  notify_email?: string
   reporter_token: string
 }
 
@@ -113,6 +115,7 @@ export function useSubmitReport() {
         postcode: data.postcode,
         council_id: data.council_id,
         note: data.note || undefined,
+        notify_email: data.notify_email || undefined,
         reporter_token: data.reporter_token,
         photo_base64: photoBase64,
       }

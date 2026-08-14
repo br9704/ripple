@@ -4,6 +4,7 @@ import { CameraCapture } from '@/components/CameraCapture'
 import { PhotoPreview } from '@/components/PhotoPreview'
 import { CategoryPicker } from '@/components/CategoryPicker'
 import { NoteInput } from '@/components/NoteInput'
+import { NotifyOptIn } from '@/components/NotifyOptIn'
 import { LocationStatus } from '@/components/LocationStatus'
 import { LocationPicker } from '@/components/LocationPicker'
 import { AIResultCard } from '@/components/AIResultCard'
@@ -37,6 +38,7 @@ export function ReportFlow() {
   const [preview, setPreview] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<ReportCategory | null>(null)
   const [note, setNote] = useState('')
+  const [notifyEmail, setNotifyEmail] = useState('')
   const [isPickingLocation, setIsPickingLocation] = useState(false)
 
   // Location enrichment
@@ -122,6 +124,7 @@ export function ReportFlow() {
       postcode,
       council_id: councilId,
       note,
+      notify_email: notifyEmail.trim() || undefined,
       reporter_token: reporterToken,
     }
 
@@ -160,7 +163,7 @@ export function ReportFlow() {
       setDuplicateNearby(result.duplicate_nearby ?? null)
       setStep('success')
     }
-  }, [photo, effectiveCategory, ai.category, ai.confidence, userCorrectedAI, geo.lat, geo.lng, address, suburb, postcode, councilId, councilName, note, reporterToken, isOnline, submit, queueReport])
+  }, [photo, effectiveCategory, ai.category, ai.confidence, userCorrectedAI, geo.lat, geo.lng, address, suburb, postcode, councilId, councilName, note, notifyEmail, reporterToken, isOnline, submit, queueReport])
 
   const handleReportAnother = useCallback(() => {
     setPhoto(null)
@@ -334,9 +337,12 @@ export function ReportFlow() {
 
         {/* Note input */}
         <div>
-          <h2 className="mb-2 text-sm font-medium text-text-secondary">Add a note (optional)</h2>
+          <h2 className="mb-2 font-mono text-xs text-text-secondary">add a note (optional)</h2>
           <NoteInput value={note} onChange={setNote} />
         </div>
+
+        {/* Status notifications — strictly opt-in (PRD §13.1) */}
+        <NotifyOptIn value={notifyEmail} onChange={setNotifyEmail} />
 
         {/* Submit error */}
         {submitError && (

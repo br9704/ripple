@@ -27,6 +27,9 @@ const SubmitReportSchema = z.object({
   council_id: z.string().uuid().nullish(),
   note: z.string().max(140, "Note exceeds 140 character limit").optional(),
   reporter_token: z.string().min(1),
+  // Opt-in status notifications (PRD §6.5). Absent for anonymous reports,
+  // which is the default and the common case.
+  notify_email: z.string().email().max(254).optional(),
   photo_base64: z.string().min(1),
   additional_photos: z.array(z.string()).max(2).optional(),
 });
@@ -179,7 +182,27 @@ Deno.serve(async (req: Request) => {
       changed_by: "system",
     });
 
-    // TODO: Sprint 12 — Elasticsearch sync (async, non-blocking)
+    // ── Opt-in status notifications (PRD §6.5) ──
+    // Written only when the user actually supplied an address. There is no
+    // implicit subscription anywhere in this codebase.
+    if (body.notify_email) {
+      const { error: notifyError } = await supabase.from("user_notifications").insert({
+        reporter_token: body.reporter_token,
+        notification_type: "email",
+        email: body.notify_email,
+        report_id: report.id,
+        is_active: true,
+      });
+      // A failed subscription must not fail the report — the citizen's primary
+      // intent was to report the problem, not to sign up for email.
+      if (notifyError) {
+        console.error("Notification opt-in failed:", notifyError.message);
+      }
+    }
+
+    // Search is served by Postgres FTS (migration 016), so there is no external
+    // index to sync. The previous Elasticsearch TODO here is obsolete — see the
+    // Sprint 12 delta in MASTERPLAN and OG4.
 
     // ── Look up council name for response ──
     let councilName = "";
