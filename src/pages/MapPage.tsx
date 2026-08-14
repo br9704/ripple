@@ -7,6 +7,7 @@ import { TabBar } from '@/components/TabBar'
 import { CameraFab } from '@/components/CameraFab'
 import { MapControls } from '@/components/MapControls'
 import { useReports } from '@/hooks/useReports'
+import { TypingLine } from '@/components/TypingLine'
 import type { MapPin } from '@/types'
 
 export function MapPage() {
@@ -35,7 +36,7 @@ export function MapPage() {
       <div className="absolute inset-0 pt-[52px] pb-14">
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
-            <span className="text-sm text-text-secondary">Loading map...</span>
+            <TypingLine text="loading map..." />
           </div>
         ) : (
           <MapComponent

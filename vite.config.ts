@@ -14,8 +14,8 @@ export default defineConfig({
         description: 'See a problem. Snap it. We\'ll fix it.',
         start_url: '/',
         display: 'standalone',
-        background_color: '#0D1117',
-        theme_color: '#E85D04',
+        background_color: '#050505',
+        theme_color: '#050505',
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },

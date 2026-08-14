@@ -10,15 +10,49 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
 const UNCLUSTERED_LAYER = 'unclustered-reports'
 const CLUSTER_LAYER = 'clusters'
 const CLUSTER_COUNT_LAYER = 'cluster-count'
+const GLYPH_LAYER = 'report-glyphs'
 const SOURCE_ID = 'reports'
 
-// Build Mapbox match expression for category → color
-function getCategoryColorExpression(): mapboxgl.ExpressionSpecification {
-  const stops: (string)[] = []
+// ── SIGNAL palette (mirrors src/index.css; Mapbox paint properties cannot
+//    read CSS custom properties, so these are the one sanctioned duplication) ──
+const BG = '#050505'
+const TEXT_PRIMARY = '#f0ece4'
+const TEXT_SECONDARY = '#98928a'
+const AMBER = '#ffb000'
+const STEEL = '#2c2925'
+
+/**
+ * category → glyph, for the symbol layer's text-field.
+ *
+ * Replaces the old category → colour match expression. Under SIGNAL there is
+ * one accent, so ten categories cannot be encoded by hue; identity moves to
+ * shape. This also means pins survive greyscale printing, colour blindness and
+ * harsh outdoor light — PRD §10.2's actual intent.
+ */
+function getCategoryGlyphExpression(): mapboxgl.ExpressionSpecification {
+  const stops: string[] = []
   for (const [key, config] of Object.entries(CATEGORY_MAP)) {
-    stops.push(key, config.color)
+    stops.push(key, config.glyph)
   }
-  return ['match', ['get', 'category'], ...stops, '#8B949E'] as mapboxgl.ExpressionSpecification
+  return ['match', ['get', 'category'], ...stops, '○'] as mapboxgl.ExpressionSpecification
+}
+
+/**
+ * Amber is reserved for safety-critical categories — the single sanctioned
+ * exception to grayscale pins, and the reason a parent scanning the map can
+ * still pick out a dead streetlight near a school at a glance.
+ */
+function getCategoryColorExpression(): mapboxgl.ExpressionSpecification {
+  const safetyKeys = Object.values(CATEGORY_MAP)
+    .filter((c) => c.isSafety)
+    .map((c) => c.key)
+
+  return [
+    'match',
+    ['get', 'category'],
+    ...safetyKeys.flatMap((k) => [k, AMBER]),
+    TEXT_SECONDARY,
+  ] as unknown as mapboxgl.ExpressionSpecification
 }
 
 export interface MapHandle {
@@ -81,25 +115,26 @@ function MapComponent({ reports, onPinClick, ref }: MapComponentProps) {
         clusterMaxZoom: MAP_CLUSTER_MAX_ZOOM,
       })
 
-      // Cluster circles
+      // Cluster "chips" — square, hairline-bordered, unfilled. Instrument
+      // readouts rather than coloured bubbles.
       map.addLayer({
         id: CLUSTER_LAYER,
         type: 'circle',
         source: SOURCE_ID,
         filter: ['has', 'point_count'],
         paint: {
-          'circle-color': '#E85D04',
+          'circle-color': BG,
           'circle-radius': [
             'step', ['get', 'point_count'],
-            18, 10, 24, 50, 32,
+            16, 10, 21, 50, 28,
           ],
-          'circle-opacity': 0.85,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#0D1117',
+          'circle-opacity': 0.92,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': STEEL,
         },
       })
 
-      // Cluster count labels
+      // Cluster count labels — monospace, tabular.
       map.addLayer({
         id: CLUSTER_COUNT_LAYER,
         type: 'symbol',
@@ -108,30 +143,50 @@ function MapComponent({ reports, onPinClick, ref }: MapComponentProps) {
         layout: {
           'text-field': '{point_count_abbreviated}',
           'text-font': ['DIN Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 13,
+          'text-size': 12,
         },
         paint: {
-          'text-color': '#F0F6FC',
+          'text-color': TEXT_PRIMARY,
         },
       })
 
-      // Unclustered report pins
+      // Unclustered pin backing — square-ish dark disc so the glyph stays
+      // legible over any basemap content.
       map.addLayer({
         id: UNCLUSTERED_LAYER,
         type: 'circle',
         source: SOURCE_ID,
         filter: ['!', ['has', 'point_count']],
         paint: {
-          'circle-color': getCategoryColorExpression(),
+          'circle-color': BG,
+          // Radius still scales with upvote_count (PRD §6.3, max ~2x) — social
+          // proof is legible by size rather than by hue.
           'circle-radius': [
             'interpolate', ['linear'], ['get', 'upvote_count'],
-            0, 8,
-            10, 11,
-            50, 16,
+            0, 9,
+            10, 12,
+            50, 17,
           ],
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#0D1117',
-          'circle-opacity': 0.9,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': getCategoryColorExpression(),
+          'circle-opacity': 0.92,
+        },
+      })
+
+      // The category glyph itself — this is what carries identity now.
+      map.addLayer({
+        id: GLYPH_LAYER,
+        type: 'symbol',
+        source: SOURCE_ID,
+        filter: ['!', ['has', 'point_count']],
+        layout: {
+          'text-field': getCategoryGlyphExpression(),
+          'text-font': ['DIN Pro Medium', 'Arial Unicode MS Bold'],
+          'text-size': 12,
+          'text-allow-overlap': true,
+        },
+        paint: {
+          'text-color': getCategoryColorExpression(),
         },
       })
 
@@ -161,6 +216,11 @@ function MapComponent({ reports, onPinClick, ref }: MapComponentProps) {
       })
 
       // Cursor on hover
+      map.on('click', GLYPH_LAYER, (e) => {
+        const id = e.features?.[0]?.properties?.id
+        if (id) onPinClickRef.current(id)
+      })
+
       map.on('mouseenter', UNCLUSTERED_LAYER, () => {
         map.getCanvas().style.cursor = 'pointer'
       })

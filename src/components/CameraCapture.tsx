@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useCameraCapture } from '@/hooks/useCameraCapture'
 import { PhotoPreview } from '@/components/PhotoPreview'
+import { TypingLine } from '@/components/TypingLine'
 
 interface CameraCaptureProps {
   onClose: () => void
@@ -77,8 +78,8 @@ export function CameraCapture({ onClose, onPhotoCaptured }: CameraCaptureProps) 
 
             {/* Processing indicator */}
             {isProcessing && (
-              <div className="mb-6 text-sm text-text-secondary">
-                Processing photo...
+              <div className="mb-6">
+                <TypingLine text="processing photo..." />
               </div>
             )}
 
@@ -97,9 +98,9 @@ export function CameraCapture({ onClose, onPhotoCaptured }: CameraCaptureProps) 
             type="button"
             onClick={capture}
             aria-label="Take photo"
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-action shadow-glow transition-transform active:scale-95"
+            className="flex h-16 w-16 items-center justify-center border-2 border-action bg-bg-primary text-action transition-colors duration-150 ease-signal active:bg-action active:text-bg-primary"
           >
-            <div className="h-12 w-12 rounded-full border-[3px] border-text-primary" />
+            <span className="font-mono text-2xl" aria-hidden="true">◉</span>
           </button>
         </div>
       )}

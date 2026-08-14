@@ -2,12 +2,14 @@ import { Routes, Route, Link } from 'react-router-dom'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { InstallBanner } from '@/components/InstallBanner'
 import { OfflineQueueProvider } from '@/components/OfflineQueueProvider'
+import { PageTransition } from '@/components/PageTransition'
 import { MapPage } from '@/pages/MapPage'
 import { ReportFlow } from '@/pages/ReportFlow'
 
 export default function App() {
   return (
     <OfflineQueueProvider>
+      <PageTransition />
       <OfflineBanner />
       <Routes>
         <Route path="/" element={<MapPage />} />

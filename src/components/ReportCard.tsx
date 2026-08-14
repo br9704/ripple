@@ -27,14 +27,15 @@ export function ReportCard({ report, onClose }: ReportCardProps) {
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        // MOTION.md:11 — ease-out or linear only. No bounce. No spring.
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         drag="y"
         dragConstraints={{ top: 0 }}
         dragElastic={0.2}
         onDragEnd={(_e, info) => {
           if (info.offset.y > 100) onClose()
         }}
-        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-xl bg-bg-secondary border-t border-border shadow-card"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-bg-secondary border-t border-border-bright"
       >
         {/* Drag handle */}
         <div className="flex justify-center py-3">
@@ -59,10 +60,14 @@ export function ReportCard({ report, onClose }: ReportCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span
-                className="flex h-8 w-8 items-center justify-center rounded-full text-sm"
-                style={{ backgroundColor: cat?.color + '20', color: cat?.color }}
+                aria-hidden="true"
+                className={`flex h-8 w-8 items-center justify-center border font-mono text-sm ${
+                  cat?.isSafety
+                    ? 'border-action text-action'
+                    : 'border-border-bright text-text-secondary'
+                }`}
               >
-                {cat?.icon}
+                {cat?.glyph}
               </span>
               <span className="text-sm font-semibold text-text-primary">
                 {cat?.label ?? report.category}
@@ -83,7 +88,7 @@ export function ReportCard({ report, onClose }: ReportCardProps) {
           <div className="space-y-1">
             {report.address && (
               <p className="text-sm text-text-primary truncate">
-                <span className="text-text-secondary" aria-hidden="true">📍 </span>
+                <span className="font-mono text-text-secondary" aria-hidden="true">&gt; </span>
                 {report.address}
               </p>
             )}
@@ -93,8 +98,8 @@ export function ReportCard({ report, onClose }: ReportCardProps) {
           </div>
 
           {/* Upvotes */}
-          <div className="flex items-center gap-2 rounded-lg bg-bg-elevated px-3 py-2">
-            <span className="text-sm" aria-hidden="true">👍</span>
+          <div className="flex items-center gap-2 border border-border px-3 py-2">
+            <span className="font-mono text-sm" aria-hidden="true">+</span>
             <span className="text-sm text-text-secondary">
               {report.upvote_count} {report.upvote_count === 1 ? 'person' : 'people'} saw this too
             </span>

@@ -25,11 +25,12 @@ export function SubmissionSuccess({
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
       {/* Checkmark */}
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-status-fixed/20">
-        <span className="text-4xl text-status-fixed" role="img" aria-label="Success">
-          {queued ? '📡' : '✓'}
+      <div className="mb-6 flex h-20 w-20 items-center justify-center border border-status-fixed">
+        <span className="font-mono text-4xl text-status-fixed" aria-hidden="true">
+          {queued ? '~' : '✓'}
         </span>
       </div>
+      <span className="sr-only">{queued ? 'Report queued' : 'Report submitted'}</span>
 
       {/* Heading */}
       <h1 className="font-display text-2xl font-bold text-text-primary">
@@ -46,11 +47,11 @@ export function SubmissionSuccess({
       <div className="mt-6 space-y-2 text-sm">
         {address && (
           <p className="text-text-secondary">
-            <span aria-hidden="true">📍</span> {address}
+            <span aria-hidden="true" className="font-mono">&gt;</span> {address}
           </p>
         )}
         <p className="text-text-secondary">
-          Category: {cat?.icon} {cat?.label ?? category}
+          Category: {cat?.glyph} {cat?.label ?? category}
         </p>
         {councilName && (
           <p className="text-text-secondary">

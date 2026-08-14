@@ -31,7 +31,7 @@ export function InstallBanner() {
   return (
     <div
       role="banner"
-      className="fixed bottom-20 left-4 right-4 z-40 flex items-center gap-3 rounded-lg bg-bg-elevated border border-border p-4 shadow-card"
+      className="fixed bottom-20 left-4 right-4 z-40 flex items-center gap-3 bg-bg-secondary border border-border-bright p-4"
     >
       <div className="flex-1">
         <p className="text-sm font-semibold text-text-primary">

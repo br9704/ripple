@@ -20,7 +20,7 @@ export function LocationStatus({
   if (error) {
     return (
       <div className="flex items-start gap-2 rounded-lg bg-status-declined/10 px-3 py-2.5 text-sm">
-        <span aria-hidden="true">📍</span>
+        <span aria-hidden="true" className="font-mono">&gt;</span>
         <div>
           <p className="text-status-declined">{error}</p>
           <p className="mt-1 text-xs text-text-tertiary">
@@ -34,7 +34,7 @@ export function LocationStatus({
   if (isLocating) {
     return (
       <div className="flex items-center gap-2 rounded-lg bg-bg-elevated px-3 py-2.5 text-sm text-text-secondary">
-        <span className="animate-pulse" aria-hidden="true">📍</span>
+        <span className="font-mono status-pulse" aria-hidden="true">&gt;</span>
         <span>
           Getting location...
           {timedOut && (
@@ -48,7 +48,7 @@ export function LocationStatus({
   if (lat !== null && lng !== null) {
     return (
       <div className="flex items-start gap-2 rounded-lg bg-bg-elevated px-3 py-2.5 text-sm">
-        <span aria-hidden="true">📍</span>
+        <span aria-hidden="true" className="font-mono">&gt;</span>
         <div className="min-w-0">
           <p className="truncate text-text-primary">
             {address ?? `${lat.toFixed(4)}, ${lng.toFixed(4)}`}

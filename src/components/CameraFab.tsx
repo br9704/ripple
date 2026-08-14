@@ -1,5 +1,17 @@
 import { useNavigate } from 'react-router-dom'
 
+/**
+ * Primary CTA — a bracketed instrument control.
+ *
+ * The previous version was the single most non-compliant element in the repo:
+ * `rounded-full bg-action shadow-glow animate-pulse-slow` broke four SIGNAL
+ * rules at once (radius, shadow, sparing-accent, no-bounce — a 2s scale(1.05)
+ * breathe). SIGNAL's amber allowance explicitly covers CTAs, so amber *type*
+ * inside a hairline bracket survives; a 64px glowing pulsing disc does not.
+ *
+ * PRD §10.2 requires a minimum 60x60pt target for this control, so the hit area
+ * is preserved even though the visual weight drops sharply.
+ */
 export function CameraFab() {
   const navigate = useNavigate()
 
@@ -8,12 +20,14 @@ export function CameraFab() {
       type="button"
       onClick={() => navigate('/report')}
       aria-label="Report an issue"
-      className="fixed bottom-[72px] left-1/2 z-50 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-action shadow-glow animate-pulse-slow"
+      className="fixed bottom-[72px] left-1/2 z-50 flex h-[60px] min-w-[160px] -translate-x-1/2 items-center justify-center gap-2 border border-action bg-bg-primary px-6 font-mono text-sm tracking-wide text-action transition-colors duration-150 ease-signal hover:bg-action hover:text-bg-primary active:bg-action active:text-bg-primary"
     >
-      <svg className="h-7 w-7 text-text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
+      <span aria-hidden="true">[</span>
+      <span aria-hidden="true" className="status-pulse">
+        ◉
+      </span>
+      <span>REPORT</span>
+      <span aria-hidden="true">]</span>
     </button>
   )
 }

@@ -1,55 +1,55 @@
 /** @type {import('tailwindcss').Config} */
+
+// SIGNAL tokens. Source of truth: ~/bruno-portfolio/CLAUDE.md
+// § "Redesign Design Decisions (2026-07 · SIGNAL)".
+//
+// Values mirror the CSS custom properties in src/index.css. Legacy key names
+// (bg.primary, action.DEFAULT, …) are retained deliberately so the migration is
+// a value swap at the leaves rather than a rename across the whole component
+// tree — the names are structural, only the values were wrong.
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
         bg: {
-          primary: '#0D1117',
-          secondary: '#161B22',
-          elevated: '#21262D',
+          primary: '#050505',   // warm black
+          secondary: '#0b0a09', // surface
+          elevated: '#0b0a09',  // SIGNAL has no elevation ladder — one surface
         },
         border: {
-          DEFAULT: '#30363D',
-          bright: '#484F58',
+          DEFAULT: '#1b1916',   // hairline — structural rules
+          bright: '#2c2925',    // steel — visible border
         },
         text: {
-          primary: '#F0F6FC',
-          secondary: '#8B949E',
-          tertiary: '#484F58',
+          primary: '#f0ece4',   // warm white
+          secondary: '#98928a',
+          tertiary: '#55504a',
         },
+        // The ONE accent. Used sparingly: cursor, status dots, CTAs, focus
+        // brackets, key data. Never as a large filled surface.
         action: {
-          DEFAULT: '#E85D04',
-          hover: '#F48C06',
+          DEFAULT: '#ffb000',   // amber (phosphor)
+          hover: '#ffc94d',
+          dim: '#8f6300',
         },
         status: {
-          reported: '#8B949E',
-          acknowledged: '#388BFD',
-          'in-progress': '#F0883E',
-          fixed: '#3FB950',
-          declined: '#F85149',
-        },
-        cat: {
-          pothole: '#F85149',
-          streetlight: '#F0883E',
-          graffiti: '#BC8CFF',
-          signage: '#F0883E',
-          accessibility: '#388BFD',
-          dumping: '#986B4A',
-          water: '#39D0D8',
-          tree: '#3FB950',
-          footpath: '#E3B341',
-          other: '#8B949E',
+          reported: '#98928a',
+          acknowledged: '#8f6300',
+          'in-progress': '#ffb000',
+          fixed: '#4a7c4e',     // the only green in the system (MOTION.md:89)
+          declined: '#55504a',  // dim, not red — refusal is information
         },
         upvote: {
-          DEFAULT: '#F0883E',
-          active: '#E85D04',
+          DEFAULT: '#98928a',
+          active: '#ffb000',
         },
       },
       fontFamily: {
-        display: ['Syne', 'Inter', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        // Inter removed — SIGNAL excludes it by name.
+        display: ['Syne', 'sans-serif'],
+        body: ['Syne', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       fontSize: {
         xs: '0.6875rem',
@@ -60,23 +60,35 @@ export default {
         '2xl': '1.75rem',
         '4xl': '2.5rem',
       },
+      // Effectively square. The ripple ring is the sole exception and is
+      // defined in index.css, not here.
       borderRadius: {
-        sm: '6px',
-        md: '8px',
-        lg: '12px',
-        xl: '16px',
+        sm: '2px',
+        md: '2px',
+        lg: '2px',
+        xl: '2px',
+        full: '2px',
       },
+      // No shadows, no glows. Depth comes from hairline borders.
       boxShadow: {
-        card: '0 2px 8px rgba(0,0,0,0.3)',
-        glow: '0 0 20px rgba(232,93,4,0.5)',
+        none: 'none',
+      },
+      transitionTimingFunction: {
+        signal: 'cubic-bezier(0.16, 1, 0.3, 1)', // ease-out
       },
       animation: {
-        'pulse-slow': 'pulse-slow 2s ease-in-out infinite',
+        'status-pulse': 'status-pulse 2s ease-in-out infinite',
+        'scan-line': 'scan-line 1200ms linear infinite',
       },
       keyframes: {
-        'pulse-slow': {
-          '0%, 100%': { transform: 'translate(-50%, 0) scale(1)' },
-          '50%': { transform: 'translate(-50%, 0) scale(1.05)' },
+        'status-pulse': {
+          '0%, 100%': { opacity: '0.3' },
+          '50%': { opacity: '1' },
+        },
+        // Sprint 7's classification scan sweep.
+        'scan-line': {
+          '0%': { transform: 'translateY(0%)' },
+          '100%': { transform: 'translateY(100%)' },
         },
       },
     },
