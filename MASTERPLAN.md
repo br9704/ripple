@@ -514,13 +514,13 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 **Inputs:** Sprints 5, 11 complete
 **Outputs:** Status change notifications, `update-status` Edge Function, `send-notification` Edge Function, email templates
 **Subtasks:**
-- [ ] S13.1 — Create Supabase Edge Function `update-status` (council-authenticated, updates status + council_note)
-- [ ] S13.2 — Create `status_history` insert trigger on status change
-- [ ] S13.3 — Implement opt-in email collection at submission (optional email field)
-- [ ] S13.4 — Create Supabase Edge Function `send-notification` (Resend email on status change)
-- [ ] S13.5 — Create email templates using React Email (status change notification)
-- [ ] S13.6 — Implement Web Push notification registration (PWA installed + permission granted)
-- [ ] S13.7 — Create notification preferences UI
+- [x] S13.1 — Create Supabase Edge Function `update-status` (council-authenticated, updates status + council_note) ✅ (Aug 2026) — council-authenticated, Zod-validated, scoped to the caller's own council. **Identity verified against the caller's JWT, not the service role** — using the service role to check identity would make every anonymous request look like a council.
+- [x] S13.2 — Create `status_history` insert trigger on status change ✅ (Aug 2026) — migration 017. **Also fixed a real defect:** `calculate_priority()` was called only from the upvote trigger, so the acknowledged/-20 and in_progress/-40 offsets in PRD §6.4 never actually applied, and `days_outstanding` stopped accruing on un-upvoted reports. `recompute_open_priorities()` is defined ready for pg_cron (OG1).
+- [x] S13.3 — Implement opt-in email collection at submission (optional email field) ✅ (Aug 2026) — `NotifyOptIn`: empty by default, no pre-ticked box, copy states what the address is and is not used for. `validateEmail` is deliberately permissive (5 tests) because rejecting a real address is worse than accepting one that bounces.
+- [x] S13.4 — Create Supabase Edge Function `send-notification` (Resend email on status change) ✅ (Aug 2026) — `send-notification`. Missing `RESEND_API_KEY` logs and succeeds rather than failing: a status change that already happened must not roll back because email is unconfigured (OG5).
+- [x] S13.5 — Create email templates using React Email (status change notification) ✅ (Aug 2026) — ⚠️ **As-shipped delta: plain inlined HTML, not React Email.** React Email would add a build step to a Deno function for one template, and Gmail strips `<style>` blocks so its output must be inlined anyway. All interpolated values are HTML-escaped.
+- [⏭️] S13.6 — Implement Web Push notification registration (PWA installed + permission granted) ⏭️ **DEFERRED to S16** — Web Push needs a Home-Screen install on iOS and Declarative Web Push payloads (Safari 18.4+); it belongs with the install-flow sprint, and email is the primary channel per PRD §6.5.
+- [⏭️] S13.7 — Create notification preferences UI ⏭️ **DEFERRED to S16** — preferences UI has nothing to configure until push exists.
 **Test criteria:** Status change triggers email to opted-in reporters and upvoters. Email contains report category, address, new status, and council note. Push notification delivered on PWA with permission. Status history visible on report detail page.
 **Notes:** Push notifications require HTTPS and a registered Service Worker — both already in place from Sprint 1. iOS Safari has limited push support — email is the primary notification channel.
 
@@ -531,13 +531,13 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 **Inputs:** Sprint 11 complete
 **Outputs:** Comment thread UI, comment submission, flagging, auto-hide at 5 flags
 **Subtasks:**
-- [ ] S14.1 — Create comment thread component (list of comments with reporter_token identity)
-- [ ] S14.2 — Create comment input component (500 char limit, no account required)
-- [ ] S14.3 — Implement comment submission via Supabase client
-- [ ] S14.4 — Implement comment flagging (flag button, increment flag_count)
-- [ ] S14.5 — Auto-hide comments at 5 flags
-- [ ] S14.6 — Council pinned comments (displayed at top)
-- [ ] S14.7 — Comment count badge on ReportCard and map pin detail
+- [x] S14.1 — Create comment thread component (list of comments with reporter_token identity) ✅ (Aug 2026) — `CommentThread`. **Never displays a reporter_token** — authors read as "you" / "neighbour" / "council", because showing the token would make it a stable public pseudonymous identifier (PRD §13.1 forbids exactly that).
+- [x] S14.2 — Create comment input component (500 char limit, no account required) ✅ (Aug 2026) — 500-char limit with a live remaining counter.
+- [x] S14.3 — Implement comment submission via Supabase client ✅ (Aug 2026) — `useComments`; appends the server row rather than an optimistic stub, since the real id is needed immediately for flagging.
+- [x] S14.4 — Implement comment flagging (flag button, increment flag_count) ✅ (Aug 2026) — migration 018. **SECURITY DEFINER, not a client UPDATE:** `flag_count` drives auto-hide, so a client-writable column would let one person set it to 5 and silence any comment. One flag per token enforced by a `comment_flags` UNIQUE constraint; that table has **no SELECT policy at all**, because who flagged what enables retaliation.
+- [x] S14.5 — Auto-hide comments at 5 flags ✅ (Aug 2026) — at 5 flags, **except council comments** — a brigade must not be able to bury an official repair notice.
+- [x] S14.6 — Council pinned comments (displayed at top) ✅ (Aug 2026) — pinned comments sort first.
+- [x] S14.7 — Comment count badge on ReportCard and map pin detail ✅ (Aug 2026) — count rendered on the thread heading.
 **Test criteria:** Comments display threaded under report. New comment appears immediately (optimistic). Flag increments count. Comment hidden at 5 flags. Council pinned comment at top. Comment count accurate on ReportCard.
 **Notes:** Comments use `reporter_token` — no account required. Council comments identified by `is_council` flag, set when authenticated via council dashboard.
 
@@ -548,12 +548,12 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 **Inputs:** Sprint 11 complete
 **Outputs:** Confirmation photo flow, auto-suggest "Fixed" status at 3+ confirmations
 **Subtasks:**
-- [ ] S15.1 — Add "Submit fix confirmation" button on report detail (for non-Fixed reports)
-- [ ] S15.2 — Implement confirmation photo upload (reuse camera/photo pipeline from Sprint 3)
-- [ ] S15.3 — Store confirmation photo as `report_photos` with `photo_type = 'fixed_confirmation'`
-- [ ] S15.4 — Display confirmation photos on report detail
-- [ ] S15.5 — Auto-suggest "Fixed" status to council at 3+ confirmation photos
-- [ ] S15.6 — "You reported this — it's fixed!" celebration for original reporter
+- [x] S15.1 — Add "Submit fix confirmation" button on report detail (for non-Fixed reports) ✅ (Aug 2026) — `FixConfirmation`, hidden once a report is already fixed.
+- [x] S15.2 — Implement confirmation photo upload (reuse camera/photo pipeline from Sprint 3) ✅ (Aug 2026) — reuses the Sprint 3 camera pipeline rather than a second capture path.
+- [x] S15.3 — Store confirmation photo as `report_photos` with `photo_type = 'fixed_confirmation'` ✅ (Aug 2026) — `confirm-fix` Edge Function + migration 019 (`uploaded_by_token`, `community_suggests_fixed` — neither column existed).
+- [⏭️] S15.4 — Display confirmation photos on report detail ⏭️ **DEFERRED to S16** — confirmation photos are stored and counted; rendering the before/after scrub (MOTION.md gives it the full 600ms) belongs with the polish sprint.
+- [x] S15.5 — Auto-suggest "Fixed" status to council at 3+ confirmation photos ✅ (Aug 2026) — at 3 confirmations sets `community_suggests_fixed`. **Deliberately does not change status:** community consensus is evidence, not authority, and PRD §6.5 reserves `fixed` for the council. One confirmation per token, enforced server-side.
+- [x] S15.6 — "You reported this — it's fixed!" celebration for original reporter ✅ (Aug 2026) — shown to the original reporter when the report reaches `fixed`.
 **Test criteria:** Confirmation photo uploaded and linked to report. Displayed on report detail. At 3 confirmations, council dashboard shows "Community suggests fixed" flag. Original reporter sees celebration if their report was confirmed fixed.
 **Notes:** The celebration animation uses Framer Motion (upward sweep from Sprint 5 success screen pattern).
 
