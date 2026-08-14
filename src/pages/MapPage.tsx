@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { MapComponent } from '@/components/Map'
+import { MapComponent, type MapHandle } from '@/components/Map'
 import { ReportCard } from '@/components/ReportCard'
 import { AppHeader } from '@/components/AppHeader'
 import { TabBar } from '@/components/TabBar'
@@ -21,10 +21,10 @@ export function MapPage() {
     [reports]
   )
 
+  const mapRef = useRef<MapHandle>(null)
+
   const handleLocateMe = useCallback(() => {
-    // Trigger the hidden locate-me button in the Map component
-    const btn = document.querySelector('[data-locate-me]') as HTMLButtonElement | null
-    btn?.click()
+    mapRef.current?.flyToUser()
   }, [])
 
   return (
@@ -39,6 +39,7 @@ export function MapPage() {
           </div>
         ) : (
           <MapComponent
+            ref={mapRef}
             reports={reports}
             onPinClick={handlePinClick}
           />

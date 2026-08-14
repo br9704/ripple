@@ -161,6 +161,12 @@ export interface MapPin {
   address: string | null
   suburb: string | null
   submitted_at: string
+  /**
+   * Thumbnail for the pin detail card (PRD §6.3 lists the photo first).
+   * Joined from report_photos where photo_type = 'original'; null when the
+   * report has no photo yet or the join returned nothing.
+   */
+  photo_url: string | null
 }
 
 // ── Report Detail (full report with relations) ──
@@ -173,13 +179,26 @@ export interface ReportDetail extends Report {
 
 // ── API Request/Response Types ──
 
+/**
+ * Wire format for POST /functions/v1/submit-report.
+ *
+ * Corrected Aug 2026: this previously omitted `address`, `suburb`, `postcode`
+ * and `council_id`, all four of which the client has always sent — it built an
+ * untyped inline object instead of using this interface, so the drift went
+ * unnoticed. Anything extending this (Sprint 7's AI fields) must start from the
+ * real shape or the drift gets encoded permanently.
+ */
 export interface SubmitReportRequest {
   category: ReportCategory
-  ai_category: ReportCategory
-  ai_confidence: number
-  user_corrected_ai: boolean
+  ai_category?: ReportCategory
+  ai_confidence?: number
+  user_corrected_ai?: boolean
   lat: number
   lng: number
+  address?: string | null
+  suburb?: string | null
+  postcode?: string | null
+  council_id?: string | null
   note?: string
   reporter_token: string
   photo_base64: string

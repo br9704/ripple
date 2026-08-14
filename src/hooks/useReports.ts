@@ -2,7 +2,22 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { MapPin } from '@/types'
 
-const REPORTS_SELECT = 'id, lat, lng, category, status, upvote_count, priority_score, address, suburb, submitted_at'
+// report_photos is joined so the detail card can show a thumbnail — PRD §6.3
+// lists the photo as the first element of the pin detail card, but MapPin
+// carried no photo URL, so ReportCard had nothing to render.
+const REPORTS_SELECT =
+  'id, lat, lng, category, status, upvote_count, priority_score, address, suburb, submitted_at, report_photos(public_url, photo_type)'
+
+interface ReportRow extends Omit<MapPin, 'photo_url'> {
+  report_photos?: { public_url: string; photo_type: string }[] | null
+}
+
+/** Flattens the joined photo rows down to a single original-photo URL. */
+function toMapPin(row: ReportRow): MapPin {
+  const original =
+    row.report_photos?.find((p) => p.photo_type === 'original') ?? row.report_photos?.[0]
+  return { ...row, photo_url: original?.public_url ?? null }
+}
 
 /**
  * Fetches all reports as lightweight MapPin objects and subscribes
@@ -30,7 +45,7 @@ export function useReports() {
         return
       }
 
-      setReports((data as MapPin[]) ?? [])
+      setReports(((data as ReportRow[]) ?? []).map(toMapPin))
       setIsLoading(false)
     }
 
@@ -44,9 +59,12 @@ export function useReports() {
         { event: 'INSERT', schema: 'public', table: 'reports' },
         (payload) => {
           if (cancelled) return
-          const newReport = payload.new as MapPin
+          // Realtime delivers the `reports` row only — never the joined
+          // report_photos — so photo_url is absent here by construction. The
+          // photo is inserted moments later by the Edge Function anyway.
+          const newReport = payload.new as ReportRow
           if (newReport?.id) {
-            setReports((prev) => [newReport, ...prev])
+            setReports((prev) => [{ ...newReport, photo_url: null }, ...prev])
           }
         }
       )
@@ -55,10 +73,17 @@ export function useReports() {
         { event: 'UPDATE', schema: 'public', table: 'reports' },
         (payload) => {
           if (cancelled) return
-          const updated = payload.new as MapPin
+          const updated = payload.new as ReportRow
           if (updated?.id) {
             setReports((prev) =>
-              prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r))
+              prev.map((r) =>
+                r.id === updated.id
+                  // Preserve the photo we resolved on fetch: the Realtime
+                  // payload has no photo_url, so a naive spread would blank it
+                  // and the thumbnail would vanish on every status change.
+                  ? { ...r, ...updated, photo_url: r.photo_url }
+                  : r
+              )
             )
           }
         }

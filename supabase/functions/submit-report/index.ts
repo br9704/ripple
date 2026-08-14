@@ -4,28 +4,37 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { decode as base64Decode } from "https://deno.land/std@0.220.0/encoding/base64.ts";
+import { z } from "https://esm.sh/zod@4.3.6";
 
 const VALID_CATEGORIES = [
   "pothole", "streetlight", "graffiti", "signage",
   "accessibility", "dumping", "water", "tree", "footpath", "other",
 ] as const;
 
-interface SubmitReportBody {
-  category: string;
-  ai_category: string;
-  ai_confidence: number;
-  user_corrected_ai: boolean;
-  lat: number;
-  lng: number;
-  address?: string | null;
-  suburb?: string | null;
-  postcode?: string | null;
-  council_id?: string | null;
-  note?: string;
-  reporter_token: string;
-  photo_base64: string;
-  additional_photos?: string[];
-}
+// CLAUDE.md §6 requires Zod for runtime validation of all Edge Function inputs.
+// This replaces a hand-rolled `if` chain that MASTERPLAN S5.6 had already
+// described as "Zod-style validation" — it was not.
+const SubmitReportSchema = z.object({
+  category: z.enum(VALID_CATEGORIES),
+  ai_category: z.enum(VALID_CATEGORIES).optional(),
+  ai_confidence: z.number().min(0).max(1).optional(),
+  user_corrected_ai: z.boolean().optional(),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  address: z.string().nullish(),
+  suburb: z.string().nullish(),
+  postcode: z.string().nullish(),
+  council_id: z.string().uuid().nullish(),
+  note: z.string().max(140, "Note exceeds 140 character limit").optional(),
+  reporter_token: z.string().min(1),
+  photo_base64: z.string().min(1),
+  additional_photos: z.array(z.string()).max(2).optional(),
+});
+
+type SubmitReportBody = z.infer<typeof SubmitReportSchema>;
+
+// PRD §10.3: 10 reports per reporter_token per hour.
+const MAX_REPORTS_PER_HOUR = 10;
 
 Deno.serve(async (req: Request) => {
   // CORS headers
@@ -47,32 +56,48 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const body: SubmitReportBody = await req.json();
+    const raw = await req.json();
 
     // ── Validation ──
-    if (!body.category || !VALID_CATEGORIES.includes(body.category as typeof VALID_CATEGORIES[number])) {
-      return errorResponse(400, "Invalid or missing category");
+    const parsed = SubmitReportSchema.safeParse(raw);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      // Prefer a custom message when the schema supplies one; otherwise name
+      // the offending field so the client shows something actionable.
+      const path = first?.path?.join(".");
+      const message = first?.message && !first.message.startsWith("Invalid input")
+        ? first.message
+        : `Invalid or missing ${path || "field"}`;
+      return errorResponse(400, message);
     }
-    if (typeof body.lat !== "number" || typeof body.lng !== "number") {
-      return errorResponse(400, "Invalid or missing coordinates");
-    }
-    if (body.lat < -90 || body.lat > 90 || body.lng < -180 || body.lng > 180) {
-      return errorResponse(400, "Coordinates out of valid range");
-    }
-    if (!body.reporter_token) {
-      return errorResponse(400, "Missing reporter_token");
-    }
-    if (!body.photo_base64) {
-      return errorResponse(400, "Missing photo");
-    }
-    if (body.note && body.note.length > 140) {
-      return errorResponse(400, "Note exceeds 140 character limit");
-    }
+    const body: SubmitReportBody = parsed.data;
 
     // ── Supabase admin client (service role) ──
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // ── Rate limiting (PRD §10.3) ──
+    // The client-side check in useSubmitReport is a courtesy, not a control:
+    // it lives in localStorage and one devtools click defeats it. This is the
+    // enforcement point, because it is the only one the caller cannot reach.
+    const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString();
+    const { count: recentCount, error: rateError } = await supabase
+      .from("reports")
+      .select("id", { count: "exact", head: true })
+      .eq("reporter_token", body.reporter_token)
+      .gte("submitted_at", oneHourAgo);
+
+    if (rateError) {
+      // Fail open on an infrastructure error: losing a citizen's report is a
+      // worse outcome than briefly under-enforcing an anti-spam limit.
+      console.error("Rate limit check failed:", rateError.message);
+    } else if ((recentCount ?? 0) >= MAX_REPORTS_PER_HOUR) {
+      return errorResponse(
+        429,
+        `Too many reports. Please wait before submitting another (max ${MAX_REPORTS_PER_HOUR}/hour).`,
+      );
+    }
 
     // ── Upload photo to Storage ──
     const now = new Date();

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useImperativeHandle, type Ref } from 'react'
 import mapboxgl from 'mapbox-gl'
 import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, MAP_CLUSTER_RADIUS, MAP_CLUSTER_MAX_ZOOM } from '@/constants/config'
 import { CATEGORY_MAP } from '@/constants/categories'
@@ -21,16 +21,39 @@ function getCategoryColorExpression(): mapboxgl.ExpressionSpecification {
   return ['match', ['get', 'category'], ...stops, '#8B949E'] as mapboxgl.ExpressionSpecification
 }
 
+export interface MapHandle {
+  /** Centre the map on the user's current position. */
+  flyToUser: () => void
+}
+
 interface MapComponentProps {
   reports: MapPin[]
   onPinClick: (reportId: string) => void
+  ref?: Ref<MapHandle>
 }
 
-function MapComponent({ reports, onPinClick }: MapComponentProps) {
+function MapComponent({ reports, onPinClick, ref }: MapComponentProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const onPinClickRef = useRef(onPinClick)
-  onPinClickRef.current = onPinClick
+
+  // Latest reports, readable from the map's own 'load' callback.
+  //
+  // The init effect must not depend on `reports` (re-creating the map on every
+  // data change would be catastrophic), but the load handler still needs the
+  // *current* value rather than the one captured at mount — otherwise any
+  // report that arrived during style loading is silently lost. This ref is how
+  // the effect stays mount-only and correct at the same time, which also lets
+  // the exhaustive-deps suppression be removed.
+  //
+  // Assigned in an effect rather than during render: refs may not be written
+  // while rendering, and Mapbox's 'load' fires well after commit either way.
+  const reportsRef = useRef(reports)
+
+  useEffect(() => {
+    reportsRef.current = reports
+    onPinClickRef.current = onPinClick
+  }, [reports, onPinClick])
 
   // Initialize map
   useEffect(() => {
@@ -50,7 +73,9 @@ function MapComponent({ reports, onPinClick }: MapComponentProps) {
       // Add GeoJSON source with clustering
       map.addSource(SOURCE_ID, {
         type: 'geojson',
-        data: reportsToGeoJSON(reports),
+        // Read from the ref, not the closure: reports that arrived while the
+        // style was still loading must survive into the initial source data.
+        data: reportsToGeoJSON(reportsRef.current),
         cluster: true,
         clusterRadius: MAP_CLUSTER_RADIUS,
         clusterMaxZoom: MAP_CLUSTER_MAX_ZOOM,
@@ -156,18 +181,24 @@ function MapComponent({ reports, onPinClick }: MapComponentProps) {
       map.remove()
       mapRef.current = null
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Update data when reports change
+  // Update data when reports change.
+  //
+  // Previously this early-returned when the style had not finished loading,
+  // with no retry — so a Realtime insert arriving in that window was dropped
+  // permanently and the pin simply never appeared. Now the source is only
+  // missing before 'load' fires, and the load handler seeds itself from
+  // reportsRef, so there is no window in which data can be lost.
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !map.isStyleLoaded()) return
+    if (!map) return
 
     const source = map.getSource(SOURCE_ID) as mapboxgl.GeoJSONSource | undefined
     if (source) {
       source.setData(reportsToGeoJSON(reports))
     }
+    // No source yet means 'load' has not run; it will pick up reportsRef.current.
   }, [reports])
 
   const flyToUser = useCallback(() => {
@@ -186,19 +217,13 @@ function MapComponent({ reports, onPinClick }: MapComponentProps) {
     )
   }, [])
 
-  return (
-    <>
-      <div ref={containerRef} className="absolute inset-0" />
-      {/* Expose flyToUser via a hidden mechanism or pass via ref */}
-      <button
-        type="button"
-        onClick={flyToUser}
-        className="hidden"
-        data-locate-me
-        aria-hidden="true"
-      />
-    </>
-  )
+  // Replaces the previous escape hatch, where MapPage reached in with
+  // document.querySelector('[data-locate-me]').click() against a hidden button.
+  // That worked but bypassed React entirely and would have broken the moment a
+  // second map instance mounted.
+  useImperativeHandle(ref, () => ({ flyToUser }), [flyToUser])
+
+  return <div ref={containerRef} className="absolute inset-0" />
 }
 
 export { MapComponent }

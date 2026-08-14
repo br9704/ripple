@@ -42,6 +42,19 @@ export function ReportCard({ report, onClose }: ReportCardProps) {
         </div>
 
         <div className="px-4 pb-6 space-y-4">
+          {/* Photo — PRD §6.3 lists this first in the pin detail card. It was
+              absent until Aug 2026 because MapPin carried no photo URL. */}
+          {report.photo_url && (
+            <img
+              src={report.photo_url}
+              alt={`Reported ${cat?.label ?? report.category}${
+                report.address ? ` at ${report.address}` : ''
+              }`}
+              loading="lazy"
+              className="h-40 w-full rounded-md object-cover"
+            />
+          )}
+
           {/* Category + Status row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
