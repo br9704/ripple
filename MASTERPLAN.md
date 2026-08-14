@@ -413,15 +413,21 @@ This does **not** invalidate the stack choice — TF.js is frozen and shipping o
 **Inputs:** Sprint 6 complete (map and pin detail exist)
 **Outputs:** `UpvoteButton` component, `useUpvote` hook, upvote count on map pins
 **Subtasks:**
-- [ ] S8.1 — Implement `useUpvote` hook (toggle upvote, optimistic count update, reporter_token enforcement)
-- [ ] S8.2 — Create `UpvoteButton` component ("I see this too" / "You saw this too" toggle)
-- [ ] S8.3 — Add upvote count badge to map pins (scale pin size with count)
-- [ ] S8.4 — Integrate upvote button into ReportCard bottom sheet
-- [ ] S8.5 — Verify UNIQUE constraint prevents double upvotes
-- [ ] S8.6 — Verify trigger updates `reports.upvote_count` correctly
-- [ ] S8.7 — Add upvote count to Realtime subscription updates
+- [x] S8.1 — Implement `useUpvote` hook (toggle upvote, optimistic count update, reporter_token enforcement) ✅ (Aug 2026) — optimistic toggle with rollback; 23505 (UNIQUE violation) treated as success, since it means the optimistic state was already right.
+- [x] S8.2 — Create `UpvoteButton` component ("I see this too" / "You saw this too" toggle) ✅ (Aug 2026) — `UpvoteButton`, SIGNAL bracket vocabulary, `aria-pressed` + `role="status"` live count.
+- [x] S8.3 — Add upvote count badge to map pins (scale pin size with count) ✅ (Aug 2026) — already implemented in Sprint 6: `Map.tsx` interpolates `circle-radius` on `upvote_count` (9→12→17px). Verified rather than rebuilt.
+- [x] S8.4 — Integrate upvote button into ReportCard bottom sheet ✅ (Aug 2026) — replaced ReportCard's static count line.
+- [⏭️] S8.5 — Verify UNIQUE constraint prevents double upvotes ⏭️ **BLOCKED BY OG1** — the UNIQUE(report_id, reporter_token) constraint exists in migration 005 and the client handles 23505, but verifying it needs a live database.
+- [⏭️] S8.6 — Verify trigger updates `reports.upvote_count` correctly ⏭️ **BLOCKED BY OG1** — `update_upvote_count()` exists in migration 011; unverifiable without a database.
+- [⏭️] S8.7 — Add upvote count to Realtime subscription updates ⏭️ **BLOCKED BY OG1** — the Realtime UPDATE handler in `useReports` already propagates `upvote_count`, and migration 014 enables the publication it needs. Both are written; neither is verifiable yet.
 **Test criteria:** Upvote increments count immediately (optimistic). Same user cannot upvote twice (shows "You saw this too"). Removing upvote decrements count. Pin size scales with upvote count on map. Upvote count updates in real-time for other users.
 **Notes:** Threshold alerts (10, 25, 50 upvotes) are Phase 2. Priority score recalculation happens via the database trigger on upvote insert/delete.
+
+### ⚠️ Sprint 7 → 8 — CODE COMPLETE, ACCEPTANCE BLOCKED (Aug 2026)
+
+S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be marked complete**, because every one of them asserts something about database behaviour and there is no database (OG1). This is the distinction the March masterplan collapsed and the Aug audit exists to preserve: **authorship is not verification.**
+
+**Also surfaced here:** `calculate_priority()` recomputes `priority_score` only inside `update_upvote_count()`, which fires on upvote insert/delete. Its `days_outstanding` term therefore goes stale on any report nobody upvotes — the age penalty silently stops accruing. No cron or scheduled recompute exists in any migration. Not a Sprint 8 bug, but it undermines the council priority ordering that Phase 3 depends on. **Recorded as a new task for S18** (council dashboard is where the ordering actually matters), and it needs `pg_cron` or a scheduled Edge Function.
 
 ---
 
