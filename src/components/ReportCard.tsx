@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { UpvoteButton } from '@/components/UpvoteButton'
 import { CATEGORY_MAP } from '@/constants/categories'
 import { STATUS_MAP } from '@/constants/statuses'
@@ -101,7 +102,14 @@ export function ReportCard({ report, onClose }: ReportCardProps) {
           {/* Upvotes — S8. Replaces the static count with the real control. */}
           <UpvoteButton reportId={report.id} initialCount={report.upvote_count} />
 
-          {/* Report ID */}
+          {/* Report ID + link to the full page, which the map sheet is too
+              cramped for (S11 note). */}
+          <Link
+            to={`/report/${report.id}`}
+            className="block font-mono text-xs text-action underline-offset-4 hover:underline"
+          >
+            [ view full report → ]
+          </Link>
           <p className="text-xs font-mono text-text-tertiary">
             Report #{report.id.slice(0, 8)}
           </p>

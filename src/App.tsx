@@ -7,6 +7,7 @@ import { MapPage } from '@/pages/MapPage'
 import { ReportFlow } from '@/pages/ReportFlow'
 import { FeedPage } from '@/pages/FeedPage'
 import { MyReportsPage } from '@/pages/MyReportsPage'
+import { ReportDetailPage } from '@/pages/ReportDetailPage'
 
 export default function App() {
   return (
@@ -16,7 +17,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<MapPage />} />
         <Route path="/report" element={<ReportFlow />} />
-        <Route path="/report/:id" element={<ComingSoon title="Report detail" sprint="Sprint 11" />} />
+        <Route path="/report/:id" element={<ReportDetailPage />} />
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/my-reports" element={<MyReportsPage />} />
         <Route path="/search" element={<ComingSoon title="Search" sprint="Sprint 12" />} />
