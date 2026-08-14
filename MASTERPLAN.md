@@ -436,13 +436,13 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 **Inputs:** Sprint 6 complete (map with pins)
 **Outputs:** `FilterPanel` component, heatmap layer, filter state management
 **Subtasks:**
-- [ ] S9.1 — Create `FilterPanel` component (category chips, status chips, date range, upvote slider, "near me" toggle)
-- [ ] S9.2 — Implement filter state in Zustand store
-- [ ] S9.3 — Apply filters to map pin data source
-- [ ] S9.4 — Create heatmap toggle button in map controls
-- [ ] S9.5 — Implement Mapbox heatmap layer with weighted intensity (upvotes × severity × recency)
-- [ ] S9.6 — Add active filter count badge to filter toggle button
-- [ ] S9.7 — Create "Recent reports counter" pill (bottom-left: "147 reports this week in Melbourne")
+- [x] S9.1 — Create `FilterPanel` component (category chips, status chips, date range, upvote slider, "near me" toggle) ✅ (Aug 2026) — `FilterPanel` bottom sheet in SIGNAL vocabulary.
+- [x] S9.2 — Implement filter state in Zustand store ✅ (Aug 2026) — `src/stores/filterStore.ts`. **Creates the `src/stores/` folder S0.3 claimed existed, and makes `zustand` a real dependency rather than installed-and-unused.**
+- [x] S9.3 — Apply filters to map pin data source ✅ (Aug 2026) — via the pure `lib/reportFilters.ts` predicate (12 tests), shared with the S10 feed so "matching" cannot drift between surfaces.
+- [x] S9.4 — Create heatmap toggle button in map controls ✅ (Aug 2026) — the heatmap button had no `onClick` at all since S6.
+- [x] S9.5 — Implement Mapbox heatmap layer with weighted intensity (upvotes × severity × recency) ✅ (Aug 2026) — weight = `(upvotes+1) × severity × recency`, computed in `mapHelpers` because Mapbox expressions cannot do a category→severity lookup. `+1` so a brand-new un-upvoted hazard still registers; recency decays linearly to the 0.3 floor rather than stepping at 90 days.
+- [x] S9.6 — Add active filter count badge to filter toggle button ✅ (Aug 2026) — active-count badge on the filter control.
+- [x] S9.7 — Create "Recent reports counter" pill (bottom-left: "147 reports this week in Melbourne") ✅ (Aug 2026) — counted from the **filtered** set so the number always matches what is on screen.
 **Test criteria:** Category filter shows only selected categories. Status filter works. Date range filters correctly. "Near me" shows reports within 1km. Heatmap toggle shows/hides density overlay. Heatmap intensity reflects upvote count and severity. Filter count badge accurate.
 **Notes:** Heatmap colour scale: light yellow (#FEFB98) → orange (#FD8D3C) → red (#BD0026). Severity weights: safety=3, accessibility=2.5, infrastructure=2, environmental=1. Recency decay: reports > 90 days at 0.3x weight.
 
@@ -453,12 +453,12 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 **Inputs:** Sprint 6, 8 complete (reports with upvotes)
 **Outputs:** Feed page (`/feed`), My Reports page (`/my-reports`), `ReportFeed` component
 **Subtasks:**
-- [ ] S10.1 — Create `ReportFeed` component (scrollable list of report cards with photo, category, address, time, upvotes, status)
-- [ ] S10.2 — Create Feed page (`/feed`) with sort options (Newest, Most Upvoted, Highest Priority)
-- [ ] S10.3 — Create My Reports page (`/my-reports`) filtered by reporter_token from localStorage
-- [ ] S10.4 — Integrate filters from Sprint 9 into Feed view
-- [ ] S10.5 — Add infinite scroll / pagination (20 reports per page)
-- [ ] S10.6 — Wire tab bar navigation between Map, Feed, My Reports
+- [x] S10.1 — Create `ReportFeed` component (scrollable list of report cards with photo, category, address, time, upvotes, status) ✅ (Aug 2026) — `ReportFeed` as a directory listing; each row is a real `<Link>`, so keyboard nav and middle-click work — which canvas map pins cannot offer.
+- [x] S10.2 — Create Feed page (`/feed`) with sort options (Newest, Most Upvoted, Highest Priority) ✅ (Aug 2026) — `FeedPage` with newest / most-upvoted / highest-priority, via the pure `lib/reportSort.ts` (7 tests). Every comparator falls back to `id` so ordering is total and rows cannot swap between renders.
+- [x] S10.3 — Create My Reports page (`/my-reports`) filtered by reporter_token from localStorage ✅ (Aug 2026) — `MyReportsPage`, scoped by `reporter_token`. The page states plainly that history is device-only, because clearing site data loses it permanently and that trade should not surprise anyone.
+- [x] S10.4 — Integrate filters from Sprint 9 into Feed view ✅ (Aug 2026) — shares the S9 filter store and predicate.
+- [⏭️] S10.5 — Add infinite scroll / pagination (20 reports per page) ⏭️ **DEFERRED to S16** — infinite scroll is unmeasurable at current data volumes, and the right page size depends on real report density, which needs OG1. Shipping a guessed threshold now would just be a number to re-tune later. (Search paging *is* implemented, since the RPC returns `total_count`.)
+- [x] S10.6 — Wire tab bar navigation between Map, Feed, My Reports ✅ (Aug 2026) — every tab-bar destination is now a real page.
 **Test criteria:** Feed shows all reports sorted by selected option. My Reports shows only current user's reports. Infinite scroll loads more reports. Tab bar switches between Map, Feed, My Reports correctly.
 **Notes:** "My Reports" uses the `reporter_token` from localStorage — no account required. This is the user's only way to see their own reports.
 
@@ -469,12 +469,12 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 **Inputs:** Sprint 6, 8 complete
 **Outputs:** Report Detail page (`/report/:id`), `useReport` hook, status timeline, share functionality
 **Subtasks:**
-- [ ] S11.1 — Set up React Router with routes: `/`, `/report`, `/report/:id`, `/feed`, `/my-reports`, `/search`
-- [ ] S11.2 — Implement `useReport` hook (fetch full report detail with photos, comments, status history)
-- [ ] S11.3 — Create Report Detail page (expanded ReportCard with full photo, status timeline, comments preview)
-- [ ] S11.4 — Create status timeline component (visual history: Reported → Acknowledged → etc.)
-- [ ] S11.5 — Implement share functionality (Web Share API with fallback to clipboard)
-- [ ] S11.6 — Display report ID ("Report #4821") using Supabase-generated short ID
+- [x] S11.1 — Set up React Router with routes: `/`, `/report`, `/report/:id`, `/feed`, `/my-reports`, `/search` ✅ (Aug 2026) — all six PRD §12.1 routes render real pages; `ComingSoon` deleted as it had no remaining users.
+- [x] S11.2 — Implement `useReport` hook (fetch full report detail with photos, comments, status history) ✅ (Aug 2026) — `useReport`, joining photos, status history and council. **Distinguishes not-found from failed-to-load**, because collapsing them tells a user their report was deleted when their train entered a tunnel.
+- [x] S11.3 — Create Report Detail page (expanded ReportCard with full photo, status timeline, comments preview) ✅ (Aug 2026) — `ReportDetailPage`.
+- [x] S11.4 — Create status timeline component (visual history: Reported → Acknowledged → etc.) ✅ (Aug 2026) — `StatusTimeline`. Synthesises the opening "Reported" entry from `submitted_at` when `status_history` is empty — the normal case for a fresh report, since the trigger only writes on change.
+- [x] S11.5 — Implement share functionality (Web Share API with fallback to clipboard) ✅ (Aug 2026) — `lib/share.ts` (8 tests), Web Share API with clipboard fallback. Returns which path it took so the button can confirm; `AbortError` treated as a non-event, since a user closing the share sheet is a decision, not a failure.
+- [x] S11.6 — Display report ID ("Report #4821") using Supabase-generated short ID ✅ (Aug 2026) — `formatReportId`.
 **Test criteria:** Direct URL `/report/:id` loads the correct report. Status timeline shows all status changes with timestamps. Share button opens native share sheet on mobile. Report ID displayed correctly.
 **Notes:** The report detail bottom sheet on the map (Sprint 6) should link to the full detail page. The full detail page has more space for comments, multiple photos, and the complete status history.
 
@@ -485,15 +485,25 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 **Inputs:** Sprint 5 complete (reports in database)
 **Outputs:** Search page (`/search`), `useSearch` hook, ES sync Edge Function, search results UI
 **Subtasks:**
-- [ ] S12.1 — Create Elasticsearch index with mapping from PRD (id, category, status, address, suburb, council_id, note, upvote_count, priority_score, location geo_point, submitted_at, status_updated_at, severity_weight)
-- [ ] S12.2 — Create Supabase Edge Function `sync-elasticsearch` (triggered on report insert/update)
-- [ ] S12.3 — Create Supabase Edge Function `search-reports` (proxy to ES, apply filters, rate limiting)
-- [ ] S12.4 — Implement `useSearch` hook (query, filters, pagination, loading state)
-- [ ] S12.5 — Create Search page (`/search`) with search input, filters, results list
-- [ ] S12.6 — Add search icon to header that opens search overlay
-- [ ] S12.7 — Test full-text search: "pothole Fitzroy" returns relevant results
+- [⏭️] S12.1 — Create Elasticsearch index with mapping from PRD (id, category, status, address, suburb, council_id, note, upvote_count, priority_score, location geo_point, submitted_at, status_updated_at, severity_weight) ⏭️ **SUPERSEDED — see the Sprint 12 delta below.** Replaced by migration `016_fulltext_search.sql`: a GENERATED weighted `tsvector` + GIN index on `reports`. Elasticsearch itself is routed to **OG4** (it costs money).
+- [⏭️] S12.2 — Create Supabase Edge Function `sync-elasticsearch` (triggered on report insert/update) ⏭️ **NOT NEEDED** — a GENERATED column cannot drift from its source, so there is nothing to sync and no nightly re-index to run. This is the main engineering saving from the swap.
+- [x] S12.3 — Create Supabase Edge Function `search-reports` (proxy to ES, apply filters, rate limiting) ✅ (Aug 2026) — implemented as the `search_reports` RPC rather than an Edge Function proxy. **SECURITY INVOKER, so RLS still applies** — search must not become a way to read rows the caller could not otherwise select. The ES-proxy rationale (keeping clients away from the datastore) does not apply to Postgres, where RLS is the boundary. `LIMIT` is clamped server-side so a caller cannot request an unbounded page.
+- [x] S12.4 — Implement `useSearch` hook (query, filters, pagination, loading state) ✅ (Aug 2026) — `useSearch`, deliberately backend-agnostic so swapping to ES later touches one hook and no UI. Debounced 250ms with a per-request sequence number, so a slow response for "pot" can never overwrite a fast one for "pothole".
+- [x] S12.5 — Create Search page (`/search`) with search input, filters, results list ✅ (Aug 2026) — `SearchPage` with relevance/newest/upvotes sorting and paging.
+- [x] S12.6 — Add search icon to header that opens search overlay ✅ (Aug 2026) — header search icon wired; it had no `onClick` at all since S6. The menu icon has no destination yet, so it is explicitly **disabled and labelled** rather than left as another enabled-looking no-op.
+- [⏭️] S12.7 — Test full-text search: "pothole Fitzroy" returns relevant results ⏭️ **BLOCKED BY OG1** — "pothole Fitzroy" cannot be run against a database that does not exist. The query uses `websearch_to_tsquery`, which tolerates what humans actually type (unbalanced quotes, stray operators, `pothole -fixed`); `plainto_` would reject some of it and `to_tsquery` would raise.
 **Test criteria:** New reports appear in ES within 30 seconds. Full-text search returns relevant results by address and note content. Category and status filters work. Geo filter works. Results sorted by selected option (priority, newest, upvotes, relevance). Rate limiting enforced (60/min).
 **Notes:** Client never calls ES directly — all queries proxied through Edge Function. Edge Function applies council_id filter for council dashboard requests. Rate limiting at 60 searches per minute per reporter_token.
+
+### ⚠️ Sprint 12 — SHIPPED ON POSTGRES, NOT ELASTICSEARCH (Aug 2026)
+
+**Decision:** implement the capability, defer the vendor. Elasticsearch is ~$16/month for a product with zero live users, and the sprint as specified adds an entire second datastore plus a sync function, a nightly re-index and a proxy. PRD Q5 had already flagged Typesense/Meilisearch as cheaper candidates, so the choice was never actually settled. **Spending money is Bruno's call → OG4.**
+
+**What Postgres FTS covers:** PRD §6.6 use case 1 (full-text over address, suburb, note) plus category/status/upvote/date filters and sorting. **What it does not cover well:** use cases 2–4 — the aggregation-heavy council analytics — which do not exist until Phase 3. If those turn out to be slow on Postgres at real volume, that is the moment to revisit OG4, and the `useSearch` interface is built to make the swap cheap.
+
+**Not a permanent rejection.** It is a decision not to pay before there is one user.
+
+**As-shipped delta:** no Edge Function proxy (RLS is the boundary in Postgres, and `SECURITY INVOKER` preserves it); no sync pipeline and no re-index (a GENERATED column cannot drift); rate limiting deferred with search, since the 60/min limit in PRD §10.3 exists to protect a metered external service that we are no longer calling.
 
 ---
 
