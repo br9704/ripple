@@ -288,7 +288,7 @@ All twenty sprints are **code-complete**. Acceptance for anything touching the d
 | | Aug 2026 |
 |---|---|
 | Sprints code-complete | **20 / 20** (plus 6.5 and 6.6, inserted) |
-| Tests | **169** across 19 files (from zero) |
+| Tests | **169** TS across 19 files, **40** SQL assertions (from zero) |
 | Lint | 0 errors, 0 warnings, **0 suppressions** |
 | TypeScript | 0 errors, strict |
 | Migrations | 21 |
@@ -296,11 +296,15 @@ All twenty sprints are **code-complete**. Acceptance for anything touching the d
 
 ### What is proven
 
-`pnpm tsc --noEmit`, `pnpm lint` and `pnpm test` all pass; `pnpm build` produces a valid service worker with the 37MB LiteRT WASM runtime correctly excluded from precache; no server-side secret appears in the bundle.
+- `pnpm tsc --noEmit`, `pnpm lint`, `pnpm test` — **169 tests**, zero lint errors, zero suppressions
+- `pnpm build` — valid service worker, 37MB LiteRT WASM correctly excluded from precache, no server-side secret in the bundle
+- **`pnpm verify:db`** — all **21 migrations** applied to a real PostgreSQL 17, seed loaded, and **40 behavioural + RLS assertions** passing. Running as `anon` with RLS enforced, an attacker provably cannot delete another user's upvote, read another user's notification email, harvest reporter tokens, or post as the council.
+
+That last one caught a real bug the moment it first ran — a `BEFORE UPDATE` trigger recomputing a priority score from the status it was in the middle of replacing. Invisible to code review; caught in seconds by execution.
 
 ### What is not proven, and why
 
-**The Supabase project this was built against no longer exists** — its ref returns NXDOMAIN. So no migration has been applied, no Edge Function deployed, and no end-to-end path exercised against a real database. Every task asserting database behaviour is marked deferred or partial in the masterplan, never complete.
+**The Supabase project this was built against no longer exists** — its ref returns NXDOMAIN. The *schema layer* is now verified locally (see above), but Storage uploads, Edge Function deployment, Auth flows and Realtime delivery are Supabase-managed services with no local stand-in, so those remain unproven. Tasks depending on them stay deferred or partial in the masterplan, never complete.
 
 **The classifier has no model.** The Sprint 7 pipeline — runtime, caching, preprocessing, confidence tiers, scan animation, override, correction logging, fallback — is built and tested, but `ripple-classifier-v1.tflite` does not exist yet, so the app currently falls through to the manual category picker on every capture. That is the designed behaviour, not a bug. **No accuracy claim is made** until a fine-tuned model lands.
 
