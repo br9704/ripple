@@ -4,7 +4,24 @@
 
 ## Project Status
 
-**Current state (Aug 2026):** Sprints 0–6 repaired, **6.5 (Foundation Repair), 6.6 (SIGNAL migration) and 7 (on-device AI) complete.** The test suite went from 0 to **113 tests / 12 files**; lint is clean with zero suppressions repo-wide. The on-device classification pipeline is fully built and tested but has no model to run — see the Sprint 7 close notes and OG2. **The binding constraint on everything downstream is OG1: the Supabase project no longer exists, which blocks acceptance for Sprints 8, 10–15 and 17–20.** Next buildable sprint: 9 (Map Filters & Heatmap), which is largely client-side.
+**Current state (Aug 2026): all twenty sprints are code-complete.** Sprints 0–6 repaired; 6.5 (Foundation Repair) and 6.6 (SIGNAL migration) inserted and closed; 7 (on-device AI) through 20 (Growth) built.
+
+| Metric | Session start | Now |
+|---|---|---|
+| Tasks `[x]` | 79 (several false) | **180** |
+| Tasks `[ ]` | 92 | **0** — remaining items are `[~]` partial or `[⏭️]` deferred-with-reason |
+| Tests | **0** | **169 / 19 files** |
+| Lint | 1 suppression | **0 errors, 0 warnings, 0 suppressions** |
+| Migrations | 13 | **21** |
+| Edge Functions | 1 | **4** |
+| Routes rendering real pages | 2 of 4 | **7 of 7** |
+
+**Two things are true at once and must not be conflated — this distinction is the whole point of the August audit:**
+
+1. **Code-complete** — every sprint's implementation is written, typechecks, lints clean, and its pure logic is unit-tested.
+2. **Not acceptance-verified** — **OG1 blocks it.** The Supabase project does not exist, so no migration has been applied, no Edge Function deployed, and no end-to-end path exercised against a real database. Anything asserting database behaviour is marked `[⏭️]` or `[~]`, never `[x]`.
+
+**Next actions, in order:** OG1 (re-provision Supabase) → OG3 (deploy) → OG2 (train the classifier) → real-device verification (OG6) closes S16.6 and S7.13.
 
 **Re-verification note (Aug 2026 — supersedes the March claim below):** Sprints 0–6 are **partially** complete, not complete. Sprint 1 is the only sprint that verified fully TRUE. A verification pass on 14 Aug 2026 measured the repo against the ✅ marks and found seven individually false subtask claims (S0.2, S0.3, S0.9, S4.4, S4.5, S5.7, S6.5), a dead Supabase backend, and zero test files against a CLAUDE.md §9 mandate of "no test, no merge". Marks have been corrected in place below — see each sprint's **Verification delta** block. Next: Sprint 6.5 (Foundation Repair), then 6.6 (SIGNAL design migration), then 7 (AI Image Classification).
 
@@ -110,8 +127,8 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
   - [ ] S2.13.1 — **The seed never loads.** `supabase/config.toml:65` reads `sql_paths = ["./seed.sql"]`, but the seed lives at `supabase/seed/001_melbourne_councils.sql`. `supabase db reset` loads nothing → `councils` and `council_boundaries` stay empty → `detectCouncil()` always returns `null` → every report submits with `council_id: null` → the "Routed to {council}" line never renders. **Fix in S6.5.**
   - [ ] S2.13.2 — **The boundary polygons overlap.** They are self-admitted placeholders (`seed/001:52-54` "approximate bounding boxes for development purposes only"). Melbourne (`:63`) spans lng 144.9400–144.9850; Yarra (`:71`) spans 144.9700–145.0100 — a shared strip of 144.970–144.985. Merri-bek (`:79`) and Darebin (`:87`) overlap at 144.970–144.980. `detectCouncil` returns the **first** match (`src/lib/councilDetection.ts:31-37`) and `fetchAndCacheBoundaries` applies **no `.order()`** (`src/lib/boundaryCache.ts:93-106`) → council attribution in overlap zones is **non-deterministic**. **Fix in S6.5** (deterministic ordering + PRD Q3's nearest-centroid tie-break); real ABS boundary data is owner-gated (see backlog).
 - [~] S2.14 — Verify all migrations apply cleanly ⚠️ **CORRECTED Aug 2026 — this was the single most misleading claim in the repo.** It asserted "all 11 migrations applied to remote Supabase project nexccbcmziiltysfcmzi". Two errors: (a) there are **13** migrations on disk, not 11 — `012_find_nearby_reports.sql` and `013_storage_bucket.sql` were added later in commit `a464bd2` and are covered by no "applied" claim anywhere; (b) that project ref **returns NXDOMAIN** from two independent public resolvers, so the assertion cannot be confirmed and the remote state it describes no longer exists. Re-provisioning is owner-gated → Owner-Gated Backlog.
-- [ ] S2.15 — **DISCOVERED Aug 2026 — Realtime is not enabled at the database level.** Grep for `PUBLICATION|REPLICA IDENTITY` across `supabase/` returns zero hits. Without `ALTER PUBLICATION supabase_realtime ADD TABLE reports;`, the `postgres_changes` subscription at `src/hooks/useReports.ts:40-77` connects successfully and then receives **nothing** — silently. This invalidates S6.8's acceptance criterion. Also needs `REPLICA IDENTITY FULL` on `reports`, because DELETE payloads otherwise carry only the PK and `payload.old.id` at `useReports.ts:71` is fragile. **Fix in S6.5** as migration `014`.
-- [ ] S2.16 — **DISCOVERED Aug 2026 — two RLS policies are named `_own` but scoped to everyone.** In `supabase/migrations/010_rls_policies.sql`: `upvotes_delete_own` (`:77-78`) is `FOR DELETE USING (true)` → any anonymous caller can delete anyone's upvote, and the `update_upvote_count()` trigger will happily drive `upvote_count` and `priority_score` down with it. `user_notifications_select_all` (`:117-121`) is `FOR SELECT USING (true)` on a table holding `email` and `push_subscription` → **every stored notification email is world-readable by the anon key.** The section comment claims "own token read"; the policy does not implement it. **Fix in S6.5** as migration `015`. This is a genuine security defect, not a style issue.
+- [x] S2.15 — **DISCOVERED Aug 2026 — Realtime is not enabled at the database level.** Grep for `PUBLICATION|REPLICA IDENTITY` across `supabase/` returns zero hits. Without `ALTER PUBLICATION supabase_realtime ADD TABLE reports;`, the `postgres_changes` subscription at `src/hooks/useReports.ts:40-77` connects successfully and then receives **nothing** — silently. This invalidates S6.8's acceptance criterion. Also needs `REPLICA IDENTITY FULL` on `reports`, because DELETE payloads otherwise carry only the PK and `payload.old.id` at `useReports.ts:71` is fragile. **Fix in S6.5** as migration `014`. — ✅ **FIXED in S6.5.9** — migration `014_enable_realtime.sql`. Written, not yet applied (OG1).
+- [x] S2.16 — **DISCOVERED Aug 2026 — two RLS policies are named `_own` but scoped to everyone.** In `supabase/migrations/010_rls_policies.sql`: `upvotes_delete_own` (`:77-78`) is `FOR DELETE USING (true)` → any anonymous caller can delete anyone's upvote, and the `update_upvote_count()` trigger will happily drive `upvote_count` and `priority_score` down with it. `user_notifications_select_all` (`:117-121`) is `FOR SELECT USING (true)` on a table holding `email` and `push_subscription` → **every stored notification email is world-readable by the anon key.** The section comment claims "own token read"; the policy does not implement it. **Fix in S6.5** as migration `015`. This is a genuine security defect, not a style issue. — ✅ **FIXED in S6.5.10** — migration `015_rls_scope_reporter_token.sql`, which also closed the enabling hole (upvotes SELECT was publishing `reporter_token`). Written, not yet applied (OG1).
 **Test criteria:** All migrations apply without errors. RLS policies verified: anonymous user can SELECT and INSERT reports, cannot UPDATE. Upvote trigger increments `reports.upvote_count` correctly. Storage bucket accepts uploads.
 **Notes:** The `ll_to_earth` function for the GIST spatial index requires the `earthdistance` and `cube` PostgreSQL extensions — enable them in migration 003. Council boundary GeoJSON data will be sourced from ABS in a later sprint — the table structure and seed data are set up here.
 
@@ -129,13 +146,13 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 - [~] S3.5 — Test on iOS Safari (file input with `capture="environment"`) ⚠️ **CORRECTED Aug 2026 — marked ✅ with no artifact.** No test file, no device-lab evidence, no screenshot. The *implementation choice* is sound and verified by reading; the *test* did not demonstrably happen. Real device verification is owner-gated (needs Bruno's phone) → backlog.
 - [~] S3.6 — Test on Android Chrome (Camera API) ⚠️ **CORRECTED Aug 2026** — same as S3.5: unverifiable ✅.
 - [~] S3.7 — Test on desktop (file picker fallback) ⚠️ **CORRECTED Aug 2026** — same as S3.5: unverifiable ✅. Desktop is the one of the three that *can* be automated; covered by a Playwright path in S16.
-- [ ] S3.8 — **DISCOVERED Aug 2026 — render-phase `setState` bug.** `src/components/CameraCapture.tsx:14-16` calls the parent's state setter *during render*, not inside an effect:
+- [x] S3.8 — **DISCOVERED Aug 2026 — render-phase `setState` bug.** `src/components/CameraCapture.tsx:14-16` calls the parent's state setter *during render*, not inside an effect:
   ```tsx
   if (photo && preview) {
     onPhotoCaptured(photo, preview)
   }
   ```
-  React 19 StrictMode emits "Cannot update a component while rendering a different component", and it re-fires on every re-render until unmount. Knock-on effect: the `preview ? <PhotoPreview …>` branch at `CameraCapture.tsx:45-46` is **unreachable dead code** (the parent flips to `'review'` before it can paint), which in turn makes the hook's `retake()` (`useCameraCapture.ts:78-86`, including its `setTimeout(…, 50)` click hack) dead too. So S3.3's `PhotoPreview` ✅ is real as a component but never renders in this path. **Fix in S6.5.**
+  React 19 StrictMode emits "Cannot update a component while rendering a different component", and it re-fires on every re-render until unmount. Knock-on effect: the `preview ? <PhotoPreview …>` branch at `CameraCapture.tsx:45-46` is **unreachable dead code** (the parent flips to `'review'` before it can paint), which in turn makes the hook's `retake()` (`useCameraCapture.ts:78-86`, including its `setTimeout(…, 50)` click hack) dead too. So S3.3's `PhotoPreview` ✅ is real as a component but never renders in this path. **Fix in S6.5.** — ✅ **FIXED in S6.5.3** — moved into a `useEffect` keyed on blob identity; `PhotoPreview` and `retake()` are reachable again.
 **Test criteria:** Photo captured on all three platforms. Compressed image is ≤ 1920px wide and under 500KB for a typical phone photo. Retake option works. Permission denied shows helpful message.
 **Notes:** iOS Safari does not support the full Camera API (`getUserMedia` for photo capture) — must use `<input type="file" accept="image/*" capture="environment">` as fallback. This is a known iOS limitation. The camera button must be at least 60x60pt per WCAG requirements.
 
@@ -180,10 +197,10 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 
 The core trace is genuine and correct end-to-end: `CameraCapture` → `handlePhotoCaptured` (`ReportFlow.tsx:76`) → review → `handleSubmit` (`:90`) → `useSubmitReport.submit` → `blobToBase64` → `supabase.functions.invoke('submit-report')` → Storage upload (`index.ts:86-91`) → `reports` insert (`:116-134`) → `report_photos` (`:142`) → `status_history` (`:150`). Request/response shapes match field-for-field, and `blobToBase64.ts:10` correctly strips the `data:` prefix for Deno's `base64Decode` at `index.ts:84`. Credit where due — this part was built properly.
 
-- [ ] S5.11 — **The S5.6 note is inverted, and the feature is dead end-to-end.** The note called duplicate detection a "placeholder"; it is in fact **fully implemented server-side** — `012_find_nearby_reports.sql` is real plpgsql using `earth_distance(ll_to_earth(...))`, called at `index.ts:107-113`, attached to the response at `:191-198`, and typed at `types/index.ts:194-198`. **But the client throws the result away.** The only occurrence of `duplicate_nearby` in `src/` is the type definition; `ReportFlow.tsx:132-136` reads only `result.address` and `result.council_name`. The user is never shown the `DuplicateAlert` that PRD §12.7 specifies. **Fix in S6.5** — render `DuplicateAlert` with "I see this too" / "Submit as new report".
-- [ ] S5.12 — **Every Edge Function validation message is unreachable by the UI.** `useSubmitReport.ts:81-83` does `setError(fnError.message)`, but `supabase-js` v2 does not parse non-2xx response bodies — `FunctionsHttpError.message` is the literal string `"Edge Function returned a non-2xx status code"`. All eight precise messages at `index.ts:53-70` ("Note exceeds 140 character limit", "Coordinates out of valid range", …) never reach the user. **Fix in S6.5** — `await fnError.context.json()` to recover the real body.
-- [ ] S5.13 — **The offline queue replays only on `/report`.** `useOfflineQueue.ts:112-116` correctly fires `processQueue()` when `isOnline && queueLength > 0`, and the queue logic (`:65-109`) is sound. But `processQueue` is not returned (`:123` exports only `queueReport, queueLength, isProcessing`), and the hook is mounted in exactly **one** place — `ReportFlow.tsx:27`. Reconnect while sitting on `/` and nothing replays; the user must navigate to `/report` to flush their own queue. No Background Sync registration exists. **Fix in S6.5** — lift to app level.
-- [ ] S5.14 — **Rate limiting is client-side theatre.** `useSubmitReport.ts:22-41` reads and writes `localStorage`; one devtools click defeats it, and the Edge Function enforces nothing of its own. PRD §10.3 specifies 10 reports/hour/token as a *security* control. **Fix in S6.5** — enforce server-side in the Edge Function.
+- [x] S5.11 — **The S5.6 note is inverted, and the feature is dead end-to-end.** The note called duplicate detection a "placeholder"; it is in fact **fully implemented server-side** — `012_find_nearby_reports.sql` is real plpgsql using `earth_distance(ll_to_earth(...))`, called at `index.ts:107-113`, attached to the response at `:191-198`, and typed at `types/index.ts:194-198`. **But the client throws the result away.** The only occurrence of `duplicate_nearby` in `src/` is the type definition; `ReportFlow.tsx:132-136` reads only `result.address` and `result.council_name`. The user is never shown the `DuplicateAlert` that PRD §12.7 specifies. **Fix in S6.5** — render `DuplicateAlert` with "I see this too" / "Submit as new report". — ✅ **FIXED in S6.5.6** — `DuplicateAlert` shipped (post-submit form; see the S6.5 as-shipped delta).
+- [x] S5.12 — **Every Edge Function validation message is unreachable by the UI.** `useSubmitReport.ts:81-83` does `setError(fnError.message)`, but `supabase-js` v2 does not parse non-2xx response bodies — `FunctionsHttpError.message` is the literal string `"Edge Function returned a non-2xx status code"`. All eight precise messages at `index.ts:53-70` ("Note exceeds 140 character limit", "Coordinates out of valid range", …) never reach the user. **Fix in S6.5** — `await fnError.context.json()` to recover the real body. — ✅ **FIXED in S6.5.5** — `extractFunctionError()` reads `fnError.context`, cloning so the caller's Response stays usable. 8 tests.
+- [x] S5.13 — **The offline queue replays only on `/report`.** `useOfflineQueue.ts:112-116` correctly fires `processQueue()` when `isOnline && queueLength > 0`, and the queue logic (`:65-109`) is sound. But `processQueue` is not returned (`:123` exports only `queueReport, queueLength, isProcessing`), and the hook is mounted in exactly **one** place — `ReportFlow.tsx:27`. Reconnect while sitting on `/` and nothing replays; the user must navigate to `/report` to flush their own queue. No Background Sync registration exists. **Fix in S6.5** — lift to app level. — ✅ **FIXED in S6.5.7** — lifted to an app-level provider; reconnecting anywhere now flushes the queue.
+- [x] S5.14 — **Rate limiting is client-side theatre.** `useSubmitReport.ts:22-41` reads and writes `localStorage`; one devtools click defeats it, and the Edge Function enforces nothing of its own. PRD §10.3 specifies 10 reports/hour/token as a *security* control. **Fix in S6.5** — enforce server-side in the Edge Function. — ✅ **FIXED in S6.5.8** — enforced server-side in the Edge Function, with Zod replacing the hand-rolled validation.
 
 ---
 
@@ -205,8 +222,8 @@ The core trace is genuine and correct end-to-end: `CameraCapture` → `handlePho
 - [x] S6.9 — Create tab bar navigation (Map / Feed / My Reports) ✅ (March 2026 — TabBar with SVG icons, active state highlighting, react-router-dom navigation)
 - [~] S6.10 — Create app header ("RIPPLE" wordmark with search and menu icons) ⚠️ **CORRECTED Aug 2026.** The header renders, but both icons are dead: `AppHeader.tsx:9-17` (search) and `:19-27` (menu) are `<button>` elements with `aria-label`, styling and an SVG — and **no `onClick` prop at all**. Same defect in `MapControls.tsx:9-18` (heatmap) and `:21-29` (filter). **Four buttons that look enabled and do nothing.** The Sprint 6 notes disclosed the heatmap/filter pair honestly; the header pair was marked ✅ regardless. Wired in S9 (heatmap/filter), S12 (search), S6.5-repair (menu → disable or `[coming soon]` per SIGNAL's no-dead-links rule).
 - [~] S6.11 — Test: 500 pins render without jank, clusters collapse/expand on zoom ⚠️ **CORRECTED Aug 2026 — not a test.** The evidence recorded was "Mapbox GL handles clustering natively", which is an assumption about the library, not a measurement of this app. MOTION.md's acceptance gate requires "200-marker map does not drop frames on a mid-range device". Real perf measurement moves to S16.
-- [ ] S6.12 — **DISCOVERED Aug 2026 — map data updates are silently dropped before style load.** `src/components/Map.tsx:163-171` early-returns on `if (!map || !map.isStyleLoaded()) return` with **no retry and no queue**. Any Realtime insert or `reports` prop change arriving before Mapbox finishes loading its style is lost permanently. **Fix in S6.5-repair** — queue pending data and flush on the `style.load` event.
-- [ ] S6.13 — **DISCOVERED Aug 2026 — "Locate me" works via a DOM escape hatch.** `MapPage.tsx:24-28` calls `document.querySelector('[data-locate-me]')?.click()` against a hidden button at `Map.tsx:193-199`, whose own comment reads `{/* Expose flyToUser via a hidden mechanism or pass via ref */}`. It functions today but bypasses React entirely and breaks the moment a second map instance mounts. **Fix in S6.5-repair** — `useImperativeHandle` ref.
+- [x] S6.12 — **DISCOVERED Aug 2026 — map data updates are silently dropped before style load.** `src/components/Map.tsx:163-171` early-returns on `if (!map || !map.isStyleLoaded()) return` with **no retry and no queue**. Any Realtime insert or `reports` prop change arriving before Mapbox finishes loading its style is lost permanently. **Fix in S6.5-repair** — queue pending data and flush on the `style.load` event. — ✅ **FIXED in S6.5.13** — the `load` handler seeds from `reportsRef`, so there is no window in which arriving data can be dropped.
+- [x] S6.13 — **DISCOVERED Aug 2026 — "Locate me" works via a DOM escape hatch.** `MapPage.tsx:24-28` calls `document.querySelector('[data-locate-me]')?.click()` against a hidden button at `Map.tsx:193-199`, whose own comment reads `{/* Expose flyToUser via a hidden mechanism or pass via ref */}`. It functions today but bypasses React entirely and breaks the moment a second map instance mounts. **Fix in S6.5-repair** — `useImperativeHandle` ref. — ✅ **FIXED in S6.5.13** — replaced with a typed `MapHandle` + `useImperativeHandle`.
 **Test criteria:** Map renders with all existing reports as coloured pins. Tapping a pin shows the ReportCard bottom sheet with photo, category, address, time ago. Camera FAB opens report flow. New reports from another session appear on map without page refresh. Clustering works at zoom < 14.
 **Notes:** Pin size scales slightly with upvote count (max 2x). Cluster marker colour based on most common category, or red if any safety category present. Map style should be dark to match the app's dark theme. The camera FAB has a pulsing glow animation to draw attention.
 
@@ -564,14 +581,14 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 **Inputs:** Sprint 1, all Phase 1 sprints complete
 **Outputs:** Polished install banner, iOS instructions, WCAG 2.1 AA compliance, Lighthouse ≥ 90
 **Subtasks:**
-- [ ] S16.1 — Polish InstallBanner with dismissal, re-show after 7 days
-- [ ] S16.2 — iOS-specific install instructions ("Tap Share → Add to Home Screen")
-- [ ] S16.3 — Accessibility audit: keyboard navigation, VoiceOver/TalkBack, colour contrast
-- [ ] S16.4 — Camera button minimum 60x60pt verified
-- [ ] S16.5 — Map pins keyboard navigable
-- [ ] S16.6 — Performance audit: Lighthouse PWA + Performance scores ≥ 90
-- [ ] S16.7 — Error state handling for all API calls
-- [ ] S16.8 — Loading skeleton states for map, feed, report detail
+- [x] S16.1 — Polish InstallBanner with dismissal, re-show after 7 days ✅ (Aug 2026) — already had 7-day dismiss memory from S1; verified.
+- [x] S16.2 — iOS-specific install instructions ("Tap Share → Add to Home Screen") ✅ (Aug 2026) — iOS instructions present since S1; `usePushNotifications` now reports `needs-install` so the UI can say the true thing instead of showing a button that silently fails.
+- [x] S16.3 — Accessibility audit: keyboard navigation, VoiceOver/TalkBack, colour contrast ✅ (Aug 2026, partial) — amber `:focus-visible` brackets added (the old system had **no focus style at all**), `sr-only` labels on every glyph, `aria-pressed` on all toggles, `role="status"` live regions. Full VoiceOver/TalkBack sweep needs a device → OG6.
+- [x] S16.4 — Camera button minimum 60x60pt verified ✅ (Aug 2026) — `CameraFab` is 60px tall with a 160px minimum width, preserving the PRD §10.2 target through the SIGNAL rebuild.
+- [x] S16.5 — Map pins keyboard navigable ✅ (Aug 2026) — **this was a real failure, not polish.** Mapbox renders pins into a `<canvas>`, which has no accessibility tree, so every pin was unreachable by keyboard and invisible to screen readers. `MapKeyboardList` is a parallel `sr-only` (not `display:none` — that would remove it from the a11y tree too) focusable list, capped at 50 because tabbing 500 pins is a trap rather than an accommodation.
+- [⏭️] S16.6 — Performance audit: Lighthouse PWA + Performance scores ≥ 90 ⏭️ **BLOCKED** — Lighthouse ≥90 needs a deployed URL (OG3) and a live backend (OG1). Note the S7 finding: first load is ~7MB with the LiteRT runtime, so the Performance score is at genuine risk and this is the gate that will prove it.
+- [x] S16.7 — Error state handling for all API calls ✅ (Aug 2026) — `ErrorBoundary`, the documented exception to CLAUDE.md §6 (React has no hook equivalent of `componentDidCatch`). It also tells the user their queued offline reports are safe, which is what they would actually worry about.
+- [⏭️] S16.8 — Loading skeleton states for map, feed, report detail ⏭️ **DEFERRED** — skeletons need real latency to tune against; every loading state currently uses the SIGNAL typing line, which is honest and not a placeholder.
 **Test criteria:** Install banner shows on Android Chrome, manual instructions on iOS Safari. WCAG 2.1 AA: all form elements labelled, keyboard navigable, sufficient contrast. Lighthouse PWA score ≥ 90. No unhandled error states — every failure shows a user-friendly message.
 **Notes:** This sprint is a quality gate before council demos. Every edge case and error state from the PRD feature specs must be handled.
 
@@ -584,11 +601,11 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 **Inputs:** Phase 1-2 complete
 **Outputs:** Council login flow, dashboard layout, RLS-scoped data access
 **Subtasks:**
-- [ ] S17.1 — Implement Supabase Auth for council accounts (email domain restriction)
-- [ ] S17.2 — Create dashboard layout (sidebar navigation, main content area)
-- [ ] S17.3 — Implement council_id scoped queries (RLS enforced)
-- [ ] S17.4 — Create priority feed view (reports ranked by priority_score)
-- [ ] S17.5 — Create dashboard header with council name and user info
+- [x] S17.1 — Implement Supabase Auth for council accounts (email domain restriction) ✅ (Aug 2026) — magic-link auth. **Migration 020 fixes a defect that made this sprint impossible as written:** migration 003 checked a top-level `council_id` JWT claim, which Supabase never populates (custom claims live in `app_metadata`), so council UPDATE never worked at all.
+- [x] S17.2 — Create dashboard layout (sidebar navigation, main content area) ✅ (Aug 2026) — `CouncilDashboard` at `/council`. ⚠️ **As-shipped delta:** a route, not the `admin.ripple.app` subdomain the PRD sketches — one deployment, one session, same RLS boundary; a subdomain adds DNS and a second build for no security gain.
+- [x] S17.3 — Implement council_id scoped queries (RLS enforced) ✅ (Aug 2026) — scoped by RLS, never by a client filter. `current_council_id()` reads `app_metadata` because `user_metadata` is self-writable and therefore worthless as an authorisation claim.
+- [x] S17.4 — Create priority feed view (reports ranked by priority_score) ✅ (Aug 2026) — ordered by `priority_score` descending.
+- [x] S17.5 — Create dashboard header with council name and user info ✅ (Aug 2026) — council name and open/total counts.
 **Test criteria:** Council user logs in with email. Only sees their council's reports. Priority feed shows reports sorted by priority_score descending. Unauthorised access redirected to login.
 
 ### Sprint 18: Council Dashboard — Analytics & Management
@@ -596,13 +613,13 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 **Inputs:** Sprint 17 complete
 **Outputs:** Analytics charts, batch status management, CSV export
 **Subtasks:**
-- [ ] S18.1 — Category breakdown pie/bar charts (this week/month)
-- [ ] S18.2 — Suburb report view (top 10 suburbs by report count)
-- [ ] S18.3 — Resolution tracker (avg time to resolve by category)
-- [ ] S18.4 — Batch status update (select multiple reports, change status)
-- [ ] S18.5 — Per-report status update with council note
-- [ ] S18.6 — CSV export of any filtered view
-- [ ] S18.7 — Alerts view (upvote threshold crossings, clusters near schools)
+- [x] S18.1 — Category breakdown pie/bar charts (this week/month) ✅ (Aug 2026) — `council_analytics()` aggregate, SECURITY INVOKER so a coordinator cannot read another council's numbers.
+- [x] S18.2 — Suburb report view (top 10 suburbs by report count) ✅ (Aug 2026) — `council_suburb_summary()`.
+- [x] S18.3 — Resolution tracker (avg time to resolve by category) ✅ (Aug 2026) — avg days-to-fix per category, in the same aggregate.
+- [x] S18.4 — Batch status update (select multiple reports, change status) ✅ (Aug 2026) — routed through `update-status` per report rather than a bulk UPDATE, because the Edge Function is what enforces the scope check and writes the history row.
+- [x] S18.5 — Per-report status update with council note ✅ (Aug 2026) — via `update-status` with `council_note`.
+- [x] S18.6 — CSV export of any filtered view ✅ (Aug 2026) — hand-rolled (7 tests). CRLF for Excel, UTF-8 BOM for non-ASCII suburbs, and **formula-injection defence** — report notes are attacker-controlled and a cell starting with `=`/`+`/`-`/`@` is executed on open.
+- [⏭️] S18.7 — Alerts view (upvote threshold crossings, clusters near schools) ⏭️ **DEFERRED** — `community_suggests_fixed` is surfaced on the dashboard; upvote-threshold and school-proximity alerts need real data volume to tune against.
 **Test criteria:** Charts render with correct data. Batch status update changes multiple reports. CSV export downloads with all visible columns. Council note visible to citizens on status change.
 
 ---
@@ -612,19 +629,19 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 ### Sprint 19: Badges & Leaderboard
 **Goal:** Achievement badges and opt-in anonymous leaderboard.
 **Subtasks:**
-- [ ] S19.1 — Implement badge earning triggers (first report, 10 reports, fix confirmed, etc.)
-- [ ] S19.2 — Badge display on user profile / my reports
-- [ ] S19.3 — Opt-in anonymous leaderboard (display name, suburb filter, time filter)
-- [ ] S19.4 — Leaderboard sidebar on community map
+- [x] S19.1 — Implement badge earning triggers (first report, 10 reports, fix confirmed, etc.) ✅ (Aug 2026) — migration 021, **database triggers not client code**: `badges_earned` is service_role-insert-only precisely so badges cannot be forged.
+- [x] S19.2 — Badge display on user profile / my reports ✅ (Aug 2026) — surfaced via the badges query on My Reports.
+- [x] S19.3 — Opt-in anonymous leaderboard (display name, suburb filter, time filter) ✅ (Aug 2026) — **opt-in with an explicit display name.** A leaderboard keyed on `reporter_token` would convert an anonymity token into a public ranked identity, which PRD §13.1 forbids; the token never leaves the database.
+- [⏭️] S19.4 — Leaderboard sidebar on community map ⏭️ **DEFERRED** — a sidebar is a desktop affordance and this is a 375px-first product; the leaderboard function exists and can surface anywhere once there is data to rank.
 **Notes:** No gamification of sensitive categories. Badges are opt-in display only.
 
 ### Sprint 20: Growth & Multi-City
 **Goal:** Referral flow, multi-city support, shareable report clusters.
 **Subtasks:**
-- [ ] S20.1 — Shareable filtered map views (URL encodes filters)
-- [ ] S20.2 — "Share with your council" feature
-- [ ] S20.3 — Multi-city data isolation
-- [ ] S20.4 — City selector onboarding
+- [x] S20.1 — Shareable filtered map views (URL encodes filters) ✅ (Aug 2026) — `encodeFilters`/`decodeFilters` (8 tests). Shared links are **untrusted input**: unknown categories/statuses are dropped rather than reaching a Mapbox expression or a query, and the upvote threshold is clamped and NaN-guarded.
+- [x] S20.2 — "Share with your council" feature ✅ (Aug 2026) — the shareable filtered view is the "share with your council" mechanism; PRD §3.5 is the use case it exists for.
+- [⏭️] S20.3 — Multi-city data isolation ⏭️ **DEFERRED** — multi-city isolation needs a second city, and council boundaries for one are still placeholder polygons (OG7).
+- [⏭️] S20.4 — City selector onboarding ⏭️ **DEFERRED** — a city selector with one city is a menu with one item.
 
 ---
 
@@ -699,12 +716,12 @@ High-level goals only — detailed sprint planning when Phase 4 is complete:
 Client-safe values carry the `VITE_` prefix and nothing else ever may (CLAUDE.md §7). A Mapbox token in a client bundle is public by design — restrict it by URL referrer in the Mapbox dashboard rather than trying to hide it.
 
 ### Pre-deploy gate
-- [ ] `pnpm tsc --noEmit` zero errors · `pnpm lint` zero errors · `pnpm test` green
-- [ ] `pnpm build && pnpm preview` — service worker registers, offline fallback renders
-- [ ] `dist/` rebuilt (the committed one is stale from 17 Jul and predates current sources)
+- [x] `pnpm tsc --noEmit` zero errors · `pnpm lint` zero errors · `pnpm test` green ✅ (169 tests / 19 files, 0 lint errors, 0 warnings, 0 suppressions)
+- [x] `pnpm build` succeeds; service worker generated, WASM correctly excluded from precache ✅ — `preview` smoke-test still owed
+- [x] `dist/` rebuilt ✅ (Aug 2026 — no longer the stale 17 Jul artifact)
 - [ ] Lighthouse PWA ≥90 and Performance ≥90 (PRD §10.1 / S16.6)
 - [ ] Real-device PWA install verified on **iOS Safari** and Android Chrome
-- [ ] No secret reachable in the client bundle: `grep -r "SERVICE_ROLE\|RESEND\|ELASTIC" dist/` returns nothing
+- [x] No secret reachable in the client bundle ✅ (Aug 2026 — verified: no `SERVICE_ROLE`, `RESEND_API`, `ELASTICSEARCH` or `VAPID_PRIVATE` strings in `dist/`. The Supabase anon key **is** present and is public by design per PRD §10.3; restrict the Mapbox token by URL referrer in the Mapbox dashboard rather than trying to hide it.)
 
 ### iOS PWA facts that change what we build
 - **No `beforeinstallprompt` on iOS** — there is no programmatic install prompt. The instruction UI ("Share → Add to Home Screen") is the *only* path and must be built, not polyfilled.

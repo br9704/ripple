@@ -10,8 +10,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-in%20development-orange" alt="Status: In Development" />
-  <img src="https://img.shields.io/badge/phase-1%20|%20sprint%206%20done-blue" alt="Phase: 1, Sprint 6 Done" />
-  <img src="https://img.shields.io/badge/pilot-Melbourne-E85D04" alt="Pilot: Melbourne" />
+  <img src="https://img.shields.io/badge/sprints-20%2F20%20code--complete-blue" alt="Sprints: 20/20 code-complete" />
+  <img src="https://img.shields.io/badge/tests-169-brightgreen" alt="Tests: 169" />
+  <img src="https://img.shields.io/badge/pilot-Melbourne-ffb000" alt="Pilot: Melbourne" />
   <img src="https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey" alt="License" />
 </p>
 
@@ -26,7 +27,9 @@
 
 ---
 
-> **This project is under active development.** PWA infrastructure is in place — features are being built sprint-by-sprint. See the [roadmap](#roadmap) below for what's done and what's next.
+> **All twenty sprints are code-complete — and the app is not yet deployable.** Both halves of that sentence are load-bearing.
+>
+> Every feature is written, typechecks, lints clean, and its pure logic is unit-tested (**169 tests**). But the Supabase project this was built against **no longer exists**, so nothing has been verified end-to-end against a real database, and the on-device classifier has no trained model yet. See [Current Status](#current-status) for exactly what is and isn't proven.
 
 ---
 
@@ -52,8 +55,8 @@ The result: Melbourne receives ~47,000 reports per year through official channel
 ## How Ripple Works
 
 1. **Open the app** — no account required. A full-viewport map shows every reported issue in your area.
-2. **Tap the camera** — large orange FAB, centre of screen. Snap a photo of the problem.
-3. **AI classifies it** — TensorFlow.js runs entirely on your phone. "Pothole (94%)" appears in under 2 seconds.
+2. **Tap the camera** — the `[ ◉ REPORT ]` control, centre of screen. Snap a photo of the problem.
+3. **AI classifies it** — LiteRT.js runs an int8 `.tflite` model entirely on your phone. "Pothole (94%)" appears without a single byte of the photo leaving the device. If the classifier is unavailable for any reason, you pick a category and the report still goes through — a broken classifier never blocks a report.
 4. **GPS captures location** — reverse geocoded to a street address, council auto-detected from coordinates.
 5. **Submit** — the report appears on the community map immediately. Done in 3 seconds.
 6. **Community upvotes** — neighbours see the pin, tap "I see this too." Social proof drives council action.
@@ -64,7 +67,7 @@ The result: Melbourne receives ~47,000 reports per year through official channel
 Privacy is a core architectural constraint, not an afterthought:
 
 - **Anonymous by default.** No name, email, address, or phone required. A random `reporter_token` (UUID in localStorage) is the only identifier — never linked to identity.
-- **AI runs on-device.** Photos are classified entirely client-side via TensorFlow.js. No image data leaves the device for classification.
+- **AI runs on-device.** Photos are classified entirely client-side via LiteRT.js. No image data leaves the device for classification — only the compressed photo, and only after you tap Submit.
 - **GPS captured at report time only.** No continuous location tracking between sessions.
 - **No analytics or tracking libraries.** Zero third-party telemetry.
 - **No PII in logs.** Email addresses, names, and device identifiers are never logged.
@@ -80,8 +83,8 @@ Privacy is a core architectural constraint, not an afterthought:
 | **Frontend** | React 18 + TypeScript (strict), Vite (PWA) |
 | **Styling** | Tailwind CSS v3 |
 | **Map** | Mapbox GL JS v3 (clustering, heatmap, geocoding) |
-| **AI/ML** | TensorFlow.js + MobileNetV2 (client-side classification) |
-| **Search** | Elasticsearch (full-text search + analytics) |
+| **AI/ML** | [LiteRT.js](https://github.com/google-ai-edge/LiteRT) + int8 `.tflite` (on-device classification, WebGPU with WASM fallback) |
+| **Search** | Postgres full-text (`tsvector` + GIN). Elasticsearch deferred — see [ADR](MASTERPLAN.md#architecture-decisions-log) |
 | **Backend** | Supabase — Postgres, Auth, Storage, Realtime, Edge Functions (Deno) |
 | **Email** | Resend (status notification transactional email) |
 | **Geocoding** | Mapbox Geocoding API (reverse geocode lat/lng → address) |
@@ -131,8 +134,8 @@ pnpm dev
 | `VITE_SUPABASE_URL` | `.env.local` | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | `.env.local` | Supabase anonymous/public key |
 | `VITE_MAPBOX_TOKEN` | `.env.local` | Mapbox GL JS access token |
-| `ELASTICSEARCH_URL` | Supabase secrets | Elasticsearch endpoint (server-side only) |
-| `ELASTICSEARCH_API_KEY` | Supabase secrets | Elasticsearch API key (server-side only) |
+| `VITE_VAPID_PUBLIC_KEY` | `.env.local` | Web Push public key (optional; `npx web-push generate-vapid-keys`) |
+| `VAPID_PRIVATE_KEY` | Supabase secrets | Web Push private key — **never** `VITE_`-prefixed |
 | `RESEND_API_KEY` | Supabase secrets | Resend email API key (server-side only) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase secrets | Supabase admin key (server-side only) |
 
@@ -159,6 +162,7 @@ ripple/
 │   └── seed/             # Seed data scripts (Melbourne councils)
 ├── PRD.md                # Product requirements document
 ├── MASTERPLAN.md         # Sprint plan and progress tracker
+├── MOTION.md             # Binding animation specification
 ├── CLAUDE.md             # Development agent instructions
 └── README.md             # You are here
 ```
@@ -218,6 +222,8 @@ All tables have **Row Level Security** enabled. Anonymous users can read and sub
 |----------|-------------|------|
 | **Product Requirements** | Full feature specs, data models, personas, design system, privacy rules, UI screen specs | [`PRD.md`](PRD.md) |
 | **Implementation Plan** | Sprint-by-sprint breakdown with progress tracking, architecture decisions, and risk log | [`MASTERPLAN.md`](MASTERPLAN.md) |
+| **Animation Spec** | Binding motion specification — sequences, timings, per-surface rules, acceptance gates | [`MOTION.md`](MOTION.md) |
+| **Classifier** | How to produce and drop in the on-device model | [`public/models/README.md`](public/models/README.md) |
 | **Agent Instructions** | Coding standards, privacy rules, commit conventions, sprint protocol | [`CLAUDE.md`](CLAUDE.md) |
 | **Environment Template** | Required environment variables with descriptions | [`.env.example`](.env.example) |
 
@@ -241,43 +247,72 @@ All tables have **Row Level Security** enabled. Anonymous users can read and sub
 
 ## Roadmap
 
+All twenty sprints are **code-complete**. Acceptance for anything touching the database is blocked on re-provisioning Supabase — see [Current Status](#current-status).
+
 ### Phase 0 — Foundation
-- [x] **Sprint 0:** Project scaffolding (Vite + React + TypeScript + Tailwind + PWA config)
-- [x] **Sprint 1:** PWA infrastructure (Service Worker, offline fallback, install prompt)
-- [x] **Sprint 2:** Supabase infrastructure (schema, migrations, RLS, seed data)
-- [x] **Sprint 3:** Camera API & photo capture
-- [x] **Sprint 4:** GPS geolocation & reverse geocoding
-- [x] **Sprint 5:** Basic report submission (end-to-end flow)
+- [x] **Sprint 0–5:** Scaffolding, PWA infrastructure, Supabase schema, camera, GPS, report submission
 
 ### Phase 1 — MVP
-- [x] **Sprint 6:** Live community map (Mapbox, pins, clustering, real-time)
-- [ ] **Sprint 7:** AI image classification (TensorFlow.js + MobileNetV2)
-- [ ] **Sprint 8:** Community upvoting ("I see this too")
-- [ ] **Sprint 9:** Map filters & heatmap
-- [ ] **Sprint 10:** Feed view & My Reports
-- [ ] **Sprint 11:** Report detail & routing
-- [ ] **Sprint 12:** Elasticsearch integration (search + analytics)
+- [x] **Sprint 6:** Live community map (Mapbox, clustering, Realtime)
+- [x] **Sprint 6.5:** Foundation Repair *(inserted Aug 2026)* — test harness from zero, plus nine defects the plan had marked complete
+- [x] **Sprint 6.6:** SIGNAL design migration *(inserted Aug 2026)*
+- [x] **Sprint 7:** On-device AI classification (LiteRT.js) — *pipeline complete, awaiting a trained model*
+- [x] **Sprint 8:** Community upvoting
+- [x] **Sprint 9:** Map filters & heatmap
+- [x] **Sprint 10:** Feed & My Reports
+- [x] **Sprint 11:** Report detail, status timeline, share
+- [x] **Sprint 12:** Full-text search — *Postgres FTS; Elasticsearch deliberately deferred*
 
 ### Phase 2 — Community & Polish
-- [ ] **Sprint 13:** Status tracking & notifications
-- [ ] **Sprint 14:** Comment threads
-- [ ] **Sprint 15:** "Fixed!" photo confirmation
-- [ ] **Sprint 16:** PWA install flow polish & accessibility audit
+- [x] **Sprint 13:** Status tracking & opt-in notifications
+- [x] **Sprint 14:** Comment threads with moderation
+- [x] **Sprint 15:** "Fixed!" photo confirmation
+- [x] **Sprint 16:** Accessibility, error boundary, Web Push — *Lighthouse gate needs a deployed URL*
 
 ### Phase 3 — Council Tools
-- [ ] **Sprint 17:** Council dashboard — authentication & layout
-- [ ] **Sprint 18:** Council dashboard — analytics & management
+- [x] **Sprint 17:** Council dashboard — magic-link auth, RLS-scoped feed
+- [x] **Sprint 18:** Analytics, batch status updates, CSV export
 
-### Phase 4+ — Gamification & Growth
-- [ ] Badges, leaderboard, referral flow, multi-city expansion
+### Phase 4 — Gamification & Growth
+- [x] **Sprint 19:** Badges & opt-in leaderboard
+- [x] **Sprint 20:** Shareable filtered views
 
-> Full sprint details with subtasks in [`MASTERPLAN.md`](MASTERPLAN.md)
+> Full sprint detail, as-shipped deltas, and every deferral with its reason: [`MASTERPLAN.md`](MASTERPLAN.md)
 
 ---
 
 ## Current Status
 
-**Sprint 6 complete.** Live community map with Mapbox GL JS (dark-v11 style). Category-coloured report pins with clustering. ReportCard bottom sheet with Framer Motion slide-up and drag-to-dismiss. Supabase Realtime subscription for live pin updates. App shell: header with blur backdrop, tab bar navigation (Map/Feed/My Reports), camera FAB with pulse animation. Locate-me map control. Next: Sprint 7 (AI image classification).
+**All twenty sprints are code-complete. Nothing is acceptance-verified.** Both halves matter, and conflating them is exactly the failure this project already had once.
+
+| | Aug 2026 |
+|---|---|
+| Sprints code-complete | **20 / 20** (plus 6.5 and 6.6, inserted) |
+| Tests | **169** across 19 files (from zero) |
+| Lint | 0 errors, 0 warnings, **0 suppressions** |
+| TypeScript | 0 errors, strict |
+| Migrations | 21 |
+| Edge Functions | 4 |
+
+### What is proven
+
+`pnpm tsc --noEmit`, `pnpm lint` and `pnpm test` all pass; `pnpm build` produces a valid service worker with the 37MB LiteRT WASM runtime correctly excluded from precache; no server-side secret appears in the bundle.
+
+### What is not proven, and why
+
+**The Supabase project this was built against no longer exists** — its ref returns NXDOMAIN. So no migration has been applied, no Edge Function deployed, and no end-to-end path exercised against a real database. Every task asserting database behaviour is marked deferred or partial in the masterplan, never complete.
+
+**The classifier has no model.** The Sprint 7 pipeline — runtime, caching, preprocessing, confidence tiers, scan animation, override, correction logging, fallback — is built and tested, but `ripple-classifier-v1.tflite` does not exist yet, so the app currently falls through to the manual category picker on every capture. That is the designed behaviour, not a bug. **No accuracy claim is made** until a fine-tuned model lands.
+
+**First load is heavier than the PRD budget.** Measured: the LiteRT WASM runtime is ~2MB gzipped, and with a ~5MB model that puts first load near 7MB against PRD §10.1's "<5s on 4G". Recorded honestly in the masterplan rather than discovered later.
+
+### To make it real
+
+1. Re-provision Supabase → apply 21 migrations, deploy 4 Edge Functions, create the `reports` and `ml-models` buckets
+2. Deploy to Vercel
+3. Train and drop in the classifier (`public/models/README.md` has the recipe)
+4. Verify on a real mid-range Android and iPhone — this closes the Lighthouse and latency gates
+
 
 ---
 
