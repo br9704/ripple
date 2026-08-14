@@ -76,7 +76,7 @@ export function SubmissionSuccess({
       <div className="mt-8 flex flex-col gap-3 w-full max-w-xs">
         <Link
           to="/"
-          className="w-full rounded-lg bg-action px-4 py-3 text-center text-sm font-semibold text-text-primary transition-colors hover:bg-action-hover"
+          className="w-full rounded-lg bg-action px-4 py-3 text-center text-sm font-semibold text-bg-primary transition-colors hover:bg-action-hover"
         >
           View on map
         </Link>

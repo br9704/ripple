@@ -1,6 +1,6 @@
-/* Syne (body/display) + JetBrains Mono (data, labels, readouts, ASCII).
-   Inter is deliberately absent — SIGNAL excludes it by name. */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* Fonts are loaded from index.html with preconnect + a non-blocking <link>.
+   The @import that used to live here was render-blocking and cost ~2.4s of
+   First Contentful Paint, which Lighthouse flagged directly. */
 @import 'mapbox-gl/dist/mapbox-gl.css';
 
 @tailwind base;
@@ -36,7 +36,10 @@
   /* ── Text ── */
   --color-text-primary: #f0ece4;
   --color-text-secondary: #98928a;
-  --color-text-tertiary: #55504a;
+  /* Raised from SIGNAL's #55504a: that is ~3.0:1 on #050505, below WCAG AA's
+     4.5:1 for body text, and Lighthouse flagged it. #847d72 measures 5.01:1 while
+     staying visibly dimmer than --text-secondary, so the hierarchy survives. */
+  --color-text-tertiary: #847d72;
 
   /* ── The one accent ── */
   --amber: #ffb000;
@@ -73,7 +76,10 @@
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   /* ── Type Scale ── */
-  --text-xs: 0.6875rem;
+  /* 11px tripped Lighthouse's legible-font-size audit (12px floor). The PRD
+     type scale predates that check; 12px is the smallest defensible size for
+     a product used outdoors one-handed. */
+  --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;

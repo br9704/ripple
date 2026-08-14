@@ -1,6 +1,16 @@
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useRef, useMemo, lazy, Suspense } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { MapComponent, type MapHandle } from '@/components/Map'
+import type { MapHandle } from '@/components/Map'
+
+/**
+ * Mapbox GL JS is ~2.2MB — roughly the entire rest of the bundle combined, and
+ * it was blocking first paint on every route. Splitting it out drops it from
+ * the initial payload and loads it only when a map is actually rendered, which
+ * also means users who arrive at /feed or /my-reports never download it at all.
+ */
+const MapComponent = lazy(() =>
+  import('@/components/Map').then((m) => ({ default: m.MapComponent }))
+)
 import { ReportCard } from '@/components/ReportCard'
 import { AppHeader } from '@/components/AppHeader'
 import { TabBar } from '@/components/TabBar'
@@ -85,12 +95,20 @@ export function MapPage() {
             <TypingLine text="loading map..." />
           </div>
         ) : (
-          <MapComponent
-            ref={mapRef}
-            reports={visibleReports}
-            onPinClick={handlePinClick}
-            showHeatmap={showHeatmap}
-          />
+          <Suspense
+            fallback={
+              <div className="flex h-full items-center justify-center">
+                <TypingLine text="loading map..." />
+              </div>
+            }
+          >
+            <MapComponent
+              ref={mapRef}
+              reports={visibleReports}
+              onPinClick={handlePinClick}
+              showHeatmap={showHeatmap}
+            />
+          </Suspense>
         )}
       </div>
 

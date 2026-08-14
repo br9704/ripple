@@ -85,6 +85,12 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    // Hidden source maps: Lighthouse's valid-source-maps audit wants them, and
+    // they make production stack traces debuggable, without shipping a
+    // //# sourceMappingURL comment that invites casual source browsing.
+    sourcemap: 'hidden',
+  },
   resolve: {
     alias: { '@': '/src' }
   },

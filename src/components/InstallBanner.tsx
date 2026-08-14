@@ -51,7 +51,7 @@ export function InstallBanner() {
         {!isIOSDevice && (
           <button
             onClick={handleInstall}
-            className="rounded-md bg-action px-3 py-2 text-xs font-semibold text-text-primary transition-colors hover:bg-action-hover active:bg-action-hover"
+            className="rounded-md bg-action px-3 py-2 text-xs font-semibold text-bg-primary transition-colors hover:bg-action-hover active:bg-action-hover"
           >
             Install
           </button>

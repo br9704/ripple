@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CameraCapture } from '@/components/CameraCapture'
 import { PhotoPreview } from '@/components/PhotoPreview'
@@ -6,7 +6,10 @@ import { CategoryPicker } from '@/components/CategoryPicker'
 import { NoteInput } from '@/components/NoteInput'
 import { NotifyOptIn } from '@/components/NotifyOptIn'
 import { LocationStatus } from '@/components/LocationStatus'
-import { LocationPicker } from '@/components/LocationPicker'
+// Also lazy: LocationPicker imports Mapbox, and most reports never open it.
+const LocationPicker = lazy(() =>
+  import('@/components/LocationPicker').then((m) => ({ default: m.LocationPicker }))
+)
 import { AIResultCard } from '@/components/AIResultCard'
 import { ScanOverlay } from '@/components/ScanOverlay'
 import { useAIClassification } from '@/hooks/useAIClassification'
@@ -202,12 +205,14 @@ export function ReportFlow() {
 
   if (isPickingLocation) {
     return (
-      <LocationPicker
-        initialLat={geo.lat}
-        initialLng={geo.lng}
-        onConfirm={handlePickLocation}
-        onCancel={() => setIsPickingLocation(false)}
-      />
+      <Suspense fallback={<div className="h-screen bg-bg-primary" />}>
+        <LocationPicker
+          initialLat={geo.lat}
+          initialLng={geo.lng}
+          onConfirm={handlePickLocation}
+          onCancel={() => setIsPickingLocation(false)}
+        />
+      </Suspense>
     )
   }
 
@@ -360,7 +365,7 @@ export function ReportFlow() {
           disabled={!canSubmit}
           className={`w-full rounded-lg px-4 py-3.5 text-sm font-semibold transition-colors ${
             canSubmit
-              ? 'bg-action text-text-primary hover:bg-action-hover active:bg-action-hover'
+              ? 'bg-action text-bg-primary hover:bg-action-hover active:bg-action-hover'
               : 'bg-bg-elevated text-text-tertiary cursor-not-allowed'
           }`}
         >

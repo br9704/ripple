@@ -1,0 +1,10 @@
+# Ripple — public civic reporting map
+User-agent: *
+Allow: /
+
+# Report detail pages are public by design (PRD §13.2: photos show public
+# infrastructure). The council dashboard is not — it is behind auth, but there
+# is no reason to invite crawlers to it.
+Disallow: /council
+
+Sitemap: /sitemap.xml

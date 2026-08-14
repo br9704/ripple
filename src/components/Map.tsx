@@ -1,4 +1,5 @@
-import { useEffect, useRef, useCallback, useImperativeHandle, type Ref } from 'react'
+import { useEffect, useRef, useCallback, useState, useImperativeHandle, type Ref } from 'react'
+import { Link } from 'react-router-dom'
 import mapboxgl from 'mapbox-gl'
 import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, MAP_CLUSTER_RADIUS, MAP_CLUSTER_MAX_ZOOM } from '@/constants/config'
 import { CATEGORY_MAP } from '@/constants/categories'
@@ -72,6 +73,12 @@ interface MapComponentProps {
 function MapComponent({ reports, onPinClick, showHeatmap = false, ref }: MapComponentProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
+  // Mapbox throws synchronously when WebGL is unavailable — no GPU, a blocked
+  // context, or a headless browser. Left unhandled it propagates to the root
+  // ErrorBoundary and takes the ENTIRE app down, so a user whose device cannot
+  // do WebGL loses the feed, search and their own reports as well as the map.
+  // Lighthouse caught exactly this: it audited the error screen, not the app.
+  const [mapFailed, setMapFailed] = useState(false)
   const onPinClickRef = useRef(onPinClick)
 
   // Latest reports, readable from the map's own 'load' callback.
@@ -96,13 +103,23 @@ function MapComponent({ reports, onPinClick, showHeatmap = false, ref }: MapComp
   useEffect(() => {
     if (!containerRef.current || !mapboxgl.accessToken) return
 
-    const map = new mapboxgl.Map({
+    let map: mapboxgl.Map
+    try {
+      map = new mapboxgl.Map({
       container: containerRef.current,
       style: 'mapbox://styles/mapbox/dark-v11',
       center: MAP_DEFAULT_CENTER,
       zoom: MAP_DEFAULT_ZOOM,
-      attributionControl: false,
-    })
+        attributionControl: false,
+      })
+    } catch (err) {
+      console.warn('[ripple] map unavailable:', err instanceof Error ? err.message : err)
+      // Deferred to a microtask: setting state synchronously inside an effect
+      // body causes a cascading render. This is an error path, so a tick's
+      // delay costs nothing and keeps the lint gate honest.
+      queueMicrotask(() => setMapFailed(true))
+      return
+    }
 
     map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left')
 
@@ -331,6 +348,23 @@ function MapComponent({ reports, onPinClick, showHeatmap = false, ref }: MapComp
   // That worked but bypassed React entirely and would have broken the moment a
   // second map instance mounted.
   useImperativeHandle(ref, () => ({ flyToUser }), [flyToUser])
+
+  if (mapFailed) {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
+        <p className="font-mono text-xs text-text-secondary">&gt; map unavailable on this device</p>
+        <p className="font-mono text-xs text-text-tertiary">
+          Your browser could not start WebGL. Everything else still works.
+        </p>
+        <Link
+          to="/feed"
+          className="mt-3 font-mono text-xs text-action underline-offset-4 hover:underline"
+        >
+          [ browse reports as a list → ]
+        </Link>
+      </div>
+    )
+  }
 
   return <div ref={containerRef} className="absolute inset-0" />
 }

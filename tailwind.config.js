@@ -24,7 +24,7 @@ export default {
         text: {
           primary: '#f0ece4',   // warm white
           secondary: '#98928a',
-          tertiary: '#55504a',
+          tertiary: '#847d72', // measured 5.01:1 on #050505 — WCAG AA body text
         },
         // The ONE accent. Used sparingly: cursor, status dots, CTAs, focus
         // brackets, key data. Never as a large filled surface.
@@ -52,7 +52,7 @@ export default {
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       fontSize: {
-        xs: '0.6875rem',
+        xs: '0.75rem', // 12px — Lighthouse legible-font-size floor
         sm: '0.875rem',
         base: '1rem',
         lg: '1.125rem',

@@ -116,7 +116,7 @@ export function LocationPicker({
         <button
           type="button"
           onClick={() => onConfirm(centre.lat, centre.lng)}
-          className="w-full bg-action px-4 py-3.5 font-mono text-sm font-semibold text-text-primary transition-colors hover:bg-action-hover"
+          className="w-full bg-action px-4 py-3.5 font-mono text-sm font-semibold text-bg-primary transition-colors hover:bg-action-hover"
         >
           [ use this location ]
         </button>
