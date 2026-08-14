@@ -33,6 +33,41 @@ function isRateLimited(): boolean {
   return recent.length >= MAX_REPORTS_PER_HOUR
 }
 
+/**
+ * Recovers the real error message from a failed Edge Function call.
+ *
+ * supabase-js v2 does not parse non-2xx response bodies: `FunctionsHttpError`
+ * carries the literal string "Edge Function returned a non-2xx status code",
+ * regardless of what the function actually said. The real body hangs off
+ * `context`, which is the undrained `Response`. Without this, every precise
+ * validation message the Edge Function produces ("Note exceeds 140 character
+ * limit", "Coordinates out of valid range", …) is invisible to the user.
+ */
+export async function extractFunctionError(fnError: unknown): Promise<string> {
+  const FALLBACK = 'Report submission failed. Please try again.'
+
+  const context = (fnError as { context?: unknown })?.context
+  if (context instanceof Response) {
+    try {
+      const body = await context.clone().json()
+      const message =
+        typeof body === 'object' && body !== null
+          ? ((body as Record<string, unknown>).error ?? (body as Record<string, unknown>).message)
+          : null
+      if (typeof message === 'string' && message.trim()) return message
+    } catch {
+      // Body was not JSON, or was already consumed — fall through.
+    }
+  }
+
+  const raw = (fnError as { message?: unknown })?.message
+  if (typeof raw === 'string' && raw.trim() && !raw.includes('non-2xx status code')) {
+    return raw
+  }
+
+  return FALLBACK
+}
+
 function recordSubmission(): void {
   const raw = localStorage.getItem(RATE_LIMIT_KEY)
   const timestamps: number[] = raw ? JSON.parse(raw) : []
@@ -79,7 +114,7 @@ export function useSubmitReport() {
       )
 
       if (fnError) {
-        setError(fnError.message || 'Report submission failed. Please try again.')
+        setError(await extractFunctionError(fnError))
         return null
       }
 

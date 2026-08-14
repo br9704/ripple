@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useCameraCapture } from '@/hooks/useCameraCapture'
 import { PhotoPreview } from '@/components/PhotoPreview'
 
@@ -10,10 +11,21 @@ export function CameraCapture({ onClose, onPhotoCaptured }: CameraCaptureProps) 
   const { photo, preview, isProcessing, error, capture, retake, handleFileChange, inputRef } =
     useCameraCapture()
 
-  // Notify parent when photo is ready
-  if (photo && preview) {
+  // Notify the parent once per captured photo.
+  //
+  // This used to run during render, which called the parent's setState mid-render
+  // (React 19 StrictMode: "Cannot update a component while rendering a different
+  // component") and re-fired on every subsequent render. Guarding on the blob
+  // identity means a retake — which produces a new Blob — notifies again, while
+  // unrelated re-renders do not.
+  const notifiedFor = useRef<Blob | null>(null)
+
+  useEffect(() => {
+    if (!photo || !preview) return
+    if (notifiedFor.current === photo) return
+    notifiedFor.current = photo
     onPhotoCaptured(photo, preview)
-  }
+  }, [photo, preview, onPhotoCaptured])
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-bg-primary">

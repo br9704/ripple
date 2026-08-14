@@ -1,13 +1,4 @@
-const STORAGE_KEY = 'ripple_reporter_token'
-
-function getOrCreateToken(): string {
-  const existing = localStorage.getItem(STORAGE_KEY)
-  if (existing) return existing
-
-  const token = crypto.randomUUID()
-  localStorage.setItem(STORAGE_KEY, token)
-  return token
-}
+import { getReporterToken } from '@/lib/reporterToken'
 
 /**
  * Returns a stable anonymous reporter token (UUID) stored in localStorage.
@@ -15,5 +6,5 @@ function getOrCreateToken(): string {
  * Never linked to personal identity — PRD Section 13.
  */
 export function useReporterToken(): string {
-  return getOrCreateToken()
+  return getReporterToken()
 }

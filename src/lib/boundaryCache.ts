@@ -103,6 +103,12 @@ export async function fetchAndCacheBoundaries(): Promise<CouncilBoundaryWithCoun
         slug
       )
     `)
+    // Without an explicit order Postgres may return rows in any order, which
+    // used to make council attribution non-deterministic in the overlapping
+    // seed polygons. detectCouncil() now resolves overlaps by nearest centroid
+    // regardless, but a stable order keeps the cached payload byte-identical
+    // between refreshes and makes any future bug reproducible.
+    .order('council_id', { ascending: true })
 
   if (error || !data) {
     // Fetch failed — try cache as fallback
