@@ -9,6 +9,7 @@ import { FeedPage } from '@/pages/FeedPage'
 import { MyReportsPage } from '@/pages/MyReportsPage'
 import { ReportDetailPage } from '@/pages/ReportDetailPage'
 import { SearchPage } from '@/pages/SearchPage'
+import { CouncilDashboard } from '@/pages/CouncilDashboard'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/my-reports" element={<MyReportsPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/council" element={<CouncilDashboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <InstallBanner />
