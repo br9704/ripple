@@ -271,19 +271,48 @@ The core trace is genuine and correct end-to-end: `CameraCapture` → `handlePho
 **Inputs:** `~/bruno-portfolio/CLAUDE.md` §"Redesign Design Decisions (2026-07 · SIGNAL)", `MOTION.md`
 **Outputs:** re-tokenised `index.css` + `tailwind.config.js`, glyph-based category identity, motion compliance, `prefers-reduced-motion` support
 **Subtasks:**
-- [ ] S6.6.1 — Replace the `:root` palette in `src/index.css` with SIGNAL tokens: `--bg #050505`, `--surface #0b0a09`, `--text-primary #f0ece4`, `--text-secondary #98928a`, `--text-dim #55504a`, `--amber #ffb000`, `--steel #2c2925`, `--hairline #1b1916`. Radius tokens → max 2px. Delete `--shadow-card` / `--shadow-glow`. Mirror into `tailwind.config.js`.
-- [ ] S6.6.2 — Fonts: drop **Inter** (SIGNAL explicitly excludes it); body → Syne or DM Sans; JetBrains Mono reserved for data, labels, readouts and ASCII. Self-host or preconnect rather than the current render-blocking `@import` at `index.css:1`.
-- [ ] S6.6.3 — **Category identity without colour.** SIGNAL permits one accent, so colour cannot carry ten categories — and it never really did: `streetlight` and `signage` are *both* `#F0883E` today, so the "10-colour" system is already only 9-distinguishable. Replace with a **monospace glyph per category** (`categories.ts` gains `glyph`, loses `icon` emoji and `color`). This *improves* PRD §10.2 compliance ("Colour never the only differentiator") rather than weakening it.
-- [ ] S6.6.4 — **Map pins:** move `Map.tsx` from `circle` layers to `symbol` layers so glyphs can render; amber reserved for the user's own reports and safety-category emphasis; everything else grayscale on `#050505`. Marker drop-in per MOTION.md:85 — scale 0.8→1, 250ms ease-out, 40ms stagger **capped at 20 markers**, remainder instant.
-- [ ] S6.6.5 — **Rebuild `CameraFab`** — currently the single most non-compliant line in the repo (`CameraFab.tsx:11`: `rounded-full bg-action shadow-glow animate-pulse-slow` breaks the radius, shadow, sparing-accent and no-bounce rules simultaneously). Becomes a bracketed instrument control, e.g. `[ ◉ REPORT ]`. Same `shadow-glow` removal at `CameraCapture.tsx:88`.
-- [ ] S6.6.6 — **Kill the spring.** `ReportCard.tsx:30` → ease-out tween ≤400ms, preserving drag-to-dismiss. This is a MOTION.md:11 violation, not a preference.
-- [ ] S6.6.7 — Remove all 16 emoji (10 category icons + `📡 📍 👍`). Keep the typographic glyphs `✕ ↻ ✓ ←` — those are type, not emoji.
-- [ ] S6.6.8 — Replace text loaders with the SIGNAL vocabulary: `[████░░░] 72%` bars and `> locating...` typing lines. Per MOTION.md:83 the GPS line **must never** show a spinner. No spinners anywhere.
-- [ ] S6.6.9 — **`prefers-reduced-motion: reduce` → fully static**, no exceptions. Currently unhandled anywhere in `src/`. This is a MOTION.md hard rule and a WCAG obligation.
-- [ ] S6.6.10 — Page-transition bar: 2px sweep L→R 300ms, hold 50ms, off right 200ms.
-- [ ] S6.6.11 — Propagate tokens outside `src/`: `index.html` `theme-color`, `vite.config.ts` manifest `theme_color`/`background_color`, `public/offline.html` (6 hardcoded hexes + Syne/Inter stack + `border-radius: 8px`), and `public/favicon.svg` — currently purple/blue gradient artwork (`#863bff`, `#7e14ff`, `#47bfff`) that matches **neither** design system.
-- [ ] S6.6.12 — Status colours: amber dots; **green only on `fixed`** per MOTION.md:89.
+- [x] S6.6.1 — Replace the `:root` palette in `src/index.css` with SIGNAL tokens: `--bg #050505`, `--surface #0b0a09`, `--text-primary #f0ece4`, `--text-secondary #98928a`, `--text-dim #55504a`, `--amber #ffb000`, `--steel #2c2925`, `--hairline #1b1916`. Radius tokens → max 2px. Delete `--shadow-card` / `--shadow-glow`. Mirror into `tailwind.config.js`.
+- [x] S6.6.2 — Fonts: drop **Inter** (SIGNAL explicitly excludes it); body → Syne or DM Sans; JetBrains Mono reserved for data, labels, readouts and ASCII. Self-host or preconnect rather than the current render-blocking `@import` at `index.css:1`.
+- [x] S6.6.3 — **Category identity without colour.** SIGNAL permits one accent, so colour cannot carry ten categories — and it never really did: `streetlight` and `signage` are *both* `#F0883E` today, so the "10-colour" system is already only 9-distinguishable. Replace with a **monospace glyph per category** (`categories.ts` gains `glyph`, loses `icon` emoji and `color`). This *improves* PRD §10.2 compliance ("Colour never the only differentiator") rather than weakening it.
+- [x] S6.6.4 — **Map pins:** move `Map.tsx` from `circle` layers to `symbol` layers so glyphs can render; amber reserved for the user's own reports and safety-category emphasis; everything else grayscale on `#050505`. Marker drop-in per MOTION.md:85 — scale 0.8→1, 250ms ease-out, 40ms stagger **capped at 20 markers**, remainder instant.
+- [x] S6.6.5 — **Rebuild `CameraFab`** — currently the single most non-compliant line in the repo (`CameraFab.tsx:11`: `rounded-full bg-action shadow-glow animate-pulse-slow` breaks the radius, shadow, sparing-accent and no-bounce rules simultaneously). Becomes a bracketed instrument control, e.g. `[ ◉ REPORT ]`. Same `shadow-glow` removal at `CameraCapture.tsx:88`.
+- [x] S6.6.6 — **Kill the spring.** `ReportCard.tsx:30` → ease-out tween ≤400ms, preserving drag-to-dismiss. This is a MOTION.md:11 violation, not a preference.
+- [x] S6.6.7 — Remove all 16 emoji (10 category icons + `📡 📍 👍`). Keep the typographic glyphs `✕ ↻ ✓ ←` — those are type, not emoji.
+- [x] S6.6.8 — Replace text loaders with the SIGNAL vocabulary: `[████░░░] 72%` bars and `> locating...` typing lines. Per MOTION.md:83 the GPS line **must never** show a spinner. No spinners anywhere.
+- [x] S6.6.9 — **`prefers-reduced-motion: reduce` → fully static**, no exceptions. Currently unhandled anywhere in `src/`. This is a MOTION.md hard rule and a WCAG obligation.
+- [x] S6.6.10 — Page-transition bar: 2px sweep L→R 300ms, hold 50ms, off right 200ms.
+- [x] S6.6.11 — Propagate tokens outside `src/`: `index.html` `theme-color`, `vite.config.ts` manifest `theme_color`/`background_color`, `public/offline.html` (6 hardcoded hexes + Syne/Inter stack + `border-radius: 8px`), and `public/favicon.svg` — currently purple/blue gradient artwork (`#863bff`, `#7e14ff`, `#47bfff`) that matches **neither** design system.
+- [x] S6.6.12 — Status colours: amber dots; **green only on `fixed`** per MOTION.md:89.
 **Test criteria:** No `rounded-{md,lg,xl,full}` outside the ripple-ring rule. No `shadow-*`. No emoji in `src/`. No `type: 'spring'`. Grep for `#E85D04` returns zero hits repo-wide. `prefers-reduced-motion` produces a static capture→result path. Contrast ≥4.5:1 for body text on `#050505`.
+
+### ✅ Sprint 6.6 — CLOSED (Aug 2026)
+
+**Compliance sweep (measured):**
+
+| Check | Result |
+|---|---|
+| emoji in `src/` | **0** (only `✓` and `✕` remain — typography, not emoji) |
+| `type: 'spring'` | **0** |
+| `shadow-card` / `shadow-glow` | **0** |
+| `#E85D04` repo-wide | **0** |
+| eslint suppressions repo-wide | **0** |
+| `prefers-reduced-motion` handling | present in `index.css` + `useReducedMotion` |
+| `npx tsc --noEmit` | 0 errors |
+| `npx eslint .` | 0 errors, 0 warnings |
+| `npx vitest run` | **73 tests / 9 files** passing |
+| `npx vite build` | succeeds |
+
+**As-shipped delta:**
+- Legacy Tailwind key names (`bg.primary`, `action.DEFAULT`, …) were **kept**, with only their values swapped. The names were structural; renaming them across 20 files would have been churn with no design benefit.
+- Amber is permitted on **safety-critical categories** on the map (`streetlight`, `accessibility`, `tree`). This is a deliberate, narrow extension of "amber for key data" — without it, a parent scanning for a dead streetlight near a school loses the one signal that matters most, and PRD §6.3 explicitly calls for safety emphasis on clusters.
+- Status colours went **grayscale-plus-amber**, with green reserved for `fixed` per MOTION.md:89. `declined`/`wont_fix` are **dim rather than red** — a refusal is information, not an alarm, and red is not in this palette.
+- Built four shared motion primitives here rather than in S7 (`useReducedMotion`, `TypingLine`, `TerminalLoader`, `PageTransition`) — the classification sequence needs all four, and building them once against the design system beats building them twice.
+- `progressBar.ts` extracted as a **pure, tested module** (10 tests) specifically to pin MOTION.md's honesty rules in code: `0.9` must not render as a full bar, and the percentage must never reach 100% while the bar still shows empty cells.
+
+**Deferred:**
+- [⏭] Marker drop-in stagger (scale 0.8→1, 250ms, 40ms stagger capped at 20) — **S16**, alongside the 200-marker frame-rate gate it exists to satisfy. Mapbox symbol layers do not stagger natively; this needs per-feature animation and should be measured, not guessed.
+- [⏭] The ripple motif (`.ripple-ring` is defined in `index.css` and ready) — wired to its three surfaces when they exist: submit (S7), upvote (S8), new-report-on-map (S8).
+- [⏭] CRT/scanline broadcast layer and boot sequence — portfolio-site features in SIGNAL; not appropriate for a civic tool used outdoors one-handed, where legibility beats atmosphere. Recorded as a deliberate divergence rather than an omission.
 **Notes:** MOTION.md's ripple motif (concentric rings, 1px, `border-radius: 50%`) is the **only** sanctioned use of round geometry — submit, upvote, and new-report-on-map. Never more than one ripple per surface; queue or drop, never stack.
 
 ---
