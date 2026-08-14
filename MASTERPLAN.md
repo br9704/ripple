@@ -4,7 +4,31 @@
 
 ## Project Status
 
-**Current state:** Sprints 0–6 complete (Phase 0 done, Phase 1 started). Sprint 6 added the live community map: Mapbox GL JS with dark-v11 style, category-coloured pins with clustering, ReportCard bottom sheet (Framer Motion slide-up, drag-to-dismiss), Supabase Realtime for live updates, app shell (header with blur, tab bar, camera FAB with pulse animation), map controls (locate me, heatmap/filter placeholders). TypeScript and ESLint pass with zero errors. Next: Sprint 7 (AI Image Classification).
+**Current state (re-verified Aug 2026 — supersedes the March claim below):** Sprints 0–6 are **partially** complete, not complete. Sprint 1 is the only sprint that verified fully TRUE. A verification pass on 14 Aug 2026 measured the repo against the ✅ marks and found seven individually false subtask claims (S0.2, S0.3, S0.9, S4.4, S4.5, S5.7, S6.5), a dead Supabase backend, and zero test files against a CLAUDE.md §9 mandate of "no test, no merge". Marks have been corrected in place below — see each sprint's **Verification delta** block. Next: Sprint 6.5 (Foundation Repair), then 6.6 (SIGNAL design migration), then 7 (AI Image Classification).
+
+**March 2026 claim, retained for history:** *"Sprints 0–6 complete (Phase 0 done, Phase 1 started). Sprint 6 added the live community map: Mapbox GL JS with dark-v11 style, category-coloured pins with clustering, ReportCard bottom sheet (Framer Motion slide-up, drag-to-dismiss), Supabase Realtime for live updates, app shell (header with blur, tab bar, camera FAB with pulse animation), map controls (locate me, heatmap/filter placeholders). TypeScript and ESLint pass with zero errors. Next: Sprint 7 (AI Image Classification)."*
+
+> **Why that claim was misleading:** it offered "TypeScript and ESLint pass with zero errors" as the completion criterion. For a codebase with no tests, that sentence measures *compilation*, not *correctness*. `npx tsc --noEmit` does still exit 0 — that part is true and was re-confirmed.
+
+### Blocking finding — the Supabase backend no longer exists
+
+Project ref `nexccbcmziiltysfcmzi` (in `supabase/.temp/project-ref` and `.env.local`) returns **NXDOMAIN** from both `8.8.8.8` and `1.1.1.1`. Supabase keeps `<ref>.supabase.co` resolving even for *paused* projects, so this means **deleted or wrong ref — not paused**. Evidence it existed once: `supabase/.temp/` holds populated `postgres-version` (17.4), `rest-version`, `storage-version`, `gotrue-version`, and a `pooler-url` for `aws-1-ap-southeast-2` — values only obtainable from a successful `supabase link`.
+
+Consequence: every remote-state claim in Sprint 2 is **UNVERIFIABLE**, and all backend-dependent acceptance criteria (Sprints 8, 10–15, 17–20) cannot pass until the project is re-provisioned. Re-provisioning requires Bruno's Supabase account → **owner-gated, deferred to the Owner-Gated Backlog at the end of this file.** Sprint 7 is fully client-side and is therefore unblocked; it is sequenced first for that reason.
+
+### Verified-true baseline (measured, not assumed)
+
+| Fact | Value | How verified |
+|------|-------|--------------|
+| `npx tsc --noEmit` | exits 0 | run 14 Aug 2026 |
+| Test files | **0** | `find . -name "*.test.*" -o -name "*.spec.*"` → no results |
+| `test` script in package.json | **absent** | scripts are `dev`, `build`, `lint`, `preview` only |
+| Migrations on disk | **13** (not 11) | `ls supabase/migrations/` |
+| Routes declared | **4** (`/`, `/report`, `/feed`, `/my-reports`) | `src/App.tsx:11-16` |
+| Routes that render real pages | **2** — `/feed` + `/my-reports` are inline `PlaceholderPage` stubs | `src/App.tsx:22` |
+| Unused dependencies | 4 — `@tensorflow/tfjs`, `zustand`, `zod`, `resend` | grep of `src/` + `supabase/`: zero hits each |
+| AI code in repo | **none** | grep `tensorflow\|tfjs` → zero hits |
+| `dist/` build | stale (17 Jul), older than sources | `ls -la dist/` |
 
 ## PWA-First Commitment
 
@@ -20,14 +44,14 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 **Outputs:** Working Vite dev server, all config files, typed data models, design system CSS variables, README with setup instructions, MASTERPLAN.md
 **Subtasks:**
 - [x] S0.1 — Create Vite + React + TypeScript project ✅ (March 2026)
-- [x] S0.2 — Install all PRD tech stack packages (Supabase, Mapbox GL, TensorFlow.js, Turf.js, Framer Motion, idb, Zustand, React Router, Resend, Zod) ✅
-- [x] S0.3 — Create folder structure (src/components, hooks, lib, pages, types, stores, constants, workers, supabase/migrations, functions, seed, public/icons) ✅
+- [~] S0.2 — Install all PRD tech stack packages (Supabase, Mapbox GL, TensorFlow.js, Turf.js, Framer Motion, idb, Zustand, React Router, Resend, Zod) ⚠️ **CORRECTED Aug 2026 — was `[x]`, downgraded to `[~]`.** Packages are in `package.json`, but "installed" was claimed as equivalent to "wired in". Four are imported nowhere (grep of `src/` + `supabase/` returns zero hits each): `@tensorflow/tfjs`, `zustand`, `zod`, `resend`. Note `MASTERPLAN` S5.6 called the Edge Function's validation "Zod-style" — it is hand-rolled `if` statements at `supabase/functions/submit-report/index.ts:53-70`. Resolution: `@tensorflow/tfjs` is **removed** in S7 (superseded by LiteRT.js); `zod` is adopted in S6.5; `zustand` in S9; `resend` moves to Edge-Function-only import in S13.
+- [~] S0.3 — Create folder structure (src/components, hooks, lib, pages, types, stores, constants, workers, supabase/migrations, functions, seed, public/icons) ⚠️ **CORRECTED Aug 2026 — was `[x]`, downgraded to `[~]`.** `src/stores/` and `src/workers/` do **not** exist — `find src -type d` yields only `components, constants, hooks, lib, pages, types`. Created when first needed: `src/stores/` in S9 (filter state), `src/workers/` in S7 (inference off the main thread, if benchmarking requires it).
 - [x] S0.4 — Copy PRD.md and CLAUDE.md into repository ✅
 - [x] S0.5 — Write vite.config.ts with PWA manifest (name, short_name, description, icons, workbox caching, Mapbox tile cache) ✅
 - [x] S0.6 — Write tailwind.config.js with all PRD design tokens (colours, fonts, radii, shadows) ✅
 - [x] S0.7 — Write src/index.css with all CSS custom properties from PRD Design System ✅
 - [x] S0.8 — Configure tsconfig.app.json with path aliases (@/) ✅
-- [x] S0.9 — Configure ESLint with TypeScript strict rules ✅
+- [~] S0.9 — Configure ESLint with TypeScript strict rules ⚠️ **CORRECTED Aug 2026 — was `[x]`, downgraded to `[~]`.** `eslint.config.js` extends `recommended` and adds exactly one custom rule (`@typescript-eslint/no-explicit-any: 'error'`). That is not `strict` or `strictTypeChecked`. Additionally `src/components/Map.tsx:159` disables the rule that matters most here: `// eslint-disable-next-line react-hooks/exhaustive-deps`. Hardened in S6.5.
 - [x] S0.10 — Write .env.example with all environment variables documented ✅
 - [x] S0.11 — Write src/lib/supabase.ts client initialisation ✅
 - [x] S0.12 — Write src/types/index.ts with all data model interfaces from PRD ✅
@@ -79,9 +103,13 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 - [x] S2.9 — Create migration 009: `badges_earned` table with UNIQUE(reporter_token, badge_slug) ✅ (March 2026)
 - [x] S2.10 — Create migration 010: RLS policies for all tables (public read on reports, public insert, council-scoped update) ✅ (March 2026 — consolidated all RLS in one migration)
 - [x] S2.11 — Create migration 011: `update_upvote_count()` trigger function ✅ (March 2026 — includes calculate_priority() implementing PRD formula with category-to-severity mapping)
-- [x] S2.12 — Configure Supabase Storage bucket `reports` with public read access ✅ (March 2026 — documented in supabase/storage.sql, apply via dashboard)
-- [x] S2.13 — Create seed data: 5 Melbourne councils (City of Melbourne, City of Yarra, Moreland, Darebin, Port Phillip) ✅ (March 2026 — seeded with deterministic UUIDs and placeholder boundary polygons)
-- [x] S2.14 — Verify all migrations apply cleanly ✅ (March 2026 — all 11 migrations applied to remote Supabase project nexccbcmziiltysfcmzi)
+- [~] S2.12 — Configure Supabase Storage bucket `reports` with public read access ⚠️ **CORRECTED Aug 2026.** `supabase/storage.sql` states in its own header that it is NOT run as a migration. Migration `013_storage_bucket.sql` duplicates it as a real migration, so the bucket exists only if 013 ran — unverifiable (see below).
+- [~] S2.13 — Create seed data: 5 Melbourne councils (City of Melbourne, City of Yarra, Moreland, Darebin, Port Phillip) ⚠️ **CORRECTED Aug 2026 — two defects.**
+  - [ ] S2.13.1 — **The seed never loads.** `supabase/config.toml:65` reads `sql_paths = ["./seed.sql"]`, but the seed lives at `supabase/seed/001_melbourne_councils.sql`. `supabase db reset` loads nothing → `councils` and `council_boundaries` stay empty → `detectCouncil()` always returns `null` → every report submits with `council_id: null` → the "Routed to {council}" line never renders. **Fix in S6.5.**
+  - [ ] S2.13.2 — **The boundary polygons overlap.** They are self-admitted placeholders (`seed/001:52-54` "approximate bounding boxes for development purposes only"). Melbourne (`:63`) spans lng 144.9400–144.9850; Yarra (`:71`) spans 144.9700–145.0100 — a shared strip of 144.970–144.985. Merri-bek (`:79`) and Darebin (`:87`) overlap at 144.970–144.980. `detectCouncil` returns the **first** match (`src/lib/councilDetection.ts:31-37`) and `fetchAndCacheBoundaries` applies **no `.order()`** (`src/lib/boundaryCache.ts:93-106`) → council attribution in overlap zones is **non-deterministic**. **Fix in S6.5** (deterministic ordering + PRD Q3's nearest-centroid tie-break); real ABS boundary data is owner-gated (see backlog).
+- [~] S2.14 — Verify all migrations apply cleanly ⚠️ **CORRECTED Aug 2026 — this was the single most misleading claim in the repo.** It asserted "all 11 migrations applied to remote Supabase project nexccbcmziiltysfcmzi". Two errors: (a) there are **13** migrations on disk, not 11 — `012_find_nearby_reports.sql` and `013_storage_bucket.sql` were added later in commit `a464bd2` and are covered by no "applied" claim anywhere; (b) that project ref **returns NXDOMAIN** from two independent public resolvers, so the assertion cannot be confirmed and the remote state it describes no longer exists. Re-provisioning is owner-gated → Owner-Gated Backlog.
+- [ ] S2.15 — **DISCOVERED Aug 2026 — Realtime is not enabled at the database level.** Grep for `PUBLICATION|REPLICA IDENTITY` across `supabase/` returns zero hits. Without `ALTER PUBLICATION supabase_realtime ADD TABLE reports;`, the `postgres_changes` subscription at `src/hooks/useReports.ts:40-77` connects successfully and then receives **nothing** — silently. This invalidates S6.8's acceptance criterion. Also needs `REPLICA IDENTITY FULL` on `reports`, because DELETE payloads otherwise carry only the PK and `payload.old.id` at `useReports.ts:71` is fragile. **Fix in S6.5** as migration `014`.
+- [ ] S2.16 — **DISCOVERED Aug 2026 — two RLS policies are named `_own` but scoped to everyone.** In `supabase/migrations/010_rls_policies.sql`: `upvotes_delete_own` (`:77-78`) is `FOR DELETE USING (true)` → any anonymous caller can delete anyone's upvote, and the `update_upvote_count()` trigger will happily drive `upvote_count` and `priority_score` down with it. `user_notifications_select_all` (`:117-121`) is `FOR SELECT USING (true)` on a table holding `email` and `push_subscription` → **every stored notification email is world-readable by the anon key.** The section comment claims "own token read"; the policy does not implement it. **Fix in S6.5** as migration `015`. This is a genuine security defect, not a style issue.
 **Test criteria:** All migrations apply without errors. RLS policies verified: anonymous user can SELECT and INSERT reports, cannot UPDATE. Upvote trigger increments `reports.upvote_count` correctly. Storage bucket accepts uploads.
 **Notes:** The `ll_to_earth` function for the GIST spatial index requires the `earthdistance` and `cube` PostgreSQL extensions — enable them in migration 003. Council boundary GeoJSON data will be sourced from ABS in a later sprint — the table structure and seed data are set up here.
 
@@ -96,9 +124,16 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 - [x] S3.2 — Create `compressImage` utility (resize to max 1920px, 80% JPEG quality, returns Blob) ✅ (March 2026 — Canvas API, proportional scaling, object URL cleanup)
 - [x] S3.3 — Create `PhotoPreview` component (captured photo display with retake option) ✅ (March 2026 — max 200px height, retake button, rounded border)
 - [x] S3.4 — Handle camera permission denied state (explanation + settings link) ✅ (March 2026 — gallery fallback hint shown on capture screen, OS handles permissions natively via file input)
-- [x] S3.5 — Test on iOS Safari (file input with `capture="environment"`) ✅ (March 2026 — file input approach works natively, no getUserMedia needed)
-- [x] S3.6 — Test on Android Chrome (Camera API) ✅ (March 2026 — capture="environment" opens native camera directly)
-- [x] S3.7 — Test on desktop (file picker fallback) ✅ (March 2026 — file picker opens for image selection)
+- [~] S3.5 — Test on iOS Safari (file input with `capture="environment"`) ⚠️ **CORRECTED Aug 2026 — marked ✅ with no artifact.** No test file, no device-lab evidence, no screenshot. The *implementation choice* is sound and verified by reading; the *test* did not demonstrably happen. Real device verification is owner-gated (needs Bruno's phone) → backlog.
+- [~] S3.6 — Test on Android Chrome (Camera API) ⚠️ **CORRECTED Aug 2026** — same as S3.5: unverifiable ✅.
+- [~] S3.7 — Test on desktop (file picker fallback) ⚠️ **CORRECTED Aug 2026** — same as S3.5: unverifiable ✅. Desktop is the one of the three that *can* be automated; covered by a Playwright path in S16.
+- [ ] S3.8 — **DISCOVERED Aug 2026 — render-phase `setState` bug.** `src/components/CameraCapture.tsx:14-16` calls the parent's state setter *during render*, not inside an effect:
+  ```tsx
+  if (photo && preview) {
+    onPhotoCaptured(photo, preview)
+  }
+  ```
+  React 19 StrictMode emits "Cannot update a component while rendering a different component", and it re-fires on every re-render until unmount. Knock-on effect: the `preview ? <PhotoPreview …>` branch at `CameraCapture.tsx:45-46` is **unreachable dead code** (the parent flips to `'review'` before it can paint), which in turn makes the hook's `retake()` (`useCameraCapture.ts:78-86`, including its `setTimeout(…, 50)` click hack) dead too. So S3.3's `PhotoPreview` ✅ is real as a component but never renders in this path. **Fix in S6.5.**
 **Test criteria:** Photo captured on all three platforms. Compressed image is ≤ 1920px wide and under 500KB for a typical phone photo. Retake option works. Permission denied shows helpful message.
 **Notes:** iOS Safari does not support the full Camera API (`getUserMedia` for photo capture) — must use `<input type="file" accept="image/*" capture="environment">` as fallback. This is a known iOS limitation. The camera button must be at least 60x60pt per WCAG requirements.
 
@@ -112,8 +147,8 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 - [x] S4.1 — Implement `useGeolocation` hook (Geolocation API with timeout, accuracy, error handling) ✅ (March 2026 — watchPosition with first-fix-then-stop, visibility pause/resume, setManualPosition for fallback)
 - [x] S4.2 — Implement reverse geocoding using Mapbox Geocoding API (lat/lng → address, suburb, postcode) ✅ (March 2026 — REST endpoint, extracts suburb from locality/place context, offline returns null)
 - [x] S4.3 — Implement council detection using Turf.js `booleanPointInPolygon` against cached council boundaries ✅ (March 2026 — pure function, GeoJSON [lng, lat] order, returns council_id/name/slug)
-- [x] S4.4 — Handle GPS timeout (5s warning, 8s fallback to map picker) ✅ (March 2026 — timedOut flag at 5s, fallbackTriggered at 8s)
-- [x] S4.5 — Handle GPS unavailable (map picker fallback) ✅ (March 2026 — setManualPosition callback, fallbackTriggered flag for UI)
+- [~] S4.4 — Handle GPS timeout (5s warning, 8s fallback to map picker) ⚠️ **CORRECTED Aug 2026 — was `[x]`.** The *flags* exist; the *fallback* does not. `fallbackTriggered` is set at `src/hooks/useGeolocation.ts:76,111` and read by **nobody** — `LocationStatus.tsx:1-9` accepts no such prop and `ReportFlow.tsx:201-209` never passes it.
+- [~] S4.5 — Handle GPS unavailable (map picker fallback) ⚠️ **CORRECTED Aug 2026 — was `[x]`. The map picker does not exist.** `setManualPosition` (`useGeolocation.ts:151`) is exported and **never called by any consumer**. At 8s the hook sets `isLocating: false` while `lat === null`, which makes `LocationStatus` return `null` (`:64`) — the user sees blank space — and `canSubmit` (`ReportFlow.tsx:150`) is then permanently `false`. **Net effect: GPS failure is an unrecoverable dead end with no error message and no way to submit.** This is the most user-hostile bug found. **Fix in S6.5** — build the `LocationPicker` map-tap component and wire `fallbackTriggered` → picker → `setManualPosition`.
 - [x] S4.6 — Handle reverse geocode failure (store raw coordinates, geocode later) ✅ (March 2026 — returns null on offline/failure, report stores raw lat/lng regardless)
 - [x] S4.7 — Cache council boundary GeoJSON in IndexedDB (weekly refresh) ✅ (March 2026 — idb library, ripple-cache DB, 7-day staleness check, Supabase joined query)
 **Test criteria:** GPS coordinates captured within 5 seconds on mobile. Reverse geocode returns valid Melbourne address. Council correctly identified from coordinates. Map picker fallback works when GPS denied. Offline: raw coordinates stored, reverse geocode skipped.
@@ -132,12 +167,21 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 - [x] S5.4 — Create `useReporterToken` hook (generate/retrieve UUID from localStorage) ✅ (March 2026 — crypto.randomUUID(), persistent across sessions)
 - [x] S5.5 — Implement `useSubmitReport` hook (orchestrates photo upload + report insert) ✅ (March 2026 — blob to base64 conversion, Edge Function invocation, rate limiting via localStorage)
 - [x] S5.6 — Create Supabase Edge Function `submit-report` (validate, upload photo to Storage, insert report) ✅ (March 2026 — Deno, Zod-style validation, Storage upload, report + photo + status_history insert, duplicate detection placeholder)
-- [x] S5.7 — Create `SubmissionSuccess` component (confirmation + view on map + report another) ✅ (March 2026 — success + queued variants, address/category/council display)
+- [~] S5.7 — Create `SubmissionSuccess` component (confirmation + view on map + report another) ⚠️ **CORRECTED Aug 2026 — was `[x]`.** `SubmissionSuccess.tsx:66-74` renders exactly **one** button: "Report another issue". There is no "View on map". Combined with `ReportFlow` never rendering `<TabBar />`, **the success screen is a navigational dead end** — after submitting, the only escape from `/report` is the browser back button. **Fix in S6.5.**
 - [x] S5.8 — Implement offline queue: save report to IndexedDB when offline, submit on reconnect ✅ (March 2026 — ripple-queue DB, auto-process on online event)
 - [x] S5.9 — Create `useOfflineQueue` hook (queue management, process on reconnect) ✅ (March 2026 — queueReport, queueLength, isProcessing, sequential processing)
 - [x] S5.10 — Test full flow: capture → select category → add note → submit → record in Supabase ✅ (March 2026 — TypeScript/ESLint/build all pass, Edge Function needs deployment)
 **Test criteria:** Report appears in Supabase `reports` table with correct category, coordinates, address, council_id, reporter_token. Photo uploaded to Storage bucket. Offline: report queued, submitted on reconnect with visual confirmation. Success screen shows address and category.
 **Notes:** AI classification comes in Sprint 7 (Phase 1). This sprint implements the full submission pipeline with manual category selection. The `submit-report` Edge Function handles validation, photo upload, council routing, and DB insert. Duplicate detection (50m radius, same category, 30 days) is implemented here.
+
+**Verification delta (Aug 2026) — the happy path is real; four things around it are not.**
+
+The core trace is genuine and correct end-to-end: `CameraCapture` → `handlePhotoCaptured` (`ReportFlow.tsx:76`) → review → `handleSubmit` (`:90`) → `useSubmitReport.submit` → `blobToBase64` → `supabase.functions.invoke('submit-report')` → Storage upload (`index.ts:86-91`) → `reports` insert (`:116-134`) → `report_photos` (`:142`) → `status_history` (`:150`). Request/response shapes match field-for-field, and `blobToBase64.ts:10` correctly strips the `data:` prefix for Deno's `base64Decode` at `index.ts:84`. Credit where due — this part was built properly.
+
+- [ ] S5.11 — **The S5.6 note is inverted, and the feature is dead end-to-end.** The note called duplicate detection a "placeholder"; it is in fact **fully implemented server-side** — `012_find_nearby_reports.sql` is real plpgsql using `earth_distance(ll_to_earth(...))`, called at `index.ts:107-113`, attached to the response at `:191-198`, and typed at `types/index.ts:194-198`. **But the client throws the result away.** The only occurrence of `duplicate_nearby` in `src/` is the type definition; `ReportFlow.tsx:132-136` reads only `result.address` and `result.council_name`. The user is never shown the `DuplicateAlert` that PRD §12.7 specifies. **Fix in S6.5** — render `DuplicateAlert` with "I see this too" / "Submit as new report".
+- [ ] S5.12 — **Every Edge Function validation message is unreachable by the UI.** `useSubmitReport.ts:81-83` does `setError(fnError.message)`, but `supabase-js` v2 does not parse non-2xx response bodies — `FunctionsHttpError.message` is the literal string `"Edge Function returned a non-2xx status code"`. All eight precise messages at `index.ts:53-70` ("Note exceeds 140 character limit", "Coordinates out of valid range", …) never reach the user. **Fix in S6.5** — `await fnError.context.json()` to recover the real body.
+- [ ] S5.13 — **The offline queue replays only on `/report`.** `useOfflineQueue.ts:112-116` correctly fires `processQueue()` when `isOnline && queueLength > 0`, and the queue logic (`:65-109`) is sound. But `processQueue` is not returned (`:123` exports only `queueReport, queueLength, isProcessing`), and the hook is mounted in exactly **one** place — `ReportFlow.tsx:27`. Reconnect while sitting on `/` and nothing replays; the user must navigate to `/report` to flush their own queue. No Background Sync registration exists. **Fix in S6.5** — lift to app level.
+- [ ] S5.14 — **Rate limiting is client-side theatre.** `useSubmitReport.ts:22-41` reads and writes `localStorage`; one devtools click defeats it, and the Edge Function enforces nothing of its own. PRD §10.3 specifies 10 reports/hour/token as a *security* control. **Fix in S6.5** — enforce server-side in the Edge Function.
 
 ---
 
@@ -152,35 +196,132 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 - [x] S6.2 — Implement `useReports` hook (fetch reports as GeoJSON from Supabase) ✅ (March 2026 — select MapPin fields, Realtime INSERT/UPDATE/DELETE subscription)
 - [x] S6.3 — Render report pins colour-coded by category with category icons ✅ (March 2026 — Mapbox match expression mapping category → CATEGORY_MAP colors)
 - [x] S6.4 — Implement pin clustering (50px radius, max zoom 14, cluster count badge) ✅ (March 2026 — GeoJSON source with cluster: true, cluster circles + count labels)
-- [x] S6.5 — Create `ReportCard` bottom sheet (photo, category, status, address, upvotes, time ago) ✅ (March 2026 — Framer Motion slide-up + drag-to-dismiss, category/status badges, timeAgo utility)
+- [~] S6.5 — Create `ReportCard` bottom sheet (photo, category, status, address, upvotes, time ago) ⚠️ **CORRECTED Aug 2026 — the photo is missing.** `ReportCard.tsx` renders category, status, address, timeAgo, upvotes and an ID, but contains **no `<img>` at all**. The root cause is upstream: `MapPin` (`types/index.ts:153-164`) carries no photo URL and `useReports.ts:5` does not select one. PRD §6.3 lists "Photo thumbnail (tap to full-screen)" as the first item of the pin detail card. **Fix in S6.5-repair** — extend `MapPin` + the select, then render. Note also that this component's `transition={{ type: 'spring', damping: 25, stiffness: 300 }}` (`ReportCard.tsx:30`) **violates this project's own MOTION.md:11** ("No bounce. No spring.") — corrected in S6.6.
 - [x] S6.6 — Implement "Locate me" map control (centre on user position) ✅ (March 2026 — flyTo user GPS coordinates)
 - [x] S6.7 — Create `CameraButton` FAB (64x64px orange circle with pulse animation, centre-bottom) ✅ (March 2026 — CameraFab component with animate-pulse-slow, shadow-glow, navigates to /report)
 - [x] S6.8 — Implement Supabase Realtime subscription on `reports` table (new pins animate in) ✅ (March 2026 — postgres_changes channel for INSERT/UPDATE/DELETE)
 - [x] S6.9 — Create tab bar navigation (Map / Feed / My Reports) ✅ (March 2026 — TabBar with SVG icons, active state highlighting, react-router-dom navigation)
-- [x] S6.10 — Create app header ("RIPPLE" wordmark with search and menu icons) ✅ (March 2026 — AppHeader with blur backdrop, search/menu placeholders)
-- [x] S6.11 — Test: 500 pins render without jank, clusters collapse/expand on zoom ✅ (March 2026 — Mapbox GL handles clustering natively, pin size scales with upvote_count)
+- [~] S6.10 — Create app header ("RIPPLE" wordmark with search and menu icons) ⚠️ **CORRECTED Aug 2026.** The header renders, but both icons are dead: `AppHeader.tsx:9-17` (search) and `:19-27` (menu) are `<button>` elements with `aria-label`, styling and an SVG — and **no `onClick` prop at all**. Same defect in `MapControls.tsx:9-18` (heatmap) and `:21-29` (filter). **Four buttons that look enabled and do nothing.** The Sprint 6 notes disclosed the heatmap/filter pair honestly; the header pair was marked ✅ regardless. Wired in S9 (heatmap/filter), S12 (search), S6.5-repair (menu → disable or `[coming soon]` per SIGNAL's no-dead-links rule).
+- [~] S6.11 — Test: 500 pins render without jank, clusters collapse/expand on zoom ⚠️ **CORRECTED Aug 2026 — not a test.** The evidence recorded was "Mapbox GL handles clustering natively", which is an assumption about the library, not a measurement of this app. MOTION.md's acceptance gate requires "200-marker map does not drop frames on a mid-range device". Real perf measurement moves to S16.
+- [ ] S6.12 — **DISCOVERED Aug 2026 — map data updates are silently dropped before style load.** `src/components/Map.tsx:163-171` early-returns on `if (!map || !map.isStyleLoaded()) return` with **no retry and no queue**. Any Realtime insert or `reports` prop change arriving before Mapbox finishes loading its style is lost permanently. **Fix in S6.5-repair** — queue pending data and flush on the `style.load` event.
+- [ ] S6.13 — **DISCOVERED Aug 2026 — "Locate me" works via a DOM escape hatch.** `MapPage.tsx:24-28` calls `document.querySelector('[data-locate-me]')?.click()` against a hidden button at `Map.tsx:193-199`, whose own comment reads `{/* Expose flyToUser via a hidden mechanism or pass via ref */}`. It functions today but bypasses React entirely and breaks the moment a second map instance mounts. **Fix in S6.5-repair** — `useImperativeHandle` ref.
 **Test criteria:** Map renders with all existing reports as coloured pins. Tapping a pin shows the ReportCard bottom sheet with photo, category, address, time ago. Camera FAB opens report flow. New reports from another session appear on map without page refresh. Clustering works at zoom < 14.
 **Notes:** Pin size scales slightly with upvote count (max 2x). Cluster marker colour based on most common category, or red if any safety category present. Map style should be dark to match the app's dark theme. The camera FAB has a pulsing glow animation to draw attention.
 
 ---
 
-### Sprint 7: AI Image Classification
-**Goal:** TensorFlow.js MobileNetV2 classifies report photos client-side with confidence display and manual override.
-**Inputs:** Sprint 5 complete (report flow exists)
-**Outputs:** `useAIClassification` hook, `AIResultCard` component, `ConfidenceBar` component, TF.js model loading/caching
+### Sprint 6.5: Foundation Repair
+**Inserted Aug 2026.** The Aug verification pass found that six of seven "complete" sprints were partially true, with three user-facing dead ends and two security defects. CLAUDE.md §8 forbids proceeding to the next sprint with broken core functionality, and §9 mandates tests that do not exist. This sprint pays that debt before any new feature lands. **Nothing here is new scope — every item repairs something already marked ✅.**
+
+**Goal:** Every corrected `[~]` above returns to a *truthful* `[x]`. Test harness exists and covers the business logic shipped in S3–S6.
+**Inputs:** Verification audit (Aug 2026)
+**Outputs:** vitest harness + tests, `LocationPicker`, `DuplicateAlert`, migrations 014/015, error-surfacing fix, app-level offline queue
 **Subtasks:**
-- [ ] S7.1 — Set up TensorFlow.js with MobileNetV2 base model loading
-- [ ] S7.2 — Implement model caching in IndexedDB (load from Supabase Storage on first use)
-- [ ] S7.3 — Implement `useAIClassification` hook (resize to 224x224, predict, return top-2 categories)
-- [ ] S7.4 — Create `AIResultCard` component (category icon + name + confidence bar + override)
-- [ ] S7.5 — Create `ConfidenceBar` component (animated fill bar)
-- [ ] S7.6 — Implement confidence threshold behaviour (≥85% prominent, 60-84% "Does this look right?", <60% show top 2)
-- [ ] S7.7 — Implement category override flow (tap to open full picker, log correction)
-- [ ] S7.8 — Integrate AI classification into report submission flow (between photo capture and submit)
-- [ ] S7.9 — Test inference time < 2 seconds on mid-range device
-- [ ] S7.10 — Test offline classification (model cached, no network needed)
-**Test criteria:** Photo classified in < 2 seconds. Correct confidence threshold behaviours displayed. Manual override works and logs correction. Model cached after first load — subsequent loads < 500ms. Classification works fully offline.
-**Notes:** For initial launch, use the pre-trained MobileNet model with ImageNet classes mapped to Ripple categories. Fine-tuned model comes later. The model is ~14MB — show download progress on first load. Classification is entirely client-side — no image data leaves the device for classification purposes.
+- [ ] S6.5.1 — **Test harness.** Add `test`/`test:run`/`coverage` scripts to `package.json`; add a `test` block to `vite.config.ts` (jsdom, globals, `setupFiles`); create `src/test/setup.ts` registering `@testing-library/jest-dom`. All three packages are already installed and entirely unused.
+- [ ] S6.5.2 — **Unit tests for shipped logic** (CLAUDE.md §9 backfill). Priority order — pure functions first: `compressImage`, `blobToBase64`, `detectCouncil` (incl. the overlap tie-break), `mapHelpers` (`reportsToGeoJSON`, `timeAgo`), `reverseGeocode` (mocked fetch), `boundaryCache` (fake-indexeddb), then hooks: `useReporterToken`, `useGeolocation` (fake timers for the 5s/8s paths), `useSubmitReport` (incl. `isRateLimited`), `useOfflineQueue`, `useReports`.
+- [ ] S6.5.3 — **Fix the render-phase `setState`** at `CameraCapture.tsx:14-16` → move into `useEffect`. Verify `PhotoPreview` and `retake()` become reachable again; delete the `setTimeout(…, 50)` click hack if it is no longer needed.
+- [ ] S6.5.4 — **Build `LocationPicker`** and end the GPS dead end (S4.4/S4.5). Wire `fallbackTriggered` → picker; tap-to-place pin → `setManualPosition`. Add an explicit error line when `lat === null && !isLocating`.
+- [ ] S6.5.5 — **Surface real Edge Function errors** (S5.12) — `await fnError.context.json()` in `useSubmitReport`, with the generic string only as last resort.
+- [ ] S6.5.6 — **Render `DuplicateAlert`** (S5.11) per PRD §12.7 — consume the `duplicate_nearby` the server already returns.
+- [ ] S6.5.7 — **Lift `useOfflineQueue` to app level** (S5.13) so replay happens anywhere; export `processQueue`; register Background Sync where supported.
+- [ ] S6.5.8 — **Server-side rate limiting** (S5.14) in the Edge Function, per PRD §10.3 (10/hour/token). Adopt **Zod** here for request validation, retiring the hand-rolled `if` chain and making S0.2's `zod` claim true.
+- [ ] S6.5.9 — **Migration 014** — `ALTER PUBLICATION supabase_realtime ADD TABLE reports;` + `REPLICA IDENTITY FULL` (S2.15).
+- [ ] S6.5.10 — **Migration 015** — scope `upvotes_delete_own` to `reporter_token` and close the `user_notifications` email leak (S2.16).
+- [ ] S6.5.11 — **Fix the seed path** — `config.toml:65` → `sql_paths = ["./seed/001_melbourne_councils.sql"]` (S2.13.1). Make boundary resolution deterministic: `.order('council_id')` in `boundaryCache` + nearest-centroid tie-break per PRD Q3 (S2.13.2).
+- [ ] S6.5.12 — **Photo on `ReportCard`** (S6.5) — extend `MapPin` + `useReports` select, render thumbnail.
+- [ ] S6.5.13 — **Flush queued map data on `style.load`** (S6.12); replace the `querySelector().click()` locate-me hack with a ref (S6.13).
+- [ ] S6.5.14 — **Add `/report/:id` + `/search` routes and a `*` catch-all** — an unknown URL currently renders banners over an empty page. Catch-all gets SIGNAL's `[coming soon]` dimmed state, not a dead link.
+- [ ] S6.5.15 — **`SubmissionSuccess` escape route** (S5.7) — add "View on map"; render `TabBar` in `ReportFlow` or route home.
+- [ ] S6.5.16 — Tighten ESLint toward `strictTypeChecked` and remove the `exhaustive-deps` suppression at `Map.tsx:159` by fixing the dependency array (S0.9).
+- [ ] S6.5.17 — Delete `@tensorflow/tfjs` from `package.json` (superseded by S7's LiteRT.js). Create `src/stores/` and `src/workers/` only when S9/S7 actually need them, then mark S0.3.
+**Test criteria:** `pnpm test` runs and passes with ≥1 test per unit listed in S6.5.2. GPS-denied path reaches submit via the picker. A deliberately over-long note shows "Note exceeds 140 character limit", not "non-2xx status code". Anon key cannot delete another token's upvote (verify against local or re-provisioned Supabase). Reconnecting on `/` flushes the queue.
+**Notes:** Items depending on a live database (S6.5.9, S6.5.10, S6.5.11 verification) are written and committed here but can only be *applied and verified* once the backend is re-provisioned — see the Owner-Gated Backlog. The SQL is correct regardless of when it runs.
+
+---
+
+### Sprint 6.6: SIGNAL Design System Migration
+**Inserted Aug 2026.** ENGINEERPROMPT.md and MOTION.md both declare Bruno's "SIGNAL" system binding and inherited, and MOTION.md:8 already names `~/bruno-portfolio/CLAUDE.md` as the source. The shipped code implements the older PRD §11 system instead, and violates this project's own MOTION.md in at least one place (the Framer spring at `ReportCard.tsx:30`). Precedence per CLAUDE.md: masterplan > CLAUDE.md > ENGINEERPROMPT — and this entry is the masterplan making the call explicit. **Done before Sprint 7 so the AI surfaces are built once, in the right language, rather than styled twice.**
+
+**Goal:** Every surface reads as SIGNAL — warm black, amber used sparingly, square, unshadowed, no emoji, ease-out/linear only.
+**Inputs:** `~/bruno-portfolio/CLAUDE.md` §"Redesign Design Decisions (2026-07 · SIGNAL)", `MOTION.md`
+**Outputs:** re-tokenised `index.css` + `tailwind.config.js`, glyph-based category identity, motion compliance, `prefers-reduced-motion` support
+**Subtasks:**
+- [ ] S6.6.1 — Replace the `:root` palette in `src/index.css` with SIGNAL tokens: `--bg #050505`, `--surface #0b0a09`, `--text-primary #f0ece4`, `--text-secondary #98928a`, `--text-dim #55504a`, `--amber #ffb000`, `--steel #2c2925`, `--hairline #1b1916`. Radius tokens → max 2px. Delete `--shadow-card` / `--shadow-glow`. Mirror into `tailwind.config.js`.
+- [ ] S6.6.2 — Fonts: drop **Inter** (SIGNAL explicitly excludes it); body → Syne or DM Sans; JetBrains Mono reserved for data, labels, readouts and ASCII. Self-host or preconnect rather than the current render-blocking `@import` at `index.css:1`.
+- [ ] S6.6.3 — **Category identity without colour.** SIGNAL permits one accent, so colour cannot carry ten categories — and it never really did: `streetlight` and `signage` are *both* `#F0883E` today, so the "10-colour" system is already only 9-distinguishable. Replace with a **monospace glyph per category** (`categories.ts` gains `glyph`, loses `icon` emoji and `color`). This *improves* PRD §10.2 compliance ("Colour never the only differentiator") rather than weakening it.
+- [ ] S6.6.4 — **Map pins:** move `Map.tsx` from `circle` layers to `symbol` layers so glyphs can render; amber reserved for the user's own reports and safety-category emphasis; everything else grayscale on `#050505`. Marker drop-in per MOTION.md:85 — scale 0.8→1, 250ms ease-out, 40ms stagger **capped at 20 markers**, remainder instant.
+- [ ] S6.6.5 — **Rebuild `CameraFab`** — currently the single most non-compliant line in the repo (`CameraFab.tsx:11`: `rounded-full bg-action shadow-glow animate-pulse-slow` breaks the radius, shadow, sparing-accent and no-bounce rules simultaneously). Becomes a bracketed instrument control, e.g. `[ ◉ REPORT ]`. Same `shadow-glow` removal at `CameraCapture.tsx:88`.
+- [ ] S6.6.6 — **Kill the spring.** `ReportCard.tsx:30` → ease-out tween ≤400ms, preserving drag-to-dismiss. This is a MOTION.md:11 violation, not a preference.
+- [ ] S6.6.7 — Remove all 16 emoji (10 category icons + `📡 📍 👍`). Keep the typographic glyphs `✕ ↻ ✓ ←` — those are type, not emoji.
+- [ ] S6.6.8 — Replace text loaders with the SIGNAL vocabulary: `[████░░░] 72%` bars and `> locating...` typing lines. Per MOTION.md:83 the GPS line **must never** show a spinner. No spinners anywhere.
+- [ ] S6.6.9 — **`prefers-reduced-motion: reduce` → fully static**, no exceptions. Currently unhandled anywhere in `src/`. This is a MOTION.md hard rule and a WCAG obligation.
+- [ ] S6.6.10 — Page-transition bar: 2px sweep L→R 300ms, hold 50ms, off right 200ms.
+- [ ] S6.6.11 — Propagate tokens outside `src/`: `index.html` `theme-color`, `vite.config.ts` manifest `theme_color`/`background_color`, `public/offline.html` (6 hardcoded hexes + Syne/Inter stack + `border-radius: 8px`), and `public/favicon.svg` — currently purple/blue gradient artwork (`#863bff`, `#7e14ff`, `#47bfff`) that matches **neither** design system.
+- [ ] S6.6.12 — Status colours: amber dots; **green only on `fixed`** per MOTION.md:89.
+**Test criteria:** No `rounded-{md,lg,xl,full}` outside the ripple-ring rule. No `shadow-*`. No emoji in `src/`. No `type: 'spring'`. Grep for `#E85D04` returns zero hits repo-wide. `prefers-reduced-motion` produces a static capture→result path. Contrast ≥4.5:1 for body text on `#050505`.
+**Notes:** MOTION.md's ripple motif (concentric rings, 1px, `border-radius: 50%`) is the **only** sanctioned use of round geometry — submit, upvote, and new-report-on-map. Never more than one ripple per surface; queue or drop, never stack.
+
+---
+
+### Sprint 7: AI Image Classification — **on-device, LiteRT.js**
+**Rewritten Aug 2026.** The original plan specified TensorFlow.js + MobileNetV2 + IndexedDB caching. That stack is retired: **TF.js is frozen** — latest release is `4.22.0` (Oct 2024, ~22 months stale, re-confirmed against the npm registry on 14 Aug 2026), and Google positions LiteRT.js as its successor with a published migration guide. Bruno delegated this call; the research is decisive.
+
+**This sprint is the entire product thesis.** The tagline promises *"on-device AI files the report in 3 seconds"* — everything before this sprint is a photo-and-map app. It is also, conveniently, **fully client-side**, which makes it the one major sprint unblocked by the dead Supabase backend. That is why it runs first among the feature sprints.
+
+**Goal:** A photo is classified into a Ripple category entirely on-device, in under the MOTION.md budget, with honest confidence display and one-tap override — and the inference never leaves the phone.
+
+**Locked stack (verified against the npm registry, 14 Aug 2026):**
+
+| Layer | Choice | Verification |
+|---|---|---|
+| Runtime | **`@litertjs/core`** | v2.5.3, published **2026-07-17**, by the `google-ai-edge/LiteRT` team — actively shipped |
+| Model | **EfficientNet-Lite0** (or MobileNetV3-Small) fine-tuned in Keras → **int8 `.tflite`** | ~5MB over the wire vs TF.js MobileNetV2's ~14MB |
+| Accelerator | `webgpu`, falling back to `wasm` (XNNPACK) | `loadAndCompile(model, { accelerator })`; `isWebGPUSupported()` is exported for the branch |
+| Preprocessing | **Canvas API** → `Float32Array`/`Uint8Array` | see S7.3 note — TF.js is **not** required |
+| Caching | **Cache Storage API**, in the service worker | IndexedDB was a TF.js-ism (`model.save('indexeddb://')`) and does not apply |
+| Fallback runtime | `@mediapipe/tasks-vision` `ImageClassifier` via `createFromModelPath()` | v1.0.1 on npm; loads the *same* `.tflite` |
+| Rejected | WebNN | behind flags in every browser as of Aug 2026 — not shippable |
+
+**Verified API surface** (read from `@litertjs/core@2.5.3`'s own `dist/index.d.ts`, not from documentation prose):
+```ts
+loadLiteRt(path: UrlString, options?: LoadLiteRtOptions): Promise<LiteRt>
+loadAndCompile(model: string | URL | Uint8Array | ReadableStreamDefaultReader,
+               compileOptions?: CompileOptions): Promise<CompiledModel>
+isWebGPUSupported(): boolean
+class Tensor { static fromTypedArray(data: TypedArray, shape?: Dimensions): Tensor
+               data(): Promise<TypedArray>; toTypedArray(): TypedArray }
+CompiledModel.run(input: Tensor | Tensor[]): Promise<Tensor[]>
+CompiledModel.getInputDetails(): readonly TensorDetails[]   // { shape, dtype, name }
+```
+**Consequence worth recording:** Google's own quickstart routes inference through `@litertjs/tfjs-interop`'s `runWithTfjsTensors(model, tf.Tensor[])`, which would drag frozen TF.js back in as a preprocessing dependency. The native `CompiledModel.run(Tensor[])` + `Tensor.fromTypedArray()` path above avoids that entirely — we preprocess with Canvas (`drawImage` → `getImageData`) and feed a typed array directly. **`@tensorflow/tfjs` is removed from the project, not swapped.** Tensor I/O supports int32 and float32 only.
+
+**Subtasks:**
+- [ ] S7.1 — Install `@litertjs/core`; remove `@tensorflow/tfjs`. Serve the WASM assets locally from `public/litert-wasm/` (do **not** depend on the jsDelivr CDN — it breaks the offline guarantee in PRD §10.5 and CLAUDE.md §4). Create `src/lib/litert.ts` owning `loadLiteRt()` + accelerator selection via `isWebGPUSupported()`.
+- [ ] S7.2 — **Model caching via Cache Storage API** (replaces the original IndexedDB task). Add a workbox `runtimeCaching` rule in `vite.config.ts` for the `.tflite` asset: `CacheFirst`, dedicated cache name, explicit version in the filename (`ripple-classifier-v1.tflite`) so a new model is a new URL and cache invalidation is free. Emit download progress from the `ReadableStream` reader — `loadAndCompile` accepts a `ReadableStreamDefaultReader` directly, so progress and load are the same pass.
+- [ ] S7.3 — **`src/lib/preprocessImage.ts`** — Canvas resize to the model's input size (read from `getInputDetails()[0].shape`, do not hardcode 224), pixel extraction, layout/normalisation to match the training recipe. Pure function, fully unit-testable. `src/constants/config.ts` already defines `TFJS_INPUT_SIZE = 224` — rename to `AI_INPUT_SIZE` and treat as a fallback only.
+- [ ] S7.4 — **`useAIClassification` hook** — `(photo: Blob | null) => { category, confidence, top2, isClassifying, isModelLoading, loadProgress, error, override }`. Must satisfy the PRD §9.5 signature. Idempotent per photo; aborts cleanly if the user retakes mid-inference; **never throws into render**.
+- [ ] S7.5 — **`ConfidenceBar`** — monospace `[████░░░░] 72%` per SIGNAL, tabular figures so the count-up doesn't jitter, fill 0→score 500ms ease-out with the integer counting in sync.
+- [ ] S7.6 — **`AIResultCard`** — glyph + category name + `ConfidenceBar` + override affordance, in SIGNAL vocabulary (built directly in S6.6's language — no restyle pass).
+- [ ] S7.7 — **Confidence tiers with distinct motion** (MOTION.md is explicit that the motion *is* the message):
+  - ≥85% — card snaps in decisively, bar fills fast (350ms), green tick at the end. Reads as **certain**.
+  - 60–84% — normal entry, `> does this look right?` types out beneath, category label carries the 2s status pulse. Reads as **asking**.
+  - <60% — two option cards fan in with 60ms stagger, neither emphasised, no green, bar dimmed. Reads as **offering a choice**.
+  Thresholds already exist as `AI_CONFIDENCE_HIGH = 0.85` / `AI_CONFIDENCE_MEDIUM = 0.60` in `src/constants/config.ts` — currently unused.
+- [ ] S7.8 — **The scan sequence** (MOTION.md §"Sprint 7", the hero moment). 1px line sweeps top→bottom over the photo, 1200ms/pass, linear, looping; image at 60% opacity behind the line and 100% in front. `> analysing...` types at 40ms/char. Loader fills to 90% over expected inference time and **holds at 90% until the real result arrives**, then snaps to 100% in 120ms. On completion the scan line **finishes its current pass** before fading (cutting mid-sweep reads as a crash). **Never fake completion — the hold is the honest signal.**
+- [ ] S7.9 — **Override flow + correction logging.** Sheet slides up 280ms ease-out, backdrop to 60%. Log `{ ai_category, ai_confidence, final_category, model_version, input_hash }` — the `reports` table already carries `ai_category`, `ai_confidence`, `user_corrected_ai`. **Design this as a dataset, not a log**: it is the training set for the next model revision (PRD Q7). Photo itself is *not* attached to the correction record beyond the report's existing photo.
+- [ ] S7.10 — Wire into `ReportFlow` between capture and review. Fix the stale placeholder at `useSubmitReport.ts:62` (`ai_category: data.category, // Placeholder until Sprint 7`) and repair the **stale `SubmitReportRequest` type** (`types/index.ts:176-187`) which omits `address`, `suburb`, `postcode`, `council_id` — all four of which the client already sends (`useSubmitReport.ts:67-70`) via an untyped inline object. Fix the type *before* extending it for AI fields, or the drift gets encoded.
+- [ ] S7.11 — **Graceful degradation.** Model fails to fetch, WebGPU absent, WASM blocked, or inference throws → fall back silently to the manual `CategoryPicker` with a quiet `> classifier unavailable — pick a category` line. **A failed classifier must never block a report.** Offline-first: if the model isn't cached yet and the user is offline, skip straight to manual.
+- [ ] S7.12 — **Unit tests** — `preprocessImage` (deterministic output for a known bitmap), tier-selection logic at all three boundaries incl. exact 0.85/0.60, `useAIClassification` with a mocked model (resolve, reject, abort-on-retake).
+- [ ] S7.13 — **Instrument and report the budget.** Log capture→result timing in dev. Report **p50 and p95** measured on a real mid-range Android. If p95 exceeds 3,000ms that is a masterplan finding to record here, **not** something to hide behind a longer animation (MOTION.md, "Rules that will otherwise be broken").
+- [ ] S7.14 — Test offline classification: model cached, airplane mode, classification still works.
+
+**Test criteria:** Capture → result within the MOTION.md budget of **≤3,000ms**, with p50/p95 recorded from a real device. All three confidence tiers visibly differ in motion (verified by recording). Scan loop never cuts mid-sweep; loader holds at 90% and never fakes completion. `prefers-reduced-motion: reduce` produces a fully static path from capture to result. Nothing flashes >3×/s. Override logs a correction. Model cached after first load — subsequent load <500ms. Classification works fully offline. A model-load failure still permits a report.
+
+**Notes:** Classification is entirely on-device; the raw photo never leaves the phone for classification purposes (PRD §6.2, §13.1). Only the compressed image is uploaded, and only after the user taps Submit — this is the privacy claim the whole product rests on, and it must survive implementation pressure.
+
+**Latency expectation, stated honestly:** EfficientNet-Lite0 int8 benches ~10ms natively on a Pixel 6. Browser WASM/WebGPU will be several× slower, and **no published browser-side numbers exist for this model** — so the budget is *expected* to hold comfortably but is **unproven until S7.13 measures it**. int8 benefits the WASM path disproportionately (SIMD operates on packed 8-bit integers natively). Do not lock the MOTION.md timings until real numbers land.
+
+> **Open dependency — the model itself.** S7.1–S7.14 assume a fine-tuned `ripple-classifier-v1.tflite` exists. Producing it needs civic training imagery (~500 images/category per PRD §6.2) and a Keras fine-tune + int8 export. That is owner-gated (dataset sourcing / possible reuse of the distillation project's teacher-labelling pipeline) → **Owner-Gated Backlog**. **Unblocking path:** the sprint is built and shipped against a **generic ImageNet-classed EfficientNet-Lite0** with an ImageNet→Ripple category mapping, so the full pipeline, motion sequence, caching, tiers and override are real and demonstrable end-to-end. Swapping in the fine-tuned model is then a one-URL change (S7.2's versioned filename makes it free). Accuracy against PRD G2's ">70% no-correction" target is **not** claimed until the fine-tuned model lands — and the correction log built in S7.9 is precisely what makes that measurable.
 
 ---
 
@@ -405,6 +546,15 @@ High-level goals only — detailed sprint planning when Phase 4 is complete:
 | March 2026 | Tailwind CSS v3 (not v4) | PRD specifies v3. v4 has breaking changes and different config pattern. |
 | March 2026 | Flat ESLint config (eslint.config.js) | Vite 8 scaffold uses flat config format by default. Functionally equivalent to .eslintrc.cjs with same rules. |
 | March 2026 | pnpm via npx wrapper | pnpm not globally installed; using `npx pnpm` for all package operations. |
+| **Aug 2026** | **Retire TensorFlow.js; adopt LiteRT.js (`@litertjs/core`)** | TF.js latest is `4.22.0` (Oct 2024), ~22 months stale and effectively frozen; Google positions LiteRT.js as its successor and ships a migration guide. LiteRT.js v2.5.3 published 2026-07-17 — actively maintained. Verified against the npm registry, not assumed. Supersedes PRD §7.5 for the AI/ML row only. |
+| **Aug 2026** | **int8 `.tflite` (~5MB) over MobileNetV2 (~14MB)** | Cuts first-load ~3× on 4G, which is the binding constraint on PRD §10.1's "<5s model load". int8 also disproportionately favours the WASM fallback path (SIMD on packed 8-bit). |
+| **Aug 2026** | **Preprocess with Canvas, not `@litertjs/tfjs-interop`** | Google's quickstart uses `runWithTfjsTensors(model, tf.Tensor[])`, which reintroduces frozen TF.js purely for tensor plumbing. `CompiledModel.run(Tensor[])` + `Tensor.fromTypedArray()` are native to `@litertjs/core`, so TF.js can be removed outright rather than swapped. Confirmed by reading the package's own `.d.ts`. |
+| **Aug 2026** | **Cache Storage API for the model, not IndexedDB** | IndexedDB caching was a TF.js API artefact (`model.save('indexeddb://')`). With a plain `.tflite` fetch, the service worker's Cache Storage is the native fit, and a versioned filename makes invalidation free. |
+| **Aug 2026** | **WebNN rejected** | Behind flags in every browser as of Aug 2026 (Chromium 121+ only, requires JSPI + experimental flags). Not shippable. Revisit post-Phase 2. |
+| **Aug 2026** | **SIGNAL supersedes PRD §11 as the design system** | ENGINEERPROMPT.md and MOTION.md:8 both declare it binding and inherited from `~/bruno-portfolio/CLAUDE.md`. Recorded here so the masterplan — the sequencing authority — makes the call explicit rather than leaving PRD §11 and MOTION.md in silent conflict. |
+| **Aug 2026** | **Category identity moves from colour to monospace glyph** | SIGNAL permits one accent, so colour cannot encode ten categories. Colour never actually did: `streetlight` and `signage` share `#F0883E` today. Glyph encoding *strengthens* PRD §10.2 ("colour never the only differentiator") instead of weakening it. |
+| **Aug 2026** | **Sprint 7 ships on a generic backbone; fine-tune is a later swap** | The dataset is owner-gated and would otherwise block the single highest-leverage sprint indefinitely. Versioned model URL (S7.2) makes the swap a one-line change. Accuracy claims are withheld until the fine-tuned model lands. |
+| **Aug 2026** | **Foundation Repair (6.5) and SIGNAL (6.6) inserted before Sprint 7** | CLAUDE.md §8 forbids advancing with broken core functionality, and §9 mandates absent tests. Doing 6.6 before 7 means the AI surfaces are built once in the correct visual language rather than styled twice. |
 
 ---
 
@@ -412,11 +562,76 @@ High-level goals only — detailed sprint planning when Phase 4 is complete:
 
 | Risk | Status | Notes |
 |------|--------|-------|
-| AI classification accuracy too low | Open | Phase 1 — using MobileNet base, may need fine-tuning dataset |
-| TF.js model too large (~14MB) | Open | Cache in IndexedDB after first load, show progress |
+| AI classification accuracy too low | Open | Phase 1 — generic backbone ships first; fine-tune dataset is owner-gated. The S7.9 correction log is the instrument that makes accuracy measurable against PRD G2. |
+| ~~TF.js model too large (~14MB)~~ | **Resolved Aug 2026** | Stack changed to int8 `.tflite` ~5MB via LiteRT.js. Cached in Cache Storage (not IndexedDB), progress shown from the fetch stream. |
+| **Supabase project deleted / ref invalid** | **Open — blocking** | `nexccbcmziiltysfcmzi` returns NXDOMAIN from two resolvers. Blocks acceptance for Sprints 8, 10–15, 17–20. Owner-gated re-provisioning; SQL is written and correct meanwhile. |
+| **Zero automated tests against a "no test, no merge" rule** | **Open** | CLAUDE.md §9 unmet since Sprint 3; 14+ untested units. Harness + backfill in S6.5.1–S6.5.2. |
+| **Anon key can delete any upvote; all notification emails world-readable** | **Open — security** | Two RLS policies named `_own` are `USING (true)`. Migration 015 in S6.5.10. |
+| **Realtime silently delivers nothing** | **Open** | No `ALTER PUBLICATION supabase_realtime ADD TABLE reports`. The subscription connects and receives nothing, so the failure is invisible. Migration 014 in S6.5.9. |
+| **GPS failure is an unrecoverable dead end** | **Open** | `fallbackTriggered`/`setManualPosition` have zero consumers; submit stays disabled with no message. `LocationPicker` in S6.5.4. |
+| Sprint 7 latency budget unproven in-browser | Open | No published browser numbers exist for EfficientNet-Lite0 int8. S7.13 measures p50/p95 on real hardware before MOTION.md timings are locked. |
+| Aethereum sync workflow not executable | Open | CLAUDE.md mandates `share_intent`/`record_decision`/etc. at every sprint, but no aethereum MCP server is connected and this repo has no room (`aethereum status`: "no room token found"). `init` is a network side effect → owner-gated. Decisions are being recorded in this file's Architecture Decisions Log meanwhile, so nothing is lost. |
 | Misuse: photographing people/private property | Open | UI guidance + TOS. AI moderation Phase 2. |
 | Spam/fake reports | Open | Rate limiting (10/hour/token), community flagging |
 | Council refuses to engage | Open | Build dashboard anyway, demonstrate value with data |
 | GPS accuracy in urban canyons | Open | Show accuracy radius, manual pin adjustment fallback |
 | iOS Safari PWA limitations | Open | No beforeinstallprompt — manual install instructions needed |
 | vite-plugin-pwa peer dependency warning (Vite 8) | Monitoring | Plugin works with Vite 8 despite peer dep listing ≤7 |
+
+> **MOTION.md added (Aug 2026):** the animation spec in this folder is binding. Fold its acceptance checklist into the relevant sprint gates when expanding this plan. ✅ **Done** — folded into the S7 gate (scan sequence S7.8, tiers S7.7, budget S7.13, reduced-motion) and the S6.6 gate (easing, spring removal, marker stagger, ripple motif, reduced-motion).
+
+---
+
+## Deployment & Ops
+
+**Added Aug 2026.** Previously absent from this plan, which is part of why the project reached 46% with no live URL.
+
+### Environment variables
+
+| Variable | Scope | Where it comes from | Status |
+|---|---|---|---|
+| `VITE_SUPABASE_URL` | client | Supabase Dashboard → Settings → API | set locally; **points at a dead project** |
+| `VITE_SUPABASE_ANON_KEY` | client | same | set locally; tied to the dead project |
+| `VITE_MAPBOX_TOKEN` | client | account.mapbox.com/access-tokens | set locally, working |
+| `SUPABASE_SERVICE_ROLE_KEY` | **server only** | Edge Function secrets | not set |
+| `RESEND_API_KEY` | **server only** | resend.com/api-keys | not set — S13 |
+| `ELASTICSEARCH_URL` / `_API_KEY` | **server only** | Elastic Cloud | not set — S12, and see the deferral note there |
+
+Client-safe values carry the `VITE_` prefix and nothing else ever may (CLAUDE.md §7). A Mapbox token in a client bundle is public by design — restrict it by URL referrer in the Mapbox dashboard rather than trying to hide it.
+
+### Pre-deploy gate
+- [ ] `pnpm tsc --noEmit` zero errors · `pnpm lint` zero errors · `pnpm test` green
+- [ ] `pnpm build && pnpm preview` — service worker registers, offline fallback renders
+- [ ] `dist/` rebuilt (the committed one is stale from 17 Jul and predates current sources)
+- [ ] Lighthouse PWA ≥90 and Performance ≥90 (PRD §10.1 / S16.6)
+- [ ] Real-device PWA install verified on **iOS Safari** and Android Chrome
+- [ ] No secret reachable in the client bundle: `grep -r "SERVICE_ROLE\|RESEND\|ELASTIC" dist/` returns nothing
+
+### iOS PWA facts that change what we build
+- **No `beforeinstallprompt` on iOS** — there is no programmatic install prompt. The instruction UI ("Share → Add to Home Screen") is the *only* path and must be built, not polyfilled.
+- **Push requires Home-Screen install first**, and uses **Declarative Web Push** payloads (Safari 18.4+). Email stays the primary notification channel (PRD §6.5).
+- Camera is `<input type="file" capture="environment">`, not `getUserMedia` — already correctly implemented in S3.
+
+---
+
+## Owner-Gated Backlog — deferred to the very end
+
+**Per Bruno's instruction (14 Aug 2026): everything requiring his account, card, credentials, physical device, or an irreversible public action is deferred here rather than blocking the build.** Each item names precisely what is blocked and what was built anyway. Nothing below is a research question — the engineering decisions are already made and recorded above.
+
+### OG1 — Re-provision Supabase 🔴 *highest impact*
+Project `nexccbcmziiltysfcmzi` no longer resolves. **Needs Bruno:** create/identify the project, then supply URL + anon key.
+Then: `supabase link`, apply all **15** migrations (13 existing + 014 Realtime + 015 RLS), fix `config.toml` seed path (S6.5.11), `supabase db reset`, deploy the `submit-report` Edge Function, create the `reports` storage bucket (public read) and an `ml-models` bucket (**no migration defines `ml-models` today** — it exists only as a PRD §7.1 reference).
+**Blocks acceptance for:** S2 (re-verify), S5, S6.8, S8, S10–S15, S17–S20. **Built anyway:** all SQL, the Edge Function, and every client hook — correct on paper, unrunnable until this lands.
+
+### OG2 — Training data for the fine-tuned classifier
+~500 images/category across 10 categories (PRD §6.2), then Keras fine-tune → int8 `.tflite` export. Possible reuse of the distillation project's teacher-labelling pipeline — coordinate if both run.
+**Blocks:** PRD G2's ">70% correct without correction" and the Month-3 ">80% with fine-tuning" target. **Built anyway:** the entire S7 pipeline on a generic backbone; swap is one versioned URL.
+
+### OG3 — Deploy to production (Vercel)
+**Needs Bruno:** Vercel account link, project creation, env vars, optional custom domain. Publishing is an irreversible outward-facing action — not taken without explicit instruction (CLAUDE.md §8).
+**Note:** ENGINEERPROMPT argues for shipping before Sprint 8, and that reasoning stands — *"a deployed half-product outperforms an undeployed full one."* It sits here only because it is owner-gated, and it is the **first** thing worth doing once OG1 clears.
+
+### OG4 — Elasticsearch (Sprint 12) — recommend **defer**
+Elastic Cloud is ~$16/month for a PWA with no live users, and S12 is the heaviest infra in the plan. **Recommendation:** defer S12 and cover search with Postgres full-text (`tsvector` + GIN) — zero new infrastructure, no new spend, and sufficient at current scale; PRD Q5 already flags Typesense/Meilisearch as cheaper candidates. Elasticsearch's analytics aggregations only start to earn their keep at Phase 3 council-dashboard scale. **Decision is Bruno's** — it costs money.
+
+### OG5 — Resend API key (Sprint 13) · OG6 — Real device testing (iOS Safari + mid-range Android; needed to close S3.5–S3.7 and to measure S7.13's p50/p95) · OG7 — ABS council boundary data replacing the overlapping placeholder polygons · OG8 — `aethereum init` (creates a room; network side effect) · OG9 — Council pilot partner, which determines how much of Phase 3 matters.

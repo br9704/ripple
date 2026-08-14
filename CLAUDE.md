@@ -235,3 +235,34 @@ Documentation is updated before the commit, not after. The commit message should
 ---
 
 *This file is maintained by Bruno Jaamaa. Do not modify without instruction.*
+
+---
+
+## Aethereum sync — required workflow (canonical block, identical across every project)
+
+This project coordinates through Aethereum. Account config lives at `~/.aethereum/config.json` and this machine is already logged in.
+
+- **First session:** run `aethereum init` in the repo root and create/join this project's room.
+- **`share_intent`** — one line at the start of every sprint, before any code. Marking a task complete without having shared intent for its sprint is a workflow violation.
+- **`declare_contract`** — for every interface other code consumes (types, schemas, event shapes, API contracts). Bump the version when the shape changes.
+- **`record_decision`** — at every architectural fork or irreversible choice, with the *why*. Future sessions read these instead of re-litigating.
+- **`ask_human`** — whenever the decision is Bruno's: spending money, publishing, deleting, rewriting git history, naming, or anything with an external side effect. Do not guess and do not block — keep working other tasks until answered.
+- **`record_verification`** — at every sprint gate, pass/fail with evidence.
+
+## Masterplan discipline (canonical block)
+
+The masterplan is the **single source of truth for sequencing**. This file is the source of truth for *rules*. Precedence on conflict: masterplan (sequencing) > CLAUDE.md (rules) > ENGINEERPROMPT.md (kickoff).
+
+- Status keys, used live in the file as work happens: `[ ]` not started · `[~]` in progress · `[x]` complete · `[⏭]` deferred (always with a one-line reason).
+- **Never delete or rewrite masterplan content.** Expand it in place — add sub-tasks, file paths, edge cases, findings. Deepen, don't replace.
+- Mark tasks as you go, never batched at the end of a session.
+- A sprint closes only when its acceptance criteria pass. Then: fill the **As-shipped delta** and **Deferred** notes, move the Current-sprint pointer, and update the Current-state line at the bottom of this file.
+- Never skip a sprint. Never partially complete one and move on.
+- Stop and report at every sprint close before starting the next.
+
+## Honesty rules (canonical block)
+
+- Never state a number in a README, the site, or any public copy that a committed artifact cannot back.
+- Verified counts only — never restate a figure from memory.
+- If a claim and the code disagree, that is a bug in one of them. Fix it or flag it; never leave it ambiguous.
+- `[PLACEHOLDER — description]` for anything unknown. Never invent content.
