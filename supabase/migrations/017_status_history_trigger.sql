@@ -18,6 +18,58 @@
 --    schedule (see the note at the bottom).
 -- ============================================================
 
+-- ------------------------------------------------------------
+-- calculate_priority overload taking an explicit status.
+--
+-- Necessary because the trigger below is BEFORE UPDATE, where the table still
+-- holds the OLD row: the single-argument calculate_priority(id) re-reads from
+-- `reports` and would therefore compute the score from the status we are in the
+-- middle of replacing, silently leaving the status_progress penalty unapplied.
+--
+-- Caught by supabase/test/01_verify.sql running against a real Postgres. It was
+-- invisible to inspection and would have been invisible in production too — the
+-- score would simply have been wrong, and wrong in the direction that keeps
+-- resolved reports ranked as urgent on the council dashboard.
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION calculate_priority(p_report_id UUID, p_status TEXT)
+RETURNS NUMERIC AS $$
+DECLARE
+  v_upvote_count     INTEGER;
+  v_category         TEXT;
+  v_submitted_at     TIMESTAMPTZ;
+  v_severity_weight  NUMERIC;
+  v_days_outstanding NUMERIC;
+  v_status_progress  NUMERIC;
+BEGIN
+  SELECT upvote_count, category, submitted_at
+  INTO v_upvote_count, v_category, v_submitted_at
+  FROM reports WHERE id = p_report_id;
+
+  v_severity_weight := CASE v_category
+    WHEN 'streetlight' THEN 3 WHEN 'tree' THEN 3
+    WHEN 'accessibility' THEN 2.5
+    WHEN 'pothole' THEN 2 WHEN 'signage' THEN 2
+    WHEN 'water' THEN 2 WHEN 'footpath' THEN 2
+    ELSE 1
+  END;
+
+  v_days_outstanding := EXTRACT(EPOCH FROM (NOW() - v_submitted_at)) / 86400.0;
+
+  v_status_progress := CASE p_status
+    WHEN 'acknowledged' THEN 1
+    WHEN 'in_progress' THEN 2
+    WHEN 'fixed' THEN 3
+    WHEN 'declined' THEN 2
+    WHEN 'wont_fix' THEN 2
+    ELSE 0
+  END;
+
+  RETURN ROUND(
+    (v_upvote_count * 2) + (v_severity_weight * 10)
+    + (v_days_outstanding * 0.5) - (v_status_progress * 20), 2);
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION record_status_change()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -39,10 +91,11 @@ BEGIN
       NEW.fixed_at := NOW();
     END IF;
 
-    -- Recompute now that status_progress has changed. Without this the
-    -- acknowledged/-20 and in_progress/-40 offsets in the PRD §6.4 formula
-    -- never actually apply.
-    NEW.priority_score := calculate_priority(NEW.id);
+    -- Recompute with the INCOMING status. Passing NEW.status explicitly is
+    -- required: in a BEFORE UPDATE the row in `reports` still carries the old
+    -- status, so the single-argument form would score the transition we are
+    -- replacing rather than the one we are making.
+    NEW.priority_score := calculate_priority(NEW.id, NEW.status);
   END IF;
 
   RETURN NEW;
