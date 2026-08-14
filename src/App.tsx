@@ -5,6 +5,8 @@ import { OfflineQueueProvider } from '@/components/OfflineQueueProvider'
 import { PageTransition } from '@/components/PageTransition'
 import { MapPage } from '@/pages/MapPage'
 import { ReportFlow } from '@/pages/ReportFlow'
+import { FeedPage } from '@/pages/FeedPage'
+import { MyReportsPage } from '@/pages/MyReportsPage'
 
 export default function App() {
   return (
@@ -15,8 +17,8 @@ export default function App() {
         <Route path="/" element={<MapPage />} />
         <Route path="/report" element={<ReportFlow />} />
         <Route path="/report/:id" element={<ComingSoon title="Report detail" sprint="Sprint 11" />} />
-        <Route path="/feed" element={<ComingSoon title="Feed" sprint="Sprint 10" />} />
-        <Route path="/my-reports" element={<ComingSoon title="My Reports" sprint="Sprint 10" />} />
+        <Route path="/feed" element={<FeedPage />} />
+        <Route path="/my-reports" element={<MyReportsPage />} />
         <Route path="/search" element={<ComingSoon title="Search" sprint="Sprint 12" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
