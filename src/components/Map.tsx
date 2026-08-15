@@ -4,6 +4,7 @@ import mapboxgl from 'mapbox-gl'
 import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, MAP_CLUSTER_RADIUS, MAP_CLUSTER_MAX_ZOOM } from '@/constants/config'
 import { CATEGORY_MAP } from '@/constants/categories'
 import { reportsToGeoJSON } from '@/lib/mapHelpers'
+import { createOriginElement } from '@/lib/originMarker'
 import type { MapPin } from '@/types'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
@@ -73,6 +74,10 @@ interface MapComponentProps {
 function MapComponent({ reports, onPinClick, showHeatmap = false, ref }: MapComponentProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
+  // The "you are here" marker. Held in a ref rather than state because it is a
+  // Mapbox-owned DOM node, not something React renders — putting it in state
+  // would re-render the whole map to move one element the map already owns.
+  const originRef = useRef<mapboxgl.Marker | null>(null)
   // Mapbox throws synchronously when WebGL is unavailable — no GPU, a blocked
   // context, or a headless browser. Left unhandled it propagates to the root
   // ErrorBoundary and takes the ENTIRE app down, so a user whose device cannot
@@ -337,10 +342,17 @@ function MapComponent({ reports, onPinClick, showHeatmap = false, ref }: MapComp
     if (!navigator.geolocation || !mapRef.current) return
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        mapRef.current?.flyTo({
-          center: [pos.coords.longitude, pos.coords.latitude],
-          zoom: 15,
-        })
+        const map = mapRef.current
+        if (!map) return
+        const here: [number, number] = [pos.coords.longitude, pos.coords.latitude]
+        map.flyTo({ center: here, zoom: 15 })
+
+        // Answer the tap with something, rather than moving the camera and
+        // leaving the destination unmarked. Reused across taps: creating a
+        // second Marker would leave the first one orphaned on the map with no
+        // reference left to remove it.
+        originRef.current ??= new mapboxgl.Marker({ element: createOriginElement() })
+        originRef.current.setLngLat(here).addTo(map)
       },
       () => {
         // GPS unavailable — stay on current view

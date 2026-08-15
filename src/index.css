@@ -192,6 +192,62 @@ body {
   animation: status-pulse 2s ease-in-out infinite;
 }
 
+/* ── Origin: where you are standing ──
+   The map had no user-position marker at all — flyToUser panned the camera to
+   your coordinates and rendered nothing there.
+
+   Brackets, not a ripple. The ripple motif above is reserved to three places
+   and border-radius: 50% to that one rule; a looping ripple under the user's
+   feet would be a fourth use, the only infinite one, and would spend the
+   effect saved for a report landing on the live map. Corner brackets are the
+   other half of SIGNAL — [ ◉ REPORT ], [ terms & privacy ] — so this frames
+   your position in a language the app already speaks.
+
+   It settles once and stops. A permanent animation on an otherwise static
+   screen reads as an alert rather than a fact, and a marker that has stopped
+   moving is easier to aim at. `forwards` is what makes reduced-motion free:
+   the global block below collapses the duration and the animation lands on
+   exactly the resting state it would have reached anyway. */
+@keyframes origin-settle {
+  from { transform: scale(1.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.origin {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  /* Load-bearing. Mapbox uses this element directly rather than wrapping it,
+     so without this a 44px invisible box swallows taps meant for report pins
+     underneath — exactly where the user is most likely to be aiming. */
+  pointer-events: none;
+  animation: origin-settle var(--dur-base) var(--ease) forwards;
+}
+
+.origin-corner {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--amber);
+}
+
+.origin-corner-tl { top: 0;    left: 0;  border-right: 0; border-bottom: 0; }
+.origin-corner-tr { top: 0;    right: 0; border-left: 0;  border-bottom: 0; }
+.origin-corner-bl { bottom: 0; left: 0;  border-right: 0; border-top: 0; }
+.origin-corner-br { bottom: 0; right: 0; border-left: 0;  border-top: 0; }
+
+.origin-glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1;
+  color: var(--amber);
+}
+
 /*
   prefers-reduced-motion: reduce → EVERYTHING static. No exceptions.
   MOTION.md states this as a hard, non-negotiable rule; the previous system

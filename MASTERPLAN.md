@@ -10,9 +10,9 @@
 
 | Metric | Session start | Now |
 |---|---|---|
-| Tasks `[x]` | 79 (several false) | **250** |
+| Tasks `[x]` | 79 (several false) | **255** |
 | Tasks `[ ]` / `[~]` / `[⏭️]` / `[🔒]` | 92 open | **0** |
-| Tests | **0** | **334 / 33 files** |
+| Tests | **0** | **340 / 34 files** |
 | Lint | 1 suppression | **0 errors, 0 warnings, 0 suppressions** |
 | Typecheck | vacuous (checked 0 files) | **`tsc -b` across 3 projects, 0 errors** |
 | Migrations | 13 | **27** |
@@ -35,7 +35,7 @@
 
 | Gate | Result |
 |---|---|
-| `pnpm test:run` | **334** tests / 33 files |
+| `pnpm test:run` | **340** tests / 34 files |
 | `pnpm verify:db` | **27** migrations + **102** assertions on real PostgreSQL 17.11 — 34 behavioural · 37 Sprint 21 · 26 RLS · 5 Realtime · **0 failures** |
 | `pnpm verify:pwa` | **28/28** installability criteria |
 | `pnpm verify:mobile` | WebKit (iPhone 14) + Chromium (Pixel 7) profiles, all passing |
@@ -957,6 +957,21 @@ That constraint turned the pass into an audit. Verifying a number means running 
 4. S7.2's model caching was correct, but nothing put the model into a deployable artifact — so OG3 would have produced a live site with no classifier and no error (D.13).
 
 **Notes:** This sprint claims no feature work. Everything it fixed was already marked `[x]` by an earlier sprint, and each fix is recorded above against the task that first claimed it.
+
+---
+
+### Sprint 22: Map UX — "origin"
+**Goal:** The first thing anyone sees is the map, and on the live deploy it was empty and obstructed. Not a design failure — SIGNAL reads well — but the hero screen had nothing alive on it and two elements fighting for the same pixels.
+**Trigger:** Screenshots of the production URL at an iPhone-14 viewport, not a local dev server.
+
+- [x] S22.1 — **The map never showed where you are.** `flyToUser` panned the camera to your coordinates and rendered *nothing* there. On an app whose whole premise is that you are standing at the problem, the one fact it most needed to confirm was the one it never showed — and panning away lost you with no way back but to tap locate and hope. Fixed with `src/lib/originMarker.ts` + six tests, wired into the existing `flyToUser` success path.
+  - **Brackets, not a ripple — and this is the interesting constraint.** The obvious marker for an app called Ripple is an expanding circle. `index.css:160` reserves that motif to *three places only* ("report submitted, upvote, new report on the live map") and permits `border-radius: 50%` nowhere else. A looping ripple under the user's feet would have been a fourth use, the only infinite one, and would have spent the effect being saved for the third case — which has never fired, because it needs Realtime. Corner brackets are the other half of SIGNAL (`[ ◉ REPORT ]`, `[ terms & privacy ]`), so the marker frames your position in a language the app already speaks. The centre glyph is `◉`, the same one the capture control uses.
+  - **It settles once and stops.** No ambient loop: a permanent animation on an otherwise static screen reads as an alert rather than a fact, and a marker that has stopped moving is easier to aim at. `forwards` makes reduced-motion free — the global block collapses the duration and the animation lands on exactly the resting state it would have reached anyway, so no special case was needed.
+  - **`pointer-events: none` is load-bearing**, not hygiene. Mapbox uses the supplied element directly rather than wrapping it, so without it a 44px invisible box swallows taps meant for report pins underneath — precisely where a user is most likely to be aiming. Asserted in the tests.
+- [x] S22.2 — **`0 reports this week` was a dead statistic.** It reported the absence of data as though that were the news. On a civic map, nothing reported nearby is not an error and not a failure — it means nobody has said anything yet, which is the one thing the user can change. Now reads `> nothing reported here yet` at zero, and the count otherwise. Deliberately understated: the `[ ◉ REPORT ]` control sits directly beside it and is the call to action, so the text does not need to nag.
+- [x] S22.3 — **The install banner covered the map controls.** `InstallBanner` was `fixed bottom-[196px] left-4 right-4`; `MapControls` is `fixed right-3 bottom-36` and its column **grows upward** to roughly 284px, straight through that band. The locate and heatmap buttons were unreachable behind it. Constrained to `right-20`. Same class of bug as the one already fixed on this component one axis over, and invisible to every check that did not render the map at 375px with the banner actually showing.
+
+**Sprint 22 close:** 340 tests / 34 files · lint 0/0/0 · `pnpm build` exit 0 · typecheck clean across three projects.
 
 ---
 

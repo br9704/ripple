@@ -134,7 +134,16 @@ export function MapPage() {
       {!isLoading && (
         <div className="pointer-events-none absolute bottom-[144px] left-4 z-30 border border-border bg-bg-primary/90 px-2 py-1">
           <span className="font-mono text-xs tabular-nums text-text-secondary">
-            {reportsThisWeek} {reportsThisWeek === 1 ? 'report' : 'reports'} this week
+            {/* A bare "0 reports this week" is a dead statistic — it reports
+                the absence of data as though that were the news. For a civic
+                map, nothing reported nearby is not an error state and not a
+                failure: it means nobody has said anything yet, which is the
+                one thing the user can change. The line stays factual and
+                understated; the [ ◉ REPORT ] control directly beside it is
+                the call to action, so the text does not need to nag. */}
+            {reportsThisWeek === 0
+              ? '> nothing reported here yet'
+              : `${reportsThisWeek} ${reportsThisWeek === 1 ? 'report' : 'reports'} this week`}
           </span>
         </div>
       )}

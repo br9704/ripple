@@ -19,7 +19,7 @@ pnpm install && pnpm dev      # front end is live at ripple-chi-bice.vercel.app,
 
 | Gate | Result | Command |
 |---|---|---|
-| Unit tests | **334** across 33 files | `pnpm test:run` |
+| Unit tests | **340** across 34 files | `pnpm test:run` |
 | Database | **27 migrations**, **102 assertions**, 0 failures, on real PostgreSQL 17 | `pnpm verify:db` |
 | On-device inference | **p50 15 ms · p95 22 ms** against a 3,000 ms budget | `pnpm bench:ai` |
 | Offline | model served **byte-identical** with the network cut; every route renders from cache | `pnpm verify:offline` |
@@ -30,7 +30,7 @@ pnpm install && pnpm dev      # front end is live at ripple-chi-bice.vercel.app,
 <p align="center">
   <a href="https://github.com/br9704/ripple/actions/workflows/verify.yml"><img src="https://github.com/br9704/ripple/actions/workflows/verify.yml/badge.svg?branch=main" alt="verify workflow status" /></a>
   <img src="https://img.shields.io/badge/status-front%20end%20live%20%C2%B7%20no%20backend-orange" alt="Status: front end live, no backend" />
-  <img src="https://img.shields.io/badge/tests-334-brightgreen" alt="334 tests" />
+  <img src="https://img.shields.io/badge/tests-340-brightgreen" alt="340 tests" />
   <img src="https://img.shields.io/badge/db%20assertions-102-brightgreen" alt="102 database assertions" />
   <img src="https://img.shields.io/badge/PWA-28%2F28-blue" alt="28 of 28 PWA criteria" />
   <img src="https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey" alt="License: All Rights Reserved" />
@@ -130,7 +130,7 @@ Nothing below is quoted from memory. Each row names the command that produces it
 
 | Command | What it proves |
 |---|---|
-| `pnpm test:run` | **334 tests across 33 files** — classification tiers at their exact boundaries, council detection including the overlap tie-break, CSV formula-injection escaping, contrast ratios computed from the files on disk, and the filter and sort predicates shared by map and feed so the two cannot disagree |
+| `pnpm test:run` | **340 tests across 34 files** — classification tiers at their exact boundaries, council detection including the overlap tie-break, CSV formula-injection escaping, contrast ratios computed from the files on disk, and the filter and sort predicates shared by map and feed so the two cannot disagree |
 | `pnpm lint` | 0 errors, 0 warnings, 0 blanket suppressions, under `strictTypeChecked` and `stylisticTypeChecked` type-aware linting, with rule triage documented in `eslint.config.js` |
 | `pnpm build` | `tsc -b` across three TypeScript projects, then Vite. Service worker emitted, 37 MB of LiteRT WASM correctly excluded from precache, no server-side secret name present in the bundle |
 | `pnpm verify:db` | **27 migrations** applied to a throwaway PostgreSQL 17.11, seed loaded, **102 assertions** — 34 behavioural, 37 coverage-closure, 26 RLS, 5 Realtime — 0 failures |
@@ -177,12 +177,12 @@ The map route is not scored: headless Chrome software-rasterises Mapbox GL throu
 
 ```bash
 pnpm install
-pnpm test:run                     # 334 tests, no configuration needed
+pnpm test:run                     # 340 tests, no configuration needed
 cp .env.example .env.local        # Supabase URL and anon key, Mapbox token
 pnpm dev
 ```
 
-Tests need no setup: `.env.test` is committed with deliberately non-resolving placeholder values, because a suite that only runs for the person who wrote it is not a verified suite. That was not true until CI said so — on a clean clone this repo produced 318 tests and a failure, not 334.
+Tests need no setup: `.env.test` is committed with deliberately non-resolving placeholder values, because a suite that only runs for the person who wrote it is not a verified suite. That was not true until CI said so — on a clean clone this repo produced 324 tests and a failure, not 340.
 
 The model is not in git — `public/models/*.tflite` is gitignored because it is 5 MB and reproducible from a URL. `pnpm build` fetches it via `prebuild`, so a clean checkout still produces a complete bundle; the fetch is idempotent and skips when the file is already there. `pnpm dev` does not, so a fresh dev server takes the designed fallback path to the manual category picker until you ask for the model:
 
@@ -239,7 +239,7 @@ Two deploy-only defects surfaced the moment it was live, both invisible to every
 
 ## Status
 
-Every task in the plan is closed — 250 of 250 — and the tree is green: 334 tests, 0 lint errors, `pnpm build` exits 0, and 102 database assertions pass against real PostgreSQL. The front end is live at [ripple-chi-bice.vercel.app](https://ripple-chi-bice.vercel.app). What is *not* claimed is that the data layer has run in production, because it has not — there is no backend behind that URL.
+Every task in the plan is closed — 255 of 255 — and the tree is green: 340 tests, 0 lint errors, `pnpm build` exits 0, and 102 database assertions pass against real PostgreSQL. The front end is live at [ripple-chi-bice.vercel.app](https://ripple-chi-bice.vercel.app). What is *not* claimed is that the data layer has run in production, because it has not — there is no backend behind that URL.
 
 What remains is owner-gated rather than unfinished: re-provisioning Supabase, training the civic classifier, sourcing ABS boundary data, filling in the Terms page's twelve legal placeholders, and holding a phone. Each is named — with what was built anyway, so that it becomes a swap rather than a build — in the [Owner-Gated Backlog](MASTERPLAN.md#owner-gated-backlog--deferred-to-the-very-end).
 

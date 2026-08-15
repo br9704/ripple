@@ -33,10 +33,17 @@ export function InstallBanner() {
   // it collided with the camera control, which being z-50 sat on top of this
   // banner's own text — the install instructions were unreadable on the exact
   // 375px viewport the product is designed for.
+  //
+  // right-20, not right-4, for the same class of reason one axis over:
+  // MapControls is `fixed right-3 bottom-36` and its column GROWS UPWARD to
+  // roughly 284px, straight through this banner's band. At full width the
+  // banner covered the locate and heatmap buttons outright. Visible on the
+  // first production deploy; invisible to every check that did not render the
+  // map at 375px with the banner actually showing.
   return (
     <div
       role="banner"
-      className="fixed bottom-[196px] left-4 right-4 z-40 flex items-center gap-3 bg-bg-secondary border border-border-bright p-4"
+      className="fixed bottom-[196px] left-4 right-20 z-40 flex items-center gap-3 bg-bg-secondary border border-border-bright p-4"
     >
       <div className="flex-1">
         <p className="text-sm font-semibold text-text-primary">
