@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { blobToBase64 } from '@/lib/blobToBase64'
-import { MAX_REPORTS_PER_HOUR } from '@/constants/config'
+import { AI_MODEL_VERSION, MAX_REPORTS_PER_HOUR } from '@/constants/config'
 import type { ReportCategory, SubmitReportResponse } from '@/types'
 
 const RATE_LIMIT_KEY = 'ripple_report_timestamps'
@@ -108,6 +108,11 @@ export function useSubmitReport() {
         ai_category: data.ai_category ?? undefined,
         ai_confidence: data.ai_confidence ?? 0,
         user_corrected_ai: data.user_corrected_ai ?? false,
+        // Sent only when there was a prediction to attribute. Corrections
+        // against different model versions must never be pooled (S21.1), and
+        // a version stamp on a report the classifier never ran for would
+        // claim provenance that does not exist.
+        ai_model_version: data.ai_category ? AI_MODEL_VERSION : undefined,
         lat: data.lat,
         lng: data.lng,
         address: data.address,

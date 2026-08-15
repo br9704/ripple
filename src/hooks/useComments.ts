@@ -22,6 +22,13 @@ export interface UseCommentsResult {
  *
  * Hidden comments are filtered server-side by the query rather than in the UI,
  * so a moderated comment never reaches the client at all.
+ *
+ * Reads go through the `report_comments` RPC rather than `.select('*')` on the
+ * table. `*` would now be refused outright — migration 025 revokes
+ * comments.reporter_token from the anon role, because a world-readable table
+ * plus a readable credential column meant anyone could collect tokens and post,
+ * upvote or read notifications as their owner. The RPC returns the one thing
+ * the UI actually needed from that column: `is_mine`, computed server-side.
  */
 export function useComments(reportId: string): UseCommentsResult {
   const [comments, setComments] = useState<Comment[]>([])
@@ -29,15 +36,11 @@ export function useComments(reportId: string): UseCommentsResult {
   const [isPosting, setIsPosting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Ordering (pins first, then oldest to newest) and the hidden filter both
+  // live in the function now, so there is exactly one definition of what a
+  // thread looks like.
   const fetchComments = useCallback(async () => {
-    return supabase
-      .from('comments')
-      .select('*')
-      .eq('report_id', reportId)
-      .eq('hidden', false)
-      // Council pins first, then oldest to newest — a thread reads forwards.
-      .order('is_pinned', { ascending: false })
-      .order('created_at', { ascending: true })
+    return supabase.rpc('report_comments', { p_report_id: reportId })
   }, [reportId])
 
   useEffect(() => {
@@ -90,7 +93,11 @@ export function useComments(reportId: string): UseCommentsResult {
           reporter_token: getReporterToken(),
           body: trimmed,
         })
-        .select('*')
+        // Explicit column list, not `*`: the row we just wrote contains our own
+        // reporter_token, but SELECT on it is revoked (migration 025) and
+        // RETURNING is a SELECT. `is_mine` is not a column, so it is added
+        // below — we just posted it, so it is true by construction.
+        .select('id, report_id, is_council, is_pinned, body, flag_count, hidden, created_at')
         .single()
 
       setIsPosting(false)
@@ -102,7 +109,9 @@ export function useComments(reportId: string): UseCommentsResult {
 
       // Append the server's row rather than an optimistic stub: it carries the
       // real id, which the flag action needs immediately.
-      if (data) setComments((prev) => [...prev, data as Comment])
+      if (data) {
+        setComments((prev) => [...prev, { ...(data as Omit<Comment, 'is_mine'>), is_mine: true }])
+      }
       return true
     },
     [reportId]

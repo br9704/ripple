@@ -29,16 +29,25 @@ export default {
         // The ONE accent. Used sparingly: cursor, status dots, CTAs, focus
         // brackets, key data. Never as a large filled surface.
         action: {
-          DEFAULT: '#ffb000',   // amber (phosphor)
-          hover: '#ffc94d',
-          dim: '#8f6300',
+          DEFAULT: '#ffb000',   // amber (phosphor) — 11.12:1
+          hover: '#ffc94d',     // 13.31:1
+          dim: '#9e6d00',       // 4.50:1 — was #8f6300 (3.84:1), see S21.13
         },
+        // ── S21.13, 15 Aug 2026 ──
+        // These values are the ones that matter: `text-status-declined` and
+        // friends resolve from THIS file, not from the custom properties in
+        // index.css. Three copies of the same palette exist (here, index.css,
+        // and src/constants/statuses.ts for Mapbox paint properties, which
+        // cannot read a CSS variable), and a contrast fix applied to only one
+        // of them changes nothing a user sees. All three now agree, and
+        // src/constants/statuses.contrast.test.ts fails the build if they
+        // drift or if any value drops below WCAG AA's 4.5:1 on #050505.
         status: {
-          reported: '#98928a',
-          acknowledged: '#8f6300',
-          'in-progress': '#ffb000',
-          fixed: '#4a7c4e',     // the only green in the system (MOTION.md:89)
-          declined: '#55504a',  // dim, not red — refusal is information
+          reported: '#98928a',      // 6.61:1
+          acknowledged: '#9e6d00',  // 4.50:1 — was #8f6300 (3.84:1)
+          'in-progress': '#ffb000', // 11.12:1
+          fixed: '#4e8252',         // 4.50:1 — was #4a7c4e (4.16:1). Still the only green (MOTION.md:89)
+          declined: '#7d756d',      // 4.50:1 — was #55504a (2.56:1). Dim, not red — refusal is information
         },
         upvote: {
           DEFAULT: '#98928a',

@@ -75,9 +75,22 @@ check(/addEventListener\(['"]fetch['"]/.test(sw) || /workbox/i.test(sw),
 check(/precache|__WB_MANIFEST|precacheAndRoute/i.test(sw), 'service worker precaches the app shell')
 check(await exists('registerSW.js'), 'registerSW.js emitted')
 
-console.log('\n=== offline fallback ===')
+console.log('\n=== navigation fallback ===')
 check(await exists('offline.html'), 'offline.html emitted')
-check(/navigateFallback|offline\.html/.test(sw), 'service worker routes navigations to the fallback')
+check(/NavigationRoute/.test(sw), 'service worker registers a navigation route')
+// This check used to be `/navigateFallback|offline\.html/`, which passed while
+// the app was broken: the fallback WAS offline.html, and a NavigationRoute
+// matches every navigation, so every route but '/' served the offline page to
+// an online user. A regex that accepts either answer cannot detect the wrong
+// one. The fallback must be the app shell — offline.html is a last resort, not
+// the router.
+check(
+  /createHandlerBoundToURL\(["']\/index\.html["']\)/.test(sw),
+  'navigations fall back to the app shell, not the offline page'
+)
+// Behavioural proof that this is actually true in a browser lives in
+// scripts/verify-offline.mjs, which drives real navigations with the worker in
+// control. This check is the cheap early warning; that one is the evidence.
 
 console.log('\n=== index.html wiring ===')
 const html = await readFile(join(dist, 'index.html'), 'utf8')

@@ -44,9 +44,29 @@ echo "==> behavioural assertions"
 psql -q -d "$DB" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/test/01_verify.sql" 2>&1 \
   | sed 's/^psql:[^ ]* NOTICE:  //' | grep -E 'PASS|FAIL|---|===' || true
 
+echo "==> Sprint 21 assertions (PRD coverage closure)"
+psql -q -d "$DB" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/test/04_sprint21.sql" 2>&1 \
+  | sed 's/^psql:[^ ]* NOTICE:  //' | grep -E 'PASS|FAIL|---|===' || true
+
 echo "==> RLS assertions (as anon)"
 psql -q -d "$DB" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/test/02_rls.sql" 2>&1 \
   | sed 's/^psql:[^ ]* NOTICE:  //' | grep -E 'PASS|FAIL|===' || true
+
+# Realtime is gated on wal_level=logical, which a default Postgres install does
+# not have. Previously this file existed but nothing ran it, so the masterplan's
+# frame counts were quoted from a single manual run and were not reproducible
+# from any gate — the same "number with no live artifact behind it" problem the
+# honesty rules exist to prevent. Run it when the server can, and say plainly
+# when it cannot, rather than silently omitting it either way.
+echo "==> Realtime replication assertions"
+if [ "$(psql -d "$DB" -t -A -c 'show wal_level')" = "logical" ]; then
+  psql -q -d "$DB" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/test/03_realtime.sql" 2>&1 \
+    | sed 's/^psql:[^ ]* NOTICE:  //' | grep -E 'PASS|FAIL|frames|inserts|===' || true
+else
+  echo "    SKIPPED — needs wal_level=logical (this server reports '$(psql -d "$DB" -t -A -c 'show wal_level')')."
+  echo "    Enable with: echo \"wal_level = logical\" >> \$PGDATA/postgresql.conf && pg_ctl restart"
+  echo "    Not a pass. Realtime emission is unverified on this run."
+fi
 
 echo
 echo "✅ database layer verified against PostgreSQL $(psql -d "$DB" -t -A -c 'show server_version')"

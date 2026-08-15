@@ -19,6 +19,13 @@ const SubmitReportSchema = z.object({
   ai_category: z.enum(VALID_CATEGORIES).optional(),
   ai_confidence: z.number().min(0).max(1).optional(),
   user_corrected_ai: z.boolean().optional(),
+  // Which model produced the prediction (S21.1). Without it the correction log
+  // is unusable the first time the model is swapped, because corrections made
+  // against two different models would be indistinguishable and pooling them
+  // would train on noise. Optional so an older client — or a queued offline
+  // report submitted from one — still succeeds; those rows are simply not
+  // eligible for the training set, which is the honest outcome.
+  ai_model_version: z.string().max(64).optional(),
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   address: z.string().nullish(),
@@ -164,6 +171,43 @@ Deno.serve(async (req: Request) => {
     if (insertError || !report) {
       console.error("Report insert error:", insertError?.message);
       return errorResponse(500, "Failed to create report");
+    }
+
+    // ── Log the AI correction, if this was one (S21.1, PRD §16 Q7) ──
+    //
+    // `reports.user_corrected_ai` already records *that* the model was wrong.
+    // Retraining needs what it was wrong *in favour of* — the confusion pair —
+    // and that is what this writes. Twenty sprints of corrections were thrown
+    // away because the boolean looked like the feature.
+    //
+    // Guarded on the labels actually differing: the client sets
+    // user_corrected_ai from UI state, and a user who opens the category
+    // picker and re-selects the same category has confirmed the prediction,
+    // not corrected it. Logging that would teach the model to keep doing what
+    // it already does — and the table's CHECK constraint would reject the row
+    // anyway, so the guard is here to avoid a pointless round-trip and a
+    // misleading error in the logs.
+    //
+    // Deliberately not awaited into the response path below: a failure to log
+    // training data must never fail a citizen's report. It is logged and
+    // dropped.
+    const predicted = body.ai_category;
+    if (
+      body.user_corrected_ai === true &&
+      predicted &&
+      predicted !== body.category &&
+      body.ai_model_version
+    ) {
+      const { error: logError } = await supabase.from("ai_correction_log").insert({
+        report_id: report.id,
+        predicted_category: predicted,
+        predicted_confidence: body.ai_confidence ?? null,
+        corrected_category: body.category,
+        model_version: body.ai_model_version,
+      });
+      // No PII here by construction — the table has no reporter_token column
+      // (PRD §13), so there is nothing to redact from this line.
+      if (logError) console.error("ai_correction_log insert failed:", logError.message);
     }
 
     // ── Insert photo record ──

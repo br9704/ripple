@@ -1,7 +1,21 @@
 {
+  /*
+   * Solution-style config: `files: []` plus project references.
+   *
+   * WARNING (S21.10, 15 Aug 2026): `tsc --noEmit` against THIS file checks
+   * ZERO files and exits 0, because `--noEmit` does not traverse project
+   * references. Every "0 TypeScript errors" claim in MASTERPLAN.md was that
+   * measurement — a green check over an empty set — while `pnpm build` was
+   * failing on a real type error nobody could see.
+   *
+   * The honest invocations are `tsc -b` (which `pnpm build` runs) or
+   * `tsc --noEmit -p tsconfig.app.json`. Do not put a bare `tsc --noEmit` back
+   * into any verification script.
+   */
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.test.json" }
   ]
 }

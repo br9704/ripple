@@ -172,7 +172,7 @@ const DEFAULT_INPUT_SIZE = 224
 /** Runs inference and returns the raw output vector. */
 export async function runInference(
   model: CompiledModel,
-  data: Float32Array | Uint8Array,
+  data: Float32Array<ArrayBuffer> | Uint8Array<ArrayBuffer>,
   shape: [number, number, number, number]
 ): Promise<number[]> {
   const input = Tensor.fromTypedArray(data, shape)

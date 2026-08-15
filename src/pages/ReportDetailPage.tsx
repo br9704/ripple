@@ -13,7 +13,6 @@ import { shareReport, formatReportId, type ShareOutcome } from '@/lib/share'
 import { CATEGORY_MAP } from '@/constants/categories'
 import { STATUS_MAP } from '@/constants/statuses'
 import { timeAgo } from '@/lib/mapHelpers'
-import { getReporterToken } from '@/lib/reporterToken'
 
 /**
  * Full report view at a shareable URL (PRD §12.8).
@@ -125,7 +124,10 @@ export function ReportDetailPage() {
             <FixConfirmation
               reportId={report.id}
               status={report.status}
-              isOwnReport={report.reporter_token === getReporterToken()}
+              // Server-decided. Comparing reporter_token here used to require
+              // the client to be able to read it, which is what let anyone
+              // harvest someone else's token (migration 025).
+              isOwnReport={report.is_mine}
               confirmationCount={
                 report.photos.filter((p) => p.photo_type === 'fixed_confirmation').length
               }

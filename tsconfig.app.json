@@ -25,5 +25,12 @@
     "noUncheckedSideEffectImports": true,
     "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src"]
+  "include": ["src"],
+  /*
+   * Tests are checked by tsconfig.test.json instead, which grants them Node
+   * types. Excluding them here is what keeps application code unable to see
+   * `fs` / `process` / `__dirname` — a component that imported a Node built-in
+   * would otherwise type-check cleanly and fail only in a browser. See S21.10.
+   */
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test"]
 }

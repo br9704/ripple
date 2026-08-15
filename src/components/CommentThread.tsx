@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useComments } from '@/hooks/useComments'
 import { TypingLine } from '@/components/TypingLine'
-import { getReporterToken } from '@/lib/reporterToken'
 import { timeAgo } from '@/lib/mapHelpers'
 import { COMMENT_MAX_LENGTH } from '@/constants/config'
 
@@ -15,11 +14,15 @@ interface CommentThreadProps {
  * Authors are shown as "you" or an anonymous marker — never as a token, which
  * would be a stable pseudonymous identifier displayed in public and exactly the
  * kind of thing PRD §13.1 says the token must never become.
+ *
+ * "you" comes from the server's `is_mine` rather than from comparing tokens
+ * here. The old comparison required the browser to be able to read every
+ * comment's `reporter_token`, which meant anyone could read them — including
+ * other people's (migration 025).
  */
 export function CommentThread({ reportId }: CommentThreadProps) {
   const { comments, isLoading, error, isPosting, post, flag } = useComments(reportId)
   const [draft, setDraft] = useState('')
-  const myToken = getReporterToken()
 
   const remaining = COMMENT_MAX_LENGTH - draft.length
   const canPost = draft.trim().length > 0 && remaining >= 0 && !isPosting
@@ -42,17 +45,13 @@ export function CommentThread({ reportId }: CommentThreadProps) {
             <li key={c.id} className="border-l border-border-bright pl-3">
               <p className="flex items-center gap-2 font-mono text-xs text-text-tertiary">
                 <span className={c.is_council ? 'text-action' : undefined}>
-                  {c.is_council
-                    ? 'council'
-                    : c.reporter_token === myToken
-                      ? 'you'
-                      : 'neighbour'}
+                  {c.is_council ? 'council' : c.is_mine ? 'you' : 'neighbour'}
                 </span>
                 {c.is_pinned && <span className="text-action">[pinned]</span>}
                 <span>{timeAgo(c.created_at)}</span>
               </p>
               <p className="mt-1 text-sm text-text-secondary">{c.body}</p>
-              {c.reporter_token !== myToken && !c.is_council && (
+              {!c.is_mine && !c.is_council && (
                 <button
                   type="button"
                   onClick={() => void flag(c.id)}

@@ -5,17 +5,11 @@ import { CameraFab } from '@/components/CameraFab'
 import { ReportFeed } from '@/components/ReportFeed'
 import { TypingLine } from '@/components/TypingLine'
 import { NotificationSettings } from '@/components/NotificationSettings'
+import { StreakCard } from '@/components/StreakCard'
+import { ReferralCard } from '@/components/ReferralCard'
 import { supabase } from '@/lib/supabase'
-import { getReporterToken } from '@/lib/reporterToken'
 import { sortReports } from '@/lib/reportSort'
 import type { MapPin } from '@/types'
-
-interface ReportRow extends Omit<MapPin, 'photo_url'> {
-  report_photos?: { public_url: string; photo_type: string }[] | null
-}
-
-const SELECT =
-  'id, lat, lng, category, status, upvote_count, priority_score, address, suburb, submitted_at, report_photos(public_url, photo_type)'
 
 /**
  * The reporter's own submissions (PRD §12.1).
@@ -24,6 +18,14 @@ const SELECT =
  * only route back to their own reports, because there is no account by design
  * (PRD §6.1). Clearing site data therefore loses the history permanently, which
  * is a deliberate trade for requiring no personal information at all.
+ *
+ * The scoping happens server-side. This used to be
+ * `.select(…).eq('reporter_token', getReporterToken())`, which needed SELECT on
+ * that column — and a column readable in a WHERE clause is a column readable in
+ * a select list, which is how any caller could harvest another reporter's token
+ * and impersonate them. Migration 025 revokes the column and answers the same
+ * question with `my_reports()`, which reads the token from the request header
+ * the Supabase client already sends and never returns it.
  */
 export function MyReportsPage() {
   const [reports, setReports] = useState<MapPin[]>([])
@@ -34,11 +36,9 @@ export function MyReportsPage() {
     let cancelled = false
 
     async function fetchMine() {
-      const { data, error: err } = await supabase
-        .from('reports')
-        .select(SELECT)
-        .eq('reporter_token', getReporterToken())
-        .order('submitted_at', { ascending: false })
+      // Already ordered newest-first and photo-flattened by the function, so
+      // there is no client-side join to get wrong.
+      const { data, error: err } = await supabase.rpc('my_reports')
 
       if (cancelled) return
       if (err) {
@@ -47,13 +47,7 @@ export function MyReportsPage() {
         return
       }
 
-      setReports(
-        ((data as ReportRow[]) ?? []).map((row) => {
-          const original =
-            row.report_photos?.find((p) => p.photo_type === 'original') ?? row.report_photos?.[0]
-          return { ...row, photo_url: original?.public_url ?? null }
-        })
-      )
+      setReports((data as MapPin[] | null) ?? [])
       setIsLoading(false)
     }
 
@@ -77,7 +71,14 @@ export function MyReportsPage() {
           </p>
         </div>
 
-        <div className="px-4 py-3">
+        {/* S21.4 / S21.5. My Reports is the only surface that is already about
+            this user's own activity, so it is where a streak and an invite code
+            belong. Both are self-fetching and render honest empty states — a
+            first-time visitor sees an explanation, never a zeroed counter
+            framing an empty history as a failed one. */}
+        <div className="space-y-3 px-4 py-3">
+          <StreakCard />
+          <ReferralCard />
           <NotificationSettings />
         </div>
 

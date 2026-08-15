@@ -101,6 +101,37 @@ check(
   'a dedicated runtime cache exists'
 )
 
+// ── Service-worker-controlled navigation ──
+//
+// Added Aug 2026 after this exact case shipped broken and no gate caught it.
+// `navigateFallback` was set to '/offline.html', and a workbox NavigationRoute
+// matches EVERY navigation request — so with the service worker in control,
+// every route except '/' served "You're offline right now" to an ONLINE user.
+// It survived because '/' matches the precached index.html route directly, and
+// because client-side <Link> navigation issues no navigation request at all.
+// What it broke was every path a stranger arrives by: a shared report link, a
+// shareable filtered view, a reload, a standalone PWA launch.
+//
+// Static analysis of the built sw.js could not see this; only driving a real
+// browser through a real navigation with the worker in control could.
+const ROUTES = ['/', '/report', '/feed', '/my-reports', '/search']
+
+/** True when the document is Ripple's app shell rather than the offline page. */
+async function rendersAppShell(path) {
+  await page.goto(`http://localhost:${PORT}${path}`, { waitUntil: 'domcontentloaded' }).catch(() => {})
+  await page.waitForTimeout(400)
+  return page.evaluate(() => {
+    const offlinePage = document.body.textContent.includes("You're offline right now")
+    const root = document.querySelector('#root')
+    return !offlinePage && !!root && root.children.length > 0
+  })
+}
+
+console.log('  --- service-worker-controlled navigation (online) ---')
+for (const route of ROUTES) {
+  check(await rendersAppShell(route), `${route} serves the app, not the offline page`)
+}
+
 // ── Cut the network ──
 await context.setOffline(true)
 console.log('  --- network offline ---')
@@ -134,6 +165,13 @@ const shellOk = await page
   .then(() => page.evaluate(() => document.body.textContent.trim().length > 0))
   .catch(() => false)
 check(shellOk, 'app shell still renders offline (not a browser error page)')
+
+// The point of an offline-first PWA is that a deep link works on a train too.
+// index.html is precached, so the shell must render for any route with no
+// network at all — CLAUDE.md §4, "offline is not an error state".
+for (const route of ROUTES.filter((r) => r !== '/')) {
+  check(await rendersAppShell(route), `${route} renders from cache with no network`)
+}
 
 await context.setOffline(false)
 await browser.close()

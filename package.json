@@ -3,6 +3,29 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "Anonymous civic infrastructure reporting PWA. On-device AI classification, live community map, council dashboard.",
+  "keywords": [
+    "civic-tech",
+    "pwa",
+    "on-device-ai",
+    "litert",
+    "tflite",
+    "offline-first",
+    "supabase",
+    "mapbox",
+    "react",
+    "typescript"
+  ],
+  "license": "UNLICENSED",
+  "author": "Bruno Jaamaa (https://brunojaamaa.dev)",
+  "homepage": "https://github.com/br9704/ripple#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/br9704/ripple.git"
+  },
+  "bugs": {
+    "url": "https://github.com/br9704/ripple/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -12,15 +35,17 @@
     "test:run": "vitest run",
     "coverage": "vitest run --coverage",
     "sync:wasm": "node scripts/sync-litert-wasm.mjs",
-    "prebuild": "node scripts/sync-litert-wasm.mjs",
+    "prebuild": "node scripts/sync-litert-wasm.mjs && node scripts/fetch-dev-model.mjs",
     "predev": "node scripts/sync-litert-wasm.mjs",
     "verify:db": "./scripts/verify-db.sh",
     "verify:pwa": "node scripts/verify-pwa.mjs",
-    "verify": "pnpm test:run && pnpm lint && tsc --noEmit && pnpm build && pnpm verify:pwa && pnpm verify:mobile",
+    "verify:mobile": "node scripts/verify-mobile.mjs",
+    "verify:offline": "node scripts/verify-offline.mjs",
+    "verify:lighthouse": "node scripts/verify-lighthouse.mjs",
+    "verify": "pnpm test:run && pnpm lint && pnpm build && pnpm verify:pwa && pnpm verify:mobile && pnpm verify:offline",
     "fetch:model": "node scripts/fetch-dev-model.mjs",
     "bench:ai": "node scripts/bench-inference.mjs",
-    "verify:offline": "node scripts/verify-offline.mjs",
-    "verify:mobile": "node scripts/verify-mobile.mjs"
+    "capture:media": "node scripts/capture-screenshots.mjs"
   },
   "dependencies": {
     "@litertjs/core": "^2.5.3",
@@ -44,6 +69,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.4.27",
+    "chrome-launcher": "^1.2.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -51,6 +77,7 @@
     "fake-indexeddb": "^6.2.5",
     "globals": "^17.4.0",
     "jsdom": "^30.0.1",
+    "lighthouse": "^13.4.1",
     "playwright": "^1.62.1",
     "postcss": "^8.5.8",
     "prettier": "^3.8.1",

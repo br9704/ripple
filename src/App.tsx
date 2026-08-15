@@ -10,8 +10,18 @@ import { MyReportsPage } from '@/pages/MyReportsPage'
 import { ReportDetailPage } from '@/pages/ReportDetailPage'
 import { SearchPage } from '@/pages/SearchPage'
 import { CouncilDashboard } from '@/pages/CouncilDashboard'
+import { TermsPage } from '@/pages/TermsPage'
+import { useArrivalReferral } from '@/hooks/useReferral'
 
 export default function App() {
+  // S21.5. Mounted here rather than on a page because an invite link can land
+  // anywhere — `/` for a plain invite, but also a report permalink or one of
+  // Sprint 20's shareable filtered map views, all of which can carry `?ref=`.
+  // Redemption is a side effect, so the return value is deliberately unused;
+  // the hook strips the parameter from the URL before it issues the request,
+  // so a reload or a bookmark cannot replay it.
+  useArrivalReferral()
+
   return (
     <OfflineQueueProvider>
       <PageTransition />
@@ -24,6 +34,7 @@ export default function App() {
         <Route path="/my-reports" element={<MyReportsPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/council" element={<CouncilDashboard />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <InstallBanner />

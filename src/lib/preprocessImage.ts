@@ -25,7 +25,14 @@ export interface PreprocessOptions {
 }
 
 export interface PreprocessResult {
-  data: Float32Array | Uint8Array
+  /**
+   * Pinned to `ArrayBuffer` rather than the default `ArrayBufferLike`: LiteRT's
+   * `Tensor.fromTypedArray` accepts only `ArrayBuffer`-backed arrays, and a
+   * `SharedArrayBuffer`-backed one would not be assignable. Every array here is
+   * built with `new Uint8Array(n)` / `new Float32Array(n)`, so this is the true
+   * type, not a widening cast.
+   */
+  data: Float32Array<ArrayBuffer> | Uint8Array<ArrayBuffer>
   shape: [number, number, number, number]
 }
 

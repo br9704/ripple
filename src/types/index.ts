@@ -56,9 +56,17 @@ export interface CouncilBoundaryWithCouncil extends CouncilBoundary {
 }
 
 // ── Report ──
+/**
+ * A report as the *client* can see it.
+ *
+ * `reporter_token` is deliberately absent. Migration 025 revokes SELECT on that
+ * column from both `anon` and `authenticated`, so no browser query can ever
+ * return it — publishing it let anyone harvest a token and then spoof the
+ * `x-reporter-token` header that every anonymous-write policy trusts. Ask
+ * `is_my_report(id)` instead of comparing tokens.
+ */
 export interface Report {
   id: string
-  reporter_token: string
   council_id: string | null
   category: ReportCategory
   ai_category: ReportCategory | null
@@ -98,16 +106,25 @@ export interface Upvote {
 }
 
 // ── Comment ──
+/**
+ * A comment as returned by the `report_comments` RPC.
+ *
+ * `reporter_token` is absent for the same reason as on `Report` (migration
+ * 025): it is the credential, and comments are world-readable. The only thing
+ * the UI ever did with it was ask "is this mine?", which the server now answers
+ * as `is_mine` — the token itself never crosses the wire.
+ */
 export interface Comment {
   id: string
   report_id: string
-  reporter_token: string
   is_council: boolean
   is_pinned: boolean
   body: string
   flag_count: number
   hidden: boolean
   created_at: string
+  /** True when this comment was posted by the caller's own reporter token. */
+  is_mine: boolean
 }
 
 // ── Status History ──
@@ -142,9 +159,11 @@ export type BadgeSlug =
   | 'accessibility_advocate'
   | 'neighbourhood_watch'
 
+/** `reporter_token` is omitted: migration 025 revokes it here too, because
+ *  badges_earned stores the same value as reports.reporter_token and was a
+ *  second route to the same impersonation. */
 export interface BadgeEarned {
   id: string
-  reporter_token: string
   badge_slug: BadgeSlug
   earned_at: string
 }

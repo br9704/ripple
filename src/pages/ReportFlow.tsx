@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CameraCapture } from '@/components/CameraCapture'
 import { PhotoPreview } from '@/components/PhotoPreview'
 import { CategoryPicker } from '@/components/CategoryPicker'
@@ -20,6 +20,7 @@ import { useReporterToken } from '@/hooks/useReporterToken'
 import { useSubmitReport } from '@/hooks/useSubmitReport'
 import { useOfflineQueue } from '@/hooks/useOfflineQueue'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import { AI_MODEL_VERSION } from '@/constants/config'
 import { reverseGeocode } from '@/lib/reverseGeocode'
 import { detectCouncil } from '@/lib/councilDetection'
 import { fetchAndCacheBoundaries } from '@/lib/boundaryCache'
@@ -144,6 +145,11 @@ export function ReportFlow() {
         ai_category: ai.category,
         ai_confidence: ai.confidence,
         user_corrected_ai: userCorrectedAI,
+        // Stamped at queue time, not at flush time (S21.1). This report may
+        // sit in IndexedDB across a model swap, and attributing the correction
+        // to whatever model happens to be current when the network returns
+        // would file it against a model that never made the prediction.
+        ai_model_version: AI_MODEL_VERSION,
         lat: geo.lat,
         lng: geo.lng,
         address,
@@ -348,6 +354,20 @@ export function ReportFlow() {
 
         {/* Status notifications — strictly opt-in (PRD §13.1) */}
         <NotifyOptIn value={notifyEmail} onChange={setNotifyEmail} />
+
+        {/* The rules themselves are on the camera screen, where they can still
+            change what gets photographed. This is the quieter half of the same
+            requirement: the moment before publishing is when a user deserves to
+            be told the report is public, and where the terms belong. */}
+        <p className="font-mono text-xs text-text-tertiary">
+          &gt; this report, its photo and its location will be public.{' '}
+          <Link
+            to="/terms"
+            className="text-text-secondary underline-offset-4 transition-colors hover:text-text-primary hover:underline"
+          >
+            terms &amp; privacy
+          </Link>
+        </p>
 
         {/* Submit error */}
         {submitError && (

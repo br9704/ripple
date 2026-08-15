@@ -125,9 +125,14 @@ export function MapPage() {
         activeFilterCount={activeFilterCount}
       />
 
-      {/* Reports counter pill (PRD §12.2) */}
+      {/* Reports counter pill (PRD §12.2).
+
+          bottom-[144px], not bottom-[72px]: the camera control occupies 72–132px
+          in the centre of the screen and is wide enough on a 375px viewport to
+          sit on top of this pill's text. The bottom band stacks
+          tab bar (0–56) → camera control (72–132) → this → install banner. */}
       {!isLoading && (
-        <div className="pointer-events-none absolute bottom-[72px] left-4 z-30 border border-border bg-bg-primary/90 px-2 py-1">
+        <div className="pointer-events-none absolute bottom-[144px] left-4 z-30 border border-border bg-bg-primary/90 px-2 py-1">
           <span className="font-mono text-xs tabular-nums text-text-secondary">
             {reportsThisWeek} {reportsThisWeek === 1 ? 'report' : 'reports'} this week
           </span>

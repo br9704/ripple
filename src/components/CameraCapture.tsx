@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useCameraCapture } from '@/hooks/useCameraCapture'
 import { PhotoPreview } from '@/components/PhotoPreview'
+import { PhotoGuidance } from '@/components/PhotoGuidance'
 import { TypingLine } from '@/components/TypingLine'
 
 interface CameraCaptureProps {
@@ -68,6 +69,10 @@ export function CameraCapture({ onClose, onPhotoCaptured }: CameraCaptureProps) 
                 Take a photo of the infrastructure issue
               </p>
             </div>
+
+            {/* PRD §13.4 requires the submission flow itself to say this, and
+                this is the last screen before a photo exists. */}
+            <PhotoGuidance />
 
             {/* Error message */}
             {error && (

@@ -89,6 +89,12 @@ describe('queuedReportToPayload', () => {
         'address',
         'ai_category',
         'ai_confidence',
+        // Added by S21.1. This test failing on that change is the test doing
+        // its job: the field went into the live payload first, and without the
+        // guard the queued path would have kept submitting corrections with no
+        // model version attached — logged as untrainable rather than as an
+        // error, which is the quiet failure this list exists to prevent.
+        'ai_model_version',
         'category',
         'council_id',
         'lat',

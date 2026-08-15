@@ -31,8 +31,29 @@ export default defineConfig({
         // variant — the one this browser actually picks — is ever downloaded.
         globIgnores: ['**/litert-wasm/**', '**/models/**'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB — Mapbox GL JS is ~2.2MB
-        navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        // The app shell, NOT the offline page.
+        //
+        // This was `/offline.html` until Aug 2026, and it broke the app in
+        // production while looking correct in every check we had. A workbox
+        // NavigationRoute matches EVERY navigation request, so once the service
+        // worker claimed the page, `/report`, `/feed`, `/my-reports`,
+        // `/report/:id`, `/search` and `/council` all returned "You're offline
+        // right now" — to a fully online user. Only `/` survived, because it
+        // matches the precached index.html route directly and never reaches the
+        // fallback. Client-side <Link> navigation also survived, because the
+        // History API issues no navigation request. What broke was every path a
+        // stranger actually arrives by: a shared report link, a shareable
+        // filtered map view (S20.1), a reload, and the standalone PWA launch.
+        //
+        // `/index.html` is precached, so serving it here is correct offline as
+        // well as online: the shell renders from cache and the app's own
+        // OfflineBanner reports the network state. That is CLAUDE.md §4's
+        // "render cached content when offline" rather than an error page.
+        //
+        // offline.html stays in the build and stays reachable (denylisted below)
+        // as the last-resort page for a navigation with no shell cached yet.
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//, /^\/offline\.html$/],
         runtimeCaching: [
           {
             // The classifier. CacheFirst because the filename is versioned

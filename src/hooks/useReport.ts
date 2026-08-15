@@ -6,12 +6,28 @@ export interface ReportDetailData extends Report {
   photos: ReportPhoto[]
   status_history: StatusHistory[]
   council_name: string | null
+  /**
+   * Whether this report belongs to the caller's own reporter token.
+   *
+   * Answered by the `is_my_report` RPC rather than by comparing
+   * `report.reporter_token` in the browser: migration 025 revokes SELECT on
+   * that column, because a token any client could read is a token any client
+   * could impersonate.
+   */
+  is_mine: boolean
 }
 
+// Every column spelled out. `select=*` is no longer valid for the anon role —
+// it expands to include reports.reporter_token, which is revoked (migration
+// 025) — and an explicit list is what keeps this query and the `Report` type
+// honest with each other. Same for report_photos, which carries
+// uploaded_by_token.
 const SELECT = `
-  *,
-  report_photos(*),
-  status_history(*),
+  id, council_id, category, ai_category, ai_confidence, user_corrected_ai,
+  lat, lng, address, suburb, postcode, note, status, council_note,
+  priority_score, upvote_count, submitted_at, status_updated_at, fixed_at,
+  report_photos(id, report_id, storage_path, public_url, photo_type, uploaded_at),
+  status_history(id, report_id, from_status, to_status, changed_by, council_note, created_at),
   councils(name)
 `
 
@@ -46,11 +62,13 @@ export function useReport(id: string | undefined): UseReportResult {
     let cancelled = false
 
     async function fetchReport() {
-      const { data, error: err } = await supabase
-        .from('reports')
-        .select(SELECT)
-        .eq('id', id)
-        .maybeSingle()
+      // Issued together rather than in sequence: ownership is only needed to
+      // decide whether to render the fix-confirmation control, and waiting for
+      // it would delay the whole page for a boolean.
+      const [{ data, error: err }, ownership] = await Promise.all([
+        supabase.from('reports').select(SELECT).eq('id', id).maybeSingle(),
+        supabase.rpc('is_my_report', { p_report_id: id }),
+      ])
 
       if (cancelled) return
 
@@ -74,6 +92,10 @@ export function useReport(id: string | undefined): UseReportResult {
 
       setReport({
         ...row,
+        // A failed ownership check falls back to "not mine": showing the
+        // confirm-fix control to a non-owner is the worse error, and the
+        // server rejects it anyway.
+        is_mine: ownership.data === true,
         photos: row.report_photos ?? [],
         // Oldest first: a timeline reads forwards.
         status_history: [...(row.status_history ?? [])].sort(

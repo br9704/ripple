@@ -1,0 +1,36 @@
+{
+  /*
+   * Type-checking for co-located tests (S21.10).
+   *
+   * Tests live next to the code they cover (CLAUDE.md §6), so they sit inside
+   * `src` and would otherwise be compiled by `tsconfig.app.json`. They cannot
+   * be: two of them read files from disk to assert that three copies of the
+   * design palette agree, and that no client query names a withheld column —
+   * checks that are only possible with `node:fs`.
+   *
+   * The wrong fix is to add `"node"` to the app config's `types`. That would
+   * hand every component `fs`, `process` and `__dirname`, so a shipped file
+   * could import a Node built-in and type-check cleanly right up until it
+   * broke in a browser. Splitting the configs keeps application code unable to
+   * see Node at all, which is the property worth protecting, while tests get
+   * the APIs they legitimately need.
+   *
+   * Referenced from the root `tsconfig.json`, so `tsc -b` (and therefore
+   * `pnpm build`) checks this project too. That matters: before S21.10 the
+   * gate ran `tsc --noEmit` against the root solution file, which traverses no
+   * references and checked nothing at all.
+   */
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+    "types": ["vite/client", "node", "vitest/globals"],
+    "noEmit": true
+  },
+  "include": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test"],
+  /*
+   * Must be reset. `extends` inherits the app config's `exclude`, which lists
+   * exactly the files this project exists to check — leaving it inherited
+   * makes every include match nothing and `tsc -b` fail with TS18003.
+   */
+  "exclude": []
+}

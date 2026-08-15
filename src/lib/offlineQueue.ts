@@ -22,6 +22,15 @@ export interface QueuedReport {
   ai_category?: ReportCategory | null
   ai_confidence?: number
   user_corrected_ai?: boolean
+  /**
+   * The model version at the moment this report was QUEUED, not the moment it
+   * flushes. A report can sit in the queue across a model swap (S7.2 made the
+   * model URL versioned precisely so swaps are cheap), and stamping the
+   * current version at flush time would file the correction against a model
+   * that never made the prediction — which is worse than not logging it,
+   * because it is wrong rather than missing.
+   */
+  ai_model_version?: string
 }
 
 export type QueuedReportInput = Omit<QueuedReport, 'id' | 'queuedAt'>
@@ -72,6 +81,8 @@ export function queuedReportToPayload(report: QueuedReport) {
     ai_category: report.ai_category ?? undefined,
     ai_confidence: report.ai_confidence ?? 0,
     user_corrected_ai: report.user_corrected_ai ?? false,
+    // Same rule as the live path: a version only where there was a prediction.
+    ai_model_version: report.ai_category ? report.ai_model_version : undefined,
     lat: report.lat,
     lng: report.lng,
     address: report.address,

@@ -44,19 +44,32 @@
   /* ── The one accent ── */
   --amber: #ffb000;
   --amber-bright: #ffc94d;
-  --amber-dim: #8f6300;
+  /* Raised from #8f6300 (3.84:1) to 4.50:1 on 15 Aug 2026 — S21.13. It backs
+     --color-status-acknowledged, which renders as small text, so AA-large's
+     3.0:1 does not apply to it. */
+  --amber-dim: #9e6d00;
   --color-action: var(--amber);
   --color-action-hover: var(--amber-bright);
 
   /* ── Status ──
      Grayscale throughout; green appears ONLY on `fixed` (MOTION.md:89).
      `declined` and `wont_fix` are dim rather than red — a refusal is
-     information, not an alarm, and red is not in this palette. */
+     information, not an alarm, and red is not in this palette.
+
+     CONTRAST FIX 15 Aug 2026 (S21.13). `--color-status-declined` was #55504a,
+     which measures 2.56:1 against --color-bg (#050505) — under the 4.5:1 that
+     PRD §10.2 requires (WCAG 2.1 AA). It is now #7d756d at 4.50:1, same hue
+     and saturation, raised in value only, so "dim, not red" survives intact.
+     It reads slightly brighter and that is the point: it is not decoration,
+     it is the colour six components use for error text. */
   --color-status-reported: #98928a;
   --color-status-acknowledged: var(--amber-dim);
   --color-status-in-progress: var(--amber);
-  --color-status-fixed: #4a7c4e;
-  --color-status-declined: #55504a;
+  /* #4a7c4e measured 4.16:1 — the payoff colour, used as small text in five
+     components. Raised to 4.50:1 the same way: value only, hue and saturation
+     untouched, so it is the same green. */
+  --color-status-fixed: #4e8252;
+  --color-status-declined: #7d756d;
 
   /* ── Category ──
      Categories are encoded by monospace glyph, not colour: SIGNAL permits one

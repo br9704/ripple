@@ -16,3 +16,5 @@ public/models/*.tflite
 # LiteRT ESM copies used only by the benchmark harness
 public/litert-wasm/dist/
 public/litert-wasm/wasm-utils/
+.vercel
+.env*
