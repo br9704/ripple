@@ -1,0 +1,51 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "_comment": [
+    "SPA history fallback. Without this, every route except / returns 404 on",
+    "Vercel: the CDN looks for a file at /feed, finds none, and 404s before",
+    "React Router ever loads.",
+    "",
+    "Found 15 Aug 2026 by curling all eight routes against the first",
+    "production deploy — / returned 200 and the other seven returned 404.",
+    "",
+    "Why it was invisible until the app was actually deployed, which is the",
+    "part worth remembering:",
+    "  * `vite preview` and the dev server both implement history fallback",
+    "    themselves, so every local check passed.",
+    "  * In-app <Link> navigation uses the History API and issues no network",
+    "    request, so clicking through the app never touched it.",
+    "  * Once the service worker installs, ITS navigateFallback serves the",
+    "    shell, so a returning visitor is fine and the bug hides.",
+    "",
+    "That last point makes this the same shape as S21.11: it breaks only cold",
+    "loads and shared links — a report permalink, a shared filtered map view,",
+    "the PWA launching from the home screen. Precisely the arrivals the",
+    "product depends on, and precisely the ones a developer with a warm cache",
+    "never sees.",
+    "",
+    "Rewrites run AFTER Vercel's filesystem check, so real files still win and",
+    "this cannot swallow /sw.js, /manifest.webmanifest, /offline.html,",
+    "/models/*.tflite, /litert-wasm/* or /icons/*. Verified by request after",
+    "deploying, not assumed.",
+    "",
+    "Unknown paths also land on the shell, which is correct: App.tsx has a",
+    "`*` route rendering NotFound, so the 404 is the app's own, with working",
+    "navigation, rather than the CDN's dead end."
+  ],
+
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+
+  "headers": [
+    {
+      "_comment": "The service worker must never be served stale — a cached sw.js pins users to an old app shell and is the failure mode CLAUDE.md §4 calls out as taking priority over feature work.",
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "_comment": "Versioned filename (AI_MODEL_VERSION), so it is safe to cache hard and immutably. 5.2MB re-downloaded per visit would dominate the load budget PRD §10.1 sets.",
+      "source": "/models/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ]
+}
