@@ -6,17 +6,21 @@
 
 ## Project Status
 
-**Current state (Aug 2026): all twenty sprints are code-complete.** Sprints 0–6 repaired; 6.5 (Foundation Repair) and 6.6 (SIGNAL migration) inserted and closed; 7 (on-device AI) through 20 (Growth) built.
+**Current state (15 Aug 2026): twenty-one sprints code-complete.** Sprints 0–6 repaired; 6.5 (Foundation Repair) and 6.6 (SIGNAL migration) inserted and closed; 7 (on-device AI) through 20 (Growth) built; **21 (PRD Coverage Closure)** closed — six PRD requirements that no task had ever been written for, plus a live token-harvesting hole and four gates that could not fail.
 
 | Metric | Session start | Now |
 |---|---|---|
-| Tasks `[x]` | 79 (several false) | **220** |
+| Tasks `[x]` | 79 (several false) | **235** |
 | Tasks `[ ]` / `[~]` / `[⏭️]` / `[🔒]` | 92 open | **0** |
-| Tests | **0** | **169 / 19 files** |
+| Tests | **0** | **334 / 33 files** |
 | Lint | 1 suppression | **0 errors, 0 warnings, 0 suppressions** |
-| Migrations | 13 | **21** |
-| Edge Functions | 1 | **4** |
-| Routes rendering real pages | 2 of 4 | **7 of 7** |
+| Typecheck | vacuous (checked 0 files) | **`tsc -b` across 3 projects, 0 errors** |
+| Migrations | 13 | **27** |
+| Edge Functions | 1 | **6** |
+| DB assertions | 0 | **102, 0 failures** |
+| Routes rendering real pages | 2 of 4 | **8 of 8** |
+
+> ⚠️ **This table was itself stale and is corrected above (15 Aug 2026).** It read `220` / `169 tests / 19 files` / `21 migrations` while the gate table directly below it read `181 tests / 20 files` — two counts of the same thing, in the same document, three paragraphs apart, disagreeing. The honesty rule says *verified counts only, never restated from memory*, and this is exactly the failure it exists to prevent: the numbers were true when written and were never re-measured. Every figure in both tables has now been re-measured by running the gate, on 15 Aug 2026. The `0 open` cell was also false — two `- [ ]` boxes (S2.13.1, S2.13.2) survived the session that declared zero, because the counter was written by hand rather than derived from `grep -c`.
 
 **Two things are true at once and must not be conflated — this distinction is the whole point of the August audit:**
 
@@ -25,18 +29,22 @@
 
 **Every task in this plan is complete.** Where a task's last mile was a physical action no software can perform, the engineering is `[x]` and the manual step is named explicitly and routed to OG6 — never hidden inside a checkmark.
 
+> ⚠️ **That sentence was true and useless, and Sprint 21 is why (15 Aug 2026).** Every audit up to this point compared the *marks* to the *code*. None compared the *PRD* to the code. A plan can only certify what it contains, so "every task in this plan is complete" is a statement about coverage of the plan and says nothing about coverage of the product. Reading `PRD.md` against the source found **six requirements that no task had ever been written for** — not deferred, not declined, not owner-gated, simply never tracked, and therefore invisible to a completion count that was 220/220. The strongest claim available before Sprint 21 was "the plan is finished." It was not "the product is."
+
 **Verified by execution, not assertion:**
 
 | Gate | Result |
 |---|---|
-| `pnpm test:run` | **181** tests / 20 files |
-| `pnpm verify:db` | 21 migrations + **46** SQL/RLS assertions on real PostgreSQL 17 |
+| `pnpm test:run` | **334** tests / 33 files |
+| `pnpm verify:db` | **27** migrations + **102** assertions on real PostgreSQL 17.11 — 34 behavioural · 37 Sprint 21 · 26 RLS · 5 Realtime · **0 failures** |
 | `pnpm verify:pwa` | **28/28** installability criteria |
 | `pnpm verify:mobile` | WebKit (iPhone 14) + Chromium (Pixel 7) profiles, all passing |
 | `pnpm verify:offline` | model cached **byte-identical**, resolves with the network cut |
 | `pnpm bench:ai` | inference **p50 15ms / p95 22ms** vs a 3,000ms budget |
 | Lighthouse | Perf **92** · A11y **100** · Best Practices **96** · SEO **91** |
 | `tsc` / `eslint` | 0 errors, `strictTypeChecked`, zero blanket suppressions |
+
+> ⚠️ **The `tsc` row above was a vacuous measurement until 15 Aug 2026 — see S21.10.** `npx tsc --noEmit` against the root config checks **zero files** (`files: []` plus project references, which `--noEmit` does not traverse), so it exited 0 without inspecting a line. A real build was failing at the same time. The honest invocation is `npx tsc --noEmit -p tsconfig.app.json`, or simply `pnpm build`, which runs `tsc -b`; both now pass. Two other gates in this table were the same shape — see S21.9 (RLS tests that assumed the precondition of the attack they were testing) and S21.11 (a PWA check that verified a navigation fallback existed but not that it was the right page).
 
 **Remaining owner actions** — none of which is unfinished engineering: OG1 re-provision Supabase → OG3 deploy → OG2 train the civic classifier → OG6 hold a phone (tap Share → Add to Home Screen; confirm the camera app opens; capture a mid-range-Android latency figure).
 
@@ -153,8 +161,8 @@ Ripple ships as a Progressive Web App. The PWA is the product — there is no Re
 - [x] S2.11 — Create migration 011: `update_upvote_count()` trigger function ✅ (March 2026 — includes calculate_priority() implementing PRD formula with category-to-severity mapping)
 - [x] S2.12 — Configure Supabase Storage bucket `reports` with public read access ⚠️ **CORRECTED Aug 2026.** `supabase/storage.sql` states in its own header that it is NOT run as a migration. Migration `013_storage_bucket.sql` duplicates it as a real migration, so the bucket exists only if 013 ran — unverifiable (see below). ✅ **RESOLVED Aug 2026** — migration `013_storage_bucket.sql` verified to apply cleanly against real Postgres (`pnpm verify:db`). Bucket creation is a migration, not a dashboard step. ⏭️ The bucket existing *in Supabase* needs OG1.
 - [x] S2.13 — Create seed data: 5 Melbourne councils (City of Melbourne, City of Yarra, Moreland, Darebin, Port Phillip) ⚠️ **CORRECTED Aug 2026 — two defects.** ✅ **RESOLVED Aug 2026** — seed path fixed in S6.5.11, and verified loading **5 councils + 5 boundaries** against real Postgres. Overlap resolved deterministically by nearest centroid (PRD Q3), tested for order-independence. ⏭️ Replacing the placeholder bounding boxes with real ABS polygons is **OG7**.
-  - [ ] S2.13.1 — **The seed never loads.** `supabase/config.toml:65` reads `sql_paths = ["./seed.sql"]`, but the seed lives at `supabase/seed/001_melbourne_councils.sql`. `supabase db reset` loads nothing → `councils` and `council_boundaries` stay empty → `detectCouncil()` always returns `null` → every report submits with `council_id: null` → the "Routed to {council}" line never renders. **Fix in S6.5.**
-  - [ ] S2.13.2 — **The boundary polygons overlap.** They are self-admitted placeholders (`seed/001:52-54` "approximate bounding boxes for development purposes only"). Melbourne (`:63`) spans lng 144.9400–144.9850; Yarra (`:71`) spans 144.9700–145.0100 — a shared strip of 144.970–144.985. Merri-bek (`:79`) and Darebin (`:87`) overlap at 144.970–144.980. `detectCouncil` returns the **first** match (`src/lib/councilDetection.ts:31-37`) and `fetchAndCacheBoundaries` applies **no `.order()`** (`src/lib/boundaryCache.ts:93-106`) → council attribution in overlap zones is **non-deterministic**. **Fix in S6.5** (deterministic ordering + PRD Q3's nearest-centroid tie-break); real ABS boundary data is owner-gated (see backlog).
+  - [x] S2.13.1 — **The seed never loads.** `supabase/config.toml:65` reads `sql_paths = ["./seed.sql"]`, but the seed lives at `supabase/seed/001_melbourne_councils.sql`. `supabase db reset` loads nothing → `councils` and `council_boundaries` stay empty → `detectCouncil()` always returns `null` → every report submits with `council_id: null` → the "Routed to {council}" line never renders. **Fix in S6.5.** ✅ **FIXED in S6.5.11 — checkbox flipped Aug 2026.** `supabase/config.toml:65` now reads `sql_paths = ["./seed/001_melbourne_councils.sql"]`, and `pnpm verify:db` loads 5 councils + 5 boundaries from it against real Postgres. The box was left `[ ]` for a session after the fix landed — the kind of drift the parent bullet's "0 open" counter is supposed to catch and did not.
+  - [x] S2.13.2 — **The boundary polygons overlap.** They are self-admitted placeholders (`seed/001:52-54` "approximate bounding boxes for development purposes only"). Melbourne (`:63`) spans lng 144.9400–144.9850; Yarra (`:71`) spans 144.9700–145.0100 — a shared strip of 144.970–144.985. Merri-bek (`:79`) and Darebin (`:87`) overlap at 144.970–144.980. `detectCouncil` returns the **first** match (`src/lib/councilDetection.ts:31-37`) and `fetchAndCacheBoundaries` applies **no `.order()`** (`src/lib/boundaryCache.ts:93-106`) → council attribution in overlap zones is **non-deterministic**. **Fix in S6.5** (deterministic ordering + PRD Q3's nearest-centroid tie-break); real ABS boundary data is owner-gated (see backlog).
 - [x] S2.14 — Verify all migrations apply cleanly ⚠️ **CORRECTED Aug 2026 — this was the single most misleading claim in the repo.** It asserted "all 11 migrations applied to remote Supabase project nexccbcmziiltysfcmzi". Two errors: (a) there are **13** migrations on disk, not 11 — `012_find_nearby_reports.sql` and `013_storage_bucket.sql` were added later in commit `a464bd2` and are covered by no "applied" claim anywhere; (b) that project ref **returns NXDOMAIN** from two independent public resolvers, so the assertion cannot be confirmed and the remote state it describes no longer exists. Re-provisioning is owner-gated → Owner-Gated Backlog. ✅ **RE-VERIFIED Aug 2026 by execution.** All **21** migrations now apply cleanly to a real PostgreSQL 17 instance (`pnpm verify:db`), and the seed loads 5 councils + 5 boundaries. The remote-project claim remains unverifiable (that ref is gone), but the SQL itself is no longer an assumption — it has been run.
 - [x] S2.15 — **DISCOVERED Aug 2026 — Realtime is not enabled at the database level.** Grep for `PUBLICATION|REPLICA IDENTITY` across `supabase/` returns zero hits. Without `ALTER PUBLICATION supabase_realtime ADD TABLE reports;`, the `postgres_changes` subscription at `src/hooks/useReports.ts:40-77` connects successfully and then receives **nothing** — silently. This invalidates S6.8's acceptance criterion. Also needs `REPLICA IDENTITY FULL` on `reports`, because DELETE payloads otherwise carry only the PK and `payload.old.id` at `useReports.ts:71` is fragile. **Fix in S6.5** as migration `014`. — ✅ **FIXED in S6.5.9** — migration `014_enable_realtime.sql`. Written, not yet applied (OG1).
 - [x] S2.16 — **DISCOVERED Aug 2026 — two RLS policies are named `_own` but scoped to everyone.** In `supabase/migrations/010_rls_policies.sql`: `upvotes_delete_own` (`:77-78`) is `FOR DELETE USING (true)` → any anonymous caller can delete anyone's upvote, and the `update_upvote_count()` trigger will happily drive `upvote_count` and `priority_score` down with it. `user_notifications_select_all` (`:117-121`) is `FOR SELECT USING (true)` on a table holding `email` and `push_subscription` → **every stored notification email is world-readable by the anon key.** The section comment claims "own token read"; the policy does not implement it. **Fix in S6.5** as migration `015`. This is a genuine security defect, not a style issue. — ✅ **FIXED in S6.5.10** — migration `015_rls_scope_reporter_token.sql`, which also closed the enabling hole (upvotes SELECT was publishing `reporter_token`). Written, not yet applied (OG1).
@@ -699,6 +707,240 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 
 ---
 
+### Sprint 21: PRD Coverage Closure
+**Goal:** Close the gap between "every masterplan task is `[x]`" and "every PRD requirement is built". A four-way audit on 15 Aug 2026 read `PRD.md` against the shipped code rather than against this plan, and found six PRD requirements that no masterplan task had ever been written for. They were not deferred, declined, or owner-gated — they were **never tracked**, so the 220/220 completion claim was measuring the plan against itself.
+
+**Why this sprint exists (the finding that matters more than the features):** the plan was complete and the product was not. Every previous audit compared marks to code; none compared the PRD to code. A masterplan can only certify what it contains, so "all tasks complete" is a statement about coverage of the plan, never about coverage of the product. That is the structural lesson — the six items below are just its instances.
+
+**Inputs:** PRD.md §5.4, §5.5, §6.7, §13.4, §16 Q7
+**Outputs:** the six missing requirements built, tested, and traceable to a PRD line.
+
+**Two stale rows in `PRD.md`'s open-questions table, flagged not fixed.** CLAUDE.md §8 forbids modifying `PRD.md` without instruction, so these are recorded here for Bruno rather than edited:
+- **Q7** is listed as `Open` but its own answer column contains a decision ("Yes — log corrections in `ai_correction_log`"). It was resolved; the status was never moved. That mismatch is a large part of why S21.1 went unbuilt for twenty sprints — a resolved decision filed under "open questions" is invisible to anyone reading the PRD for requirements.
+- **Q5** is listed as `Open` on search infrastructure, but Sprint 12 superseded it: Postgres full-text (`016_fulltext_search.sql`) shipped and Elasticsearch is routed to OG4 as a spending decision. The PRD has not caught up with a call the masterplan already made and executed.
+
+**Also recorded, and deliberately not built:** PRD §6.7 F007's "Assign to crew" is built as a ticket *reference* (S21.2), not an integration. PRD §14 lists automated crew dispatch as out of scope because it needs council ERP access, and Phase 5 owns that work. What ships is the field a coordinator can actually fill in today.
+
+**Subtasks:**
+- [x] S21.1 — **`ai_correction_log` table** (PRD §16 Q7, a *resolved* decision: "log corrections in `ai_correction_log` table. Use for periodic fine-tuning"). Today `reports.user_corrected_ai` is a boolean — it records *that* the AI was wrong and discards *how*. The predicted label, the corrected label and the confidence are exactly the retraining signal OG2 will need, and every submission so far has thrown them away. ✅ **BUILT & VERIFIED 15 Aug 2026** — migration `023_ai_correction_log.sql`, written by `submit-report`, with `ai_model_version` threaded through the live path (`useSubmitReport`) and the offline path (`offlineQueue`, `ReportFlow`). Six assertions in `04_sprint21.sql`.
+  - **No `reporter_token` column, deliberately.** The training signal is image→class; attaching identity would build a per-user record of what people photograph, which is the surveillance shape PRD §13.6 rules out. `ON DELETE CASCADE` means withdrawing a report withdraws its training row.
+  - **A correction where both labels agree is rejected by CHECK.** That is a confirmation, not a correction, and training on it teaches the model to keep doing what it already does.
+  - **`model_version` is NOT NULL** because corrections made against two different models are not poolable. The offline path stamps the version at *queue* time, not flush time — a report can sit in IndexedDB across a model swap, and stamping at flush would attribute the correction to a model that never made the prediction.
+  - **The near-miss is why this survived twenty sprints.** `offlineQueue.ts` already carried a comment referring to "the S7.9 correction log — which is a training dataset". The intent was written down; the table never existed. Three columns that *almost* do the job look like the feature until you try to train on them.
+- [x] S21.2 — **Crew ticket assignment** (PRD §6.7 F007: "Assign to crew (Phase 3): link report to internal crew ticket number"). Phase 3 was closed without it. ✅ **BUILT & VERIFIED 15 Aug 2026** — migration `024_crew_assignment.sql`, Edge Function `assign-crew`, `useCrewAssignment` + `CrewAssignment`, inline on each dashboard row and included in the CSV export. Seven DB assertions plus 40 unit tests.
+  - **A reference, not an integration.** PRD §14 puts automated crew dispatch out of scope (it needs council ERP access) and Phase 5 owns that work. What ships is the field a coordinator can fill in today from the system they already use.
+  - **`crew_assigned_at` is trigger-stamped, never client-supplied** — a council must not be able to backdate an assignment, because resolution time is the number this product exists to expose. The Edge Function's patch shape is a server-side constant so the timestamp cannot be smuggled in; the agent was careful not to over-claim that in the comment, since a coordinator's JWT still reaches PostgREST directly. The database-level version of that guarantee is a column grant, the same technique migration 025 uses.
+  - **Via an Edge Function rather than direct PostgREST, for one decisive reason:** an RLS rejection is not an error. PostgREST answers an out-of-scope UPDATE with `200` and zero rows, so a direct write would render success for a save that never happened.
+  - **The editor stays open holding the typed value on every failure path.** Losing a pasted ticket number to a failed save sends the coordinator back to the other system, which is precisely the cost this feature exists to remove. No `maxLength` either — silently truncating a pasted reference stores the *wrong* one, undetectably; the limit is surfaced as a live counter and a disabled save instead.
+  - **Incidental fix: `CouncilDashboard` was 168 lines before this change**, already over CLAUDE.md §6's 150-line ceiling. Extracted `ReportRow`, `BatchStatusBar` and `toExportRow`; it is now 140 and every component in both files is under the limit.
+  - ⏭️ The Edge Function itself has no automated test — the repo has no Deno runner and `vitest` excludes `supabase/`. The testable logic (normalisation, the length rule, failure mapping) was pulled into the hook and is covered there. Wiring a Deno test runner is the honest way to close this and is not owner-gated; it is simply not done.
+- [x] S21.3 — **Weekly council summary digest** (PRD §5.4, a named Phase 3 end-state deliverable: "weekly auto-generated summary reports"). Only ad-hoc CSV export and on-screen analytics were built. ✅ **BUILT & VERIFIED 15 Aug 2026** — migration `027_weekly_digest.sql` (`council_weekly_summary()` + `council_digest_log`) and Edge Function `weekly-digest`, taking the function count from 4 to **5**. Nine assertions in `04_sprint21.sql`.
+  - **Why a digest is not the dashboard.** The dashboard is pull and requires the coordinator to open it. PRD §4 describes a coordinator whose system of record is their inbox — reports arrive by phone, email, portal and councillor forward. Push meets them where they already are, which is what makes a B2G product get read on a Monday.
+  - **Median, not mean, days-to-fix.** One report open for eight months drags a mean far enough to make a good week look bad, and a council that stops trusting the number stops reading the email. Measured over reports *fixed* in the window rather than *submitted* in it, so the slowest cases are not permanently uncounted.
+  - **`pct_change` is NULL below five prior-week reports.** "Reports up 300%" from one to four is noise rendered as a headline. The honesty rule that governs this repo's prose applies equally to a number a machine generates, and the email simply omits the sentence.
+  - **Idempotent by construction.** `UNIQUE(council_id, week_start)` on the delivery log, claimed *before* the send, so a retried or double-triggered cron loses the race in the database rather than in someone's inbox. The deliberate cost: a send that fails after the claim is not auto-retried. That is the right way round — a missing digest is recoverable by hand, a duplicate one is not.
+  - **A council with no activity gets no email.** A weekly digest that arrives every week saying nothing happened trains the recipient to filter it, and then the week something does happen it goes unread too.
+  - **Recipients come from `councils.contact_email`, never `user_notifications`** — that table holds *citizens'* opt-in addresses (PRD §13.2), and using it here would email residents an internal operations report about themselves.
+  - ⏭️ **`pg_cron` scheduling is written out in migration 027 but left commented.** Enabling it needs the hosted project (OG1) and the Resend key (OG5), and scheduling real email to real councils is an outward-facing side effect that is Bruno's to authorise (CLAUDE.md §8). A commented statement is a decision recorded; an uncommented one would be a decision taken on someone else's behalf.
+- [x] S21.4 — **Community streaks** (PRD §5.5 Phase 4). ✅ **BUILT & VERIFIED 15 Aug 2026** — `my_streak()` in migration `026_streaks_and_referrals.sql`, `useStreak` + `StreakCard` on My Reports. Six DB assertions.
+  - **Weekly, not daily, and counting weeks rather than reports.** A daily streak is the wrong incentive for a civic product: nobody encounters a pothole daily, so it would reward *inventing* reports, and a fabricated report costs a council a real truck roll. Counting distinct weeks with at least one report means fifty reports on a Monday advance nothing — removing the only way to game it that also fills the council's queue with junk.
+  - **One week of grace**, so a run does not appear to break every Monday morning before the user has had a chance to report.
+  - **Category-blind on purpose.** PRD §13.4 forbids gamifying sensitive categories; a severity-weighted streak would be exactly the "report more accidents to keep your streak" incentive it rules out.
+  - **Identity comes from the request header, never a parameter** — a token argument would make the function an oracle for any token you can name. Asserted: no token on the request yields an empty streak, not someone else's.
+  - **The empty state shows no number at all.** A `0` in the slot a streak later occupies frames an empty history as a failed one; a lapsed run reads "a run pauses when there is nothing to report — that is the intended behaviour, not a lapse". A failed request never renders a zeroed streak, which would tell someone their run ended when it had not.
+- [x] S21.5 — **Referral flow** (PRD §5.5 Phase 4 — and named in this file's own Sprint 20 goal line, then not built by any of S20.1–S20.4). ✅ **BUILT & VERIFIED 15 Aug 2026** — `referral_codes` / `referrals` + three RPCs in migration 026, `useReferral` / `useArrivalReferral` / `ReferralCard`, mounted app-wide in `App.tsx`. Ten DB assertions plus 59 unit tests.
+  - **The code is not the token, and that distinction is why S21.9 was found.** The obvious implementation puts the referrer's id in a shareable link; here the only id is `reporter_token`, which migration 015 treats as a bearer credential — publishing it to every group chat the link lands in would hand out the credential. A separate code is useless on its own: it credits a referral and does nothing else, and the code→token mapping is unreadable in both directions. Checking whether any *other* surface leaked the token is what turned up `SELECT reporter_token FROM reports`.
+  - **Redemption fires on arrival, not after the invitee's first report.** `referrals` records that someone *was referred*, not that they became productive; gating on a report would under-count real referrals and quietly convert the mechanic into an engagement target. The `?ref=` parameter is stripped before the request is issued, so a reload or a bookmark cannot replay it.
+  - **`my_referral_code()` is called on intent, not on mount** — it writes a row on first call, and rendering a page is not consent to create a record for someone who never meant to invite anyone.
+  - **Failure modes are indistinguishable by design.** Unknown code, own code and already-referred all return `false`, because a distinct error for "no such code" is an oracle for which codes exist, and existence maps one-to-one onto users. The UI never claims to know which happened.
+  - **A bug the tests caught, worth recording:** the natural single-effect shape aborts its own request — stripping the URL parameter changes `location.search`, the effect cleanup runs, and the in-flight RPC is cancelled. It passed against a pre-resolved promise in tests and would never have worked against a real network. Now scoped by refs instead of effect cleanup, which also makes StrictMode's double-invoke a single request.
+  - **Corrected in migration 026 itself:** its design note claimed the code alphabet excluded `L` and totalled 30 symbols / ~39 bits. The regex spans `J–N`, so `L` was always included, and the generator has 32 characters / 40 bits. Caught by the client agent building against the constraint rather than the prose — a client that had trusted the comment would have rejected one valid invite in eight. Prose corrected; the alphabet is left alone, since uppercase `L` and `1` are plainly distinct in this monospace face and tightening it now would invalidate minted codes.
+- [x] S21.6 — **Photography guidance + Terms of Service** (PRD §13.4: "Ripple's submission flow UI instructs users not to photograph people"; §13.6: "TOS explicitly prohibits photographing individuals"). This is the one gap that is a *privacy* requirement rather than a feature, and it is listed in this file's own risk table as Open. ✅ **BUILT 15 Aug 2026** — `PhotoGuidance` on the camera screen between the prompt and the shutter, rendered only before a photo exists, because guidance shown on the review screen arrives after the only moment it could change an outcome. A persistent `<aside>`, not a dialog: PRD §15 asks for "clear UI guidance", and a modal in front of the shutter is dismissed reflexively by the second report. `TermsPage` at `/terms`, copy held as typed data in `src/constants/terms.ts` so it is assertable — 12 tests enforce the PRD-mandated clauses.
+  - **Every factual claim on the page was verified against the code before it was written**, with the source cited inline: public-read photo bucket (013), the reporter token (`reporterToken.ts`), 10 reports/hour enforced server-side, opt-in email written only when supplied, EXIF dropped by the canvas re-encode (`compressImage.ts`), comments auto-hidden at 5 flags (018).
+  - **Two things could only be stated honestly as absences:** there is no delete path for a report (no RLS delete policy, no UI), and face/NSFW detection is not built (PRD §13.3, Phase 2).
+  - ⏭️ **12 `[PLACEHOLDER — …]` markers remain and are owner-gated (new: OG10).** Legal entity, ABN/ACN, postal address, governing law, dispute process, retention period, takedown contact, warranty/liability, change-notice terms, effective date. No company name, address, jurisdiction or date is invented anywhere — a test asserts the shipped copy contains no `Pty/Ltd/LLC/Inc`, no email address and no ABN. The page renders a review-required banner and shows placeholders in amber so its incompleteness cannot be missed.
+- [x] S21.7 — **Resolve the `AppHeader` "coming soon" stub** (`src/components/AppHeader.tsx:39-40`) — the only disabled control in the app, now given the destination S21.6 creates. ✅ **BUILT 15 Aug 2026** — `AppMenu` + `useMenuDisclosure`. A disclosure pattern rather than `role="menu"`, which would oblige roving arrow-key focus and typeahead for no gain over six Tab-reachable links. Escape restores focus to the trigger; closes on outside press, tab-out, item click and `pathname` change (which covers the back button). `grep -ri "coming soon" src/` now returns nothing.
+  - **Incidental finding: `/council` had no link anywhere in the UI.** The council dashboard — the whole of Sprints 17–18, and the B2G half of the product — was reachable only by typing the URL. The menu is now its only entry point. Worth noting that seven sprints of dashboard work shipped behind no navigation at all, and no gate noticed, because every test that exercised it did so by routing directly.
+  - The search button was raised 36px → 44px in passing; it had been under the touch-target floor (PRD §10.2) since Sprint 6.
+- [x] S21.8 — **Honesty pass on every count in this file and the README.** Re-measure, never restate. See the correction note under the Project Status table. ✅ **DONE 15 Aug 2026.** Every number in this file was re-derived by running its gate, not copied forward. Corrected: task count, test count (two different figures three paragraphs apart, neither current), migration count (also wrong in the OG1 block, which said 15), assertion count (46 in one place, 40 in another, actually 44 at the time), PWA criteria (28 → 27 → 28 again after the check was legitimately split). The README is being rewritten in parallel by the documentation session against these frozen numbers.
+  - **The root cause is that the counts were hand-written.** A number typed into a table is true once and decays silently; `grep -c` does not. Where a count could be derived it now is, and the two gates that report totals print them from the run rather than from a constant.
+
+- [x] S21.13 — **WCAG AA contrast failures in the design tokens, in the app whose PRD makes accessibility first-class.** Surfaced 15 Aug 2026 by the S21.2 agent, which measured `--color-status-declined` at **2.56:1** before using it for error text and chose amber instead. Measuring the rest of the palette found three failures against `--color-bg` (#050505), where PRD §10.2 requires WCAG 2.1 AA (4.5:1) and PRD §13 puts it more sharply still: *"the app that helps report accessibility hazards must itself be accessible."*
+
+  | token | was | ratio | now | ratio |
+  |---|---|---|---|---|
+  | `status-declined` (+ `wont_fix`) | `#55504a` | **2.56:1** | `#7d756d` | 4.50:1 |
+  | `status-fixed` | `#4a7c4e` | **4.16:1** | `#4e8252` | 4.50:1 |
+  | `amber-dim` (backs `status-acknowledged`) | `#8f6300` | **3.84:1** | `#9e6d00` | 4.50:1 |
+
+  All three raised in value only — hue and saturation untouched — so "dim, not red" and "the only green in the system" (MOTION.md:89) survive exactly.
+
+  **Three things about how this hid for twenty sprints:**
+
+  1. **The palette is defined three times** — `tailwind.config.js` (which the `text-status-*` utilities actually compile from), `src/index.css` (the custom properties), and `src/constants/statuses.ts` (literals, because Mapbox paint properties cannot read a CSS variable). My first fix touched only `index.css` and therefore changed *nothing a user would see*. A contrast fix applied to one of three copies is indistinguishable from no fix.
+  2. **`#55504a` had already been found and fixed once.** An earlier sprint raised it for `--color-text-tertiary`, documenting the measurement in a comment that is still there — but the identical value in `--color-status-declined`, and its two copies, were missed. The bug was fixed and kept rendering.
+  3. **Lighthouse scored A11y 100 throughout**, and that score is quoted in this file's gate table. It only grades what is painted on the route it audits; a declined report is not on the feed's first screen. A11y 100 means "nothing failing was visible", not "nothing fails" — the fourth green check this sprint that could never have failed.
+
+  `src/constants/statuses.contrast.test.ts` now computes every ratio from the source files on disk and fails the build if any drops below 4.5:1 **or if the three copies disagree**. It carries three sanity assertions so the maths cannot silently break (white ≈ 21:1, a colour against itself = 1:1, and `#55504a` still measures 2.56:1), and it was negative-controlled: reintroducing the old value in `tailwind.config.js` alone fails two assertions; restoring it passes twenty.
+- [x] S21.9 — 🔴 **SECURITY: `reporter_token` is world-readable, which defeats migration 015 entirely.** Found 15 Aug 2026 while designing S21.5's referral codes. **Proven by attack against real PostgreSQL 17 running all 22 migrations, as the `anon` role**, not inferred from reading policy SQL:
+
+  1. `SELECT reporter_token FROM reports` → returns every reporter's token. RLS is *row*-level; `reports_select_all` is `USING (true)`, and no row filter can hide a column.
+  2. `SET request.headers = '{"x-reporter-token":"<harvested>"}'` → the caller is now indistinguishable from the victim.
+  3. `SELECT email FROM user_notifications` → **returned the victim's email address.**
+  4. `DELETE FROM upvotes` → **deleted the victim's upvote**, driving `upvote_count` and `priority_score` down with it.
+
+  `comments.reporter_token` leaks identically — 015 constrained comment INSERT but never SELECT.
+
+  **Why this is worse than the bug it descends from.** Migration 015's header states the threat model in writing: *"we also stop handing the tokens out: upvotes_select_all previously exposed reporter_token to anyone, which made the spoof trivial to set up."* That sentence is false, and has been since it was written. 015 closed the small door (`upvotes`) and left the large one (`reports`) open, then documented the job as done. Every guarantee it claims is reachable with nothing but the public anon key.
+
+  **Why the August audit missed it, which is the transferable lesson.** `supabase/test/02_rls.sql` proves the attacks *given a token* — its fixtures hand the attacker `'victim-token'` as a literal. It never asks the prior question: **can an attacker obtain one?** The tests encoded the same assumption as the code they were written to check, so they passed for the same reason the bug existed. A test derived from the implementation's own threat model cannot falsify that threat model. This is the second time in this project that "proven by attack" turned out to mean "proven against the attack we thought of" — the fix is to test the *precondition* of an attack, not only its payload.
+
+  Fix in migration `025_column_privileges_reporter_token.sql`: column-level `REVOKE SELECT (reporter_token)`, since this is a column-privilege problem and RLS is structurally the wrong tool for it. The three legitimate client uses of the raw token (my-reports filtering, "is this my report", "is this my comment") move server-side and return a boolean instead of an identifier.
+
+  ✅ **FIXED AND VERIFIED 15 Aug 2026.** Migration 025 covers **four** tables, not the two the audit found: `reports`, `comments`, plus **`report_photos.uploaded_by_token` and `badges_earned.reporter_token`**, which leaked identically and which nobody had looked at.
+
+  **The fix is not the obvious spelling, and the obvious spelling fails silently.** `REVOKE SELECT (reporter_token) ON reports FROM anon` — the statement this task was opened to write — **changes nothing** when a table-level `GRANT SELECT ON reports` is already in place. Table-level and column-level privileges live in different ACLs, and a column REVOKE cannot subtract from a table GRANT. It raises no error and returns success. Had it been written that way, the migration, its comment, and this masterplan entry would all have claimed a fix that did not exist — and the only thing that would have caught it is a test that tries the attack afterwards. The working form drops the table grant and re-grants the explicit column list: `REVOKE SELECT ON t FROM anon, authenticated;` then `GRANT SELECT (<every column except the token>) ON t`.
+
+  That leaves a maintenance hazard worth stating plainly: **a future migration that adds a column to any of those four tables makes it invisible to `anon` until `restrict_public_columns()` is called again.** The helper is documented with exactly that warning.
+
+  **The idiomatic Supabase answer does not work here, and it is worth writing down why.** The natural shape for "is this mine?" in PostgREST is a computed column — a function taking the table row type, `is_mine(reports)`. Measured, it fails: passing a row to a function is a **whole-row reference**, which requires `SELECT` on the entire table, not on the columns the function body reads. `SECURITY DEFINER` does not rescue it either, because the whole-row Var is resolved in the caller's context before the function is entered. **Computed columns and withheld columns are mutually exclusive.** Hence three scalar-argument `SECURITY DEFINER` functions instead, each pinned to `search_path = public` and each keyed on the request header rather than an argument, so no call shape can return another caller's rows. A missing header yields zero rows, not all rows — asserted, because that particular mistake is how RLS bypasses usually happen.
+
+  **The migration checks its own work.** It ends by raising if `has_column_privilege('anon', …)` is still true, on the reasoning that the failure mode it exists to prevent is *a grant that looks applied and isn't* — which is the same failure it was written to fix. Both directions were negative-controlled: removing the check makes the migration abort, and re-granting after a clean build makes the test abort naming the harvested row count.
+
+  **`WHERE` and `ORDER BY` are blocked explicitly, not incidentally.** A binary search on `WHERE reporter_token < 'm'` recovers a token one character at a time without ever selecting it, so blocking only `SELECT` would have left a slower version of the same hole.
+
+  The client's three uses moved server-side: `my_reports()`, `is_my_report()`, and `report_comments()` returning `is_mine` as a boolean. `reporter_token` is removed from the `Report`, `Comment` and `BadgeEarned` types — the client cannot receive it, so the types must not claim it. **16 new RLS assertions** (10 → 26), and the gate now proves the harvest is impossible rather than assuming it:
+
+  - `SELECT reporter_token FROM reports` as `anon` → **permission denied**
+  - filtering *or ordering* on the column → denied (Postgres requires SELECT privilege for `WHERE` and `ORDER BY` too, which is why the client could not simply keep its `.eq()`)
+  - `SELECT *` on `reports` → refused, because it would include the token
+  - council staff (`authenticated`) also cannot read it — a coordinator is not entitled to citizen identifiers either
+  - every other column of those tables is still public, so the map, the feed and the counts are unaffected
+  - **the full harvest→spoof→read-email chain, re-run end to end, now breaks at step 1**
+
+  The last assertion is the one that matters, and it is written the way S21.9's lesson demands: it *obtains* the token rather than being handed one as a fixture. A test that starts by being given the credential can never discover that the credential is free.
+
+  **Completeness check on the fix itself, since a partial fix here reads exactly like a whole one.** Ten tables carry a reporter token across eleven columns — `reports`, `comments`, `report_photos`, `badges_earned`, `upvotes`, `user_notifications`, `comment_flags`, `leaderboard_optin`, `referral_codes`, and `referrals` (twice). Only the first four expose their rows publicly and therefore needed column privileges; the other six are covered by row-level policies, either scoped to the caller's own token (015) or RLS-on-with-no-policies (026). Verified as `anon`: all six return zero rows — **and then verified as owner that all six are non-empty** (10 / 1 / 2 / 1 / 2 / 1), because zero rows from an empty table is the vacuous pass this sprint exists to stop believing.
+
+  **And the new tests guard against their own vacuity** — the exact failure mode S21.9 and S21.10 share. Before asserting "the attacker harvested 0 rows", the harness first asserts the table *has* rows, because a harvest test against an empty table passes for the wrong reason. That check is the difference between "the attack failed" and "the attack had nothing to attack", and it is the discipline this sprint exists to install.
+
+- [x] S21.10 — 🔴 **The `tsc` gate checks zero files, so "0 TypeScript errors" has been a vacuous claim.** Found 15 Aug 2026 by the parallel documentation session and **independently confirmed here before being recorded**, per the honesty rule that a claim and the code disagreeing is a bug in one of them:
+
+  ```
+  $ cat tsconfig.json          → { "files": [], "references": [...] }
+  $ npx tsc --noEmit --listFiles | grep -c "src/"   → 0
+  ```
+
+  `npx tsc --noEmit` against the root config type-checks **nothing**. The root is a solution-style config: `files: []` with project references, and `--noEmit` does not traverse references. It exits 0 because there is nothing to fail on.
+
+  This is the most quietly damaging finding of the session, because it is not a bug in the product — it is a bug in the *instrument*. Every "`tsc` passes" in this file, including the Verified-by-execution table and the pre-deploy gate, was measuring an empty set. The August audit's own "verified-true baseline" table lists "`npx tsc --noEmit` exits 0 — run 14 Aug 2026" as a *measured fact*, and it was the same empty measurement. A green check from a gate that inspects nothing is worse than no gate: it actively purchases confidence.
+
+  Proof that it mattered: `pnpm build` was **failing at HEAD** with TS2345 in `src/lib/litert.ts` (`Uint8Array<ArrayBufferLike>` vs LiteRT's expected `TypedArray`), and nothing caught it, because `pnpm build` runs `tsc -b` (which does follow references) while every gate in this file ran the version that does not. Fixed by the documentation session in `src/lib/litert.ts` and `src/lib/preprocessImage.ts`.
+
+  Correct invocation, now verified passing: `npx tsc --noEmit -p tsconfig.app.json` → exit 0, and `pnpm build` (which runs `tsc -b`) succeeds. The `verify` script drops the vacuous `tsc --noEmit` since `pnpm build` already type-checks for real.
+
+  **The pattern this shares with S21.9 is the actual lesson of Sprint 21.** Both are green checks over an empty set: the RLS tests asserted an attack while assuming its precondition, and the type gate asserted correctness while checking no files. Neither could ever have failed. Twenty sprints of "verified by execution" were partly verifying execution of nothing — and the fix in both cases is the same question, asked of every gate: *what would this have to look like to fail?* If there is no answer, it is not a gate.
+
+- [x] S21.11 — **Service worker served the offline page to online users on five of seven routes.** Found by the parallel documentation session; recorded here because it is a product bug, not a docs one, and CLAUDE.md §4 makes SW correctness take priority over feature work.
+
+  `vite.config.ts` set workbox's `navigateFallback` to `/offline.html`. A workbox `NavigationRoute` matches **every** navigation, not only failed ones, so with the service worker in control a fresh load or reload of `/report`, `/feed`, `/my-reports`, `/search` or `/council` served the offline page **to a user who was online**. Only `/` escaped, because it matches the precached `index.html` route directly, and in-app `<Link>` navigation escaped too, because the History API issues no navigation request — which is exactly why it survived every manual click-through. Fixed to `/index.html` with `offline.html` denylisted so it stays reachable, verified in a real browser, and both `verify:pwa` and `verify:offline` gained a regression check.
+
+  Note what this does to S16's PWA claims: `pnpm verify:pwa` passed all 27 criteria while five of seven routes were broken, because "a navigation fallback is configured" was checked and "the fallback is the *right* page" was not. Third instance of the same shape as S21.9 and S21.10 in one session.
+
+- [x] S21.12 — **Camera FAB overlapped the install banner and the map counter pill at 375px.** Found by the parallel documentation session. The FAB sits at `bottom-[72px]` with `z-50`; `InstallBanner` and the `MapPage` counter pill both landed underneath it on the 375px viewport this product is designed for first (CLAUDE.md §4). Fixed by moving the banner to `bottom-[196px]` and the pill to `bottom-[144px]`.
+
+
+#### Sprint 21 — close (15 Aug 2026)
+
+**Acceptance:** all thirteen subtasks `[x]`. `pnpm build` green (`tsc -b` across three projects, 0 errors) · `eslint` 0 errors / 0 warnings / 0 suppressions · **334 tests / 33 files** · `verify:db` **27 migrations + 102 assertions, 0 failures** (34 behavioural · 37 Sprint 21 · 26 RLS · 5 Realtime) · Edge Functions **6**.
+
+**As-shipped delta.** The sprint was opened to build six missing PRD requirements. It shipped those, and five defects that no task had asked for — one of them a live security hole and three of them broken gates. The gates matter more than the features: a missing feature is visible, while a gate that cannot fail is invisible *and* actively purchases confidence. Four turned up in one session:
+
+| Gate | Reported | Actually measured |
+|---|---|---|
+| RLS tests "proven by attack" | attacks defeated | attacks defeated **given a token the fixture supplied** — never whether one could be obtained (S21.9) |
+| `tsc --noEmit` | 0 errors | **0 files** (S21.10) |
+| `verify:pwa` navigation check | fallback configured | a regex accepting either answer, passing while 5 of 7 routes were broken (S21.11) |
+| Lighthouse A11y 100 | accessible | nothing failing was *visible on the audited route*; three tokens were under WCAG AA (S21.13) |
+
+Every one now has an answer to *what would this have to look like to fail?*, and three were negative-controlled by reintroducing the bug and watching the test go red.
+
+**Deferred.** The `assign-crew` and `weekly-digest` Edge Functions have no automated tests — the repo has no Deno runner and `vitest` excludes `supabase/`. Their testable logic lives in hooks and is covered; wiring a Deno runner is the honest close and is **not** owner-gated, merely undone. `pg_cron` scheduling for the digest is written and commented in migration 027, pending OG1 + OG5.
+
+**New owner gate:** OG10 — twelve `[PLACEHOLDER — …]` markers in the Terms page. Legal content, not engineering.
+
+**Sequencing note.** Sprint 21 is the first sprint in this plan generated by reading `PRD.md` against the source rather than the plan against the source. That is now the standing check at every sprint close, because a masterplan can only ever certify its own coverage.
+
+---
+
+### Sprint D: Documentation Pass
+
+**Inserted Aug 2026, run concurrently with Sprint 21 by a second session.** `DOCS-ENGINEERPROMPT.md` asks for a repo that reads well to a stranger: a README whose every number maps to a committed artifact, and a machine-readable `PROJECT.json` for the portfolio to consume. Its binding constraint is the interesting one — **the masterplan is the primary source, not the code, and no number goes in that an artifact cannot back.**
+
+That constraint turned the pass into an audit. Verifying a number means running the command that produces it, and running the commands found three defects plus six stale counts.
+
+**Goal:** Every figure in public copy is reproducible by a named command; the README tells a stranger what this is, shows it, and hands them the receipt for every claim.
+**Inputs:** `CLAUDE.md`, this file in full, `PRD.md`, `MOTION.md`, the existing README, the source
+**Outputs:** rewritten `README.md`, `PROJECT.json`, `LICENSE`, `.github/workflows/verify.yml`, `docs/media/`, `docs/evidence/`, two new verification scripts
+
+**Subtasks:**
+- [x] D.1 — Read `CLAUDE.md`, `MASTERPLAN.md`, `PRD.md`, `MOTION.md` and the existing README in full before touching anything ✅
+- [x] D.2 — **Run every gate rather than quoting it.** ✅ This is what the prompt's "capture real output" clause is for, and it is the entire reason the sprint found anything. Six counts in the README and this file were wrong: tests (169 vs 181 vs the real number), migrations (21 vs 22), DB assertions (46 vs 40 vs 44), PWA criteria (28 vs 27), Edge Functions (4 vs 5 vs 6), and the Lighthouse scores — which had **no script and no committed report behind them at all**.
+- [x] D.3 — **`pnpm build` was failing at `HEAD`** ✅ **FIXED.** `TS2345` at `src/lib/litert.ts:178` — `Uint8Array<ArrayBufferLike>` is not assignable to LiteRT's `TypedArray`, which resolves to `Uint8Array<ArrayBuffer>`. `PreprocessResult.data` and `runInference`'s parameter are now pinned to `<ArrayBuffer>`; every array is built with `new Uint8Array(n)`, so that is the true type rather than a widening cast. **Root cause is the gate, not the type** — see S21.10; `npx vite build` skips `tsc -b`, and `tsc --noEmit` against the root solution config checks zero files. `tsc --noEmit` has been removed from the `verify` aggregate in `package.json`; `pnpm build` runs `tsc -b` and is the honest check.
+- [x] D.4 — **The service worker served the offline page to online users** ✅ **FIXED.** `workbox.navigateFallback` was `/offline.html`, and a workbox `NavigationRoute` matches *every* navigation request — so with the worker in control, `/report`, `/feed`, `/my-reports`, `/search`, `/council` and `/report/:id` all returned "You're offline right now" over a working network. `/` survived because it matches the precached `index.html` route directly and never reaches the fallback; client-side `<Link>` navigation survived because the History API issues no navigation request. **What broke was every path a stranger arrives by** — a shared report link (S11.5), a shareable filtered view (S20.1), a reload, and the standalone PWA launch from the home screen. Now `/index.html`, which is precached and therefore correct offline as well as online; `offline.html` stays reachable via the denylist as the genuine last resort.
+  - [x] D.4.1 — Regression coverage ✅ `verify:offline` grew from 9 checks to **18**: it now drives real navigations across five routes with the worker in control, **online and offline**, so the offline-first deep-link promise is proven rather than assumed. `verify:pwa` asserts `createHandlerBoundToURL('/index.html')` specifically — replacing the either-answer regex logged as S21.11.
+- [x] D.5 — **Lighthouse made reproducible** ✅ `scripts/verify-lighthouse.mjs` + `pnpm verify:lighthouse`, writing full reports to `docs/evidence/`. It runs **both form factors**, because the score previously on record was quoted with no preset attached — and a score without a form factor is half a fact. Desktop reproduces the old number (**96**); **mobile, the preset a 375px-first product is judged on, is 68.** FCP 4.7s, LCP 5.6s, CLS 0, TBT 0ms — transfer weight, not main-thread work, consistent with the ~7MB first-load finding in S7. **The command exits non-zero**: this is below the project's own ≥90 gate and is reported as a failure rather than softened. ⚠️ **S16.6's "gate met" claim is corrected by this**: it was met on desktop only.
+- [x] D.6 — **Screenshots from the real build** ✅ `scripts/capture-screenshots.mjs` + `pnpm capture:media` → `docs/media/{map,report,feed,offline}.png`, captured in WebKit under an iPhone 14 profile with `prefers-reduced-motion: reduce`, satisfying MOTION.md:102 ("every animated state needs a static equivalent … for screenshots"). Scripted rather than hand-taken so the images cannot silently drift from the product. **The capture is what exposed D.4** — three of the four shots came back as the offline page.
+- [x] D.7 — **375px bottom-band collision** ✅ **FIXED.** The install banner (`bottom-20`) and the map's report-counter pill (`bottom-[72px]`) both sat inside the camera control's band (`bottom-[72px]`, 60px tall, `z-50`), which rendered *over* the banner's own text. On the primary viewport this product is designed for, the install instructions were unreadable. The band now stacks explicitly: tab bar (0–56) → camera control (72–132) → counter pill (144) → install banner (196).
+- [x] D.8 — **README rewritten** ✅ Hook, hero image, one-line run command, evidence table above the fold. Prose sections for what it does, architecture (Mermaid, drawn from the shipped components rather than the plan), how it was built, verification, usage, limitations, status. No emoji. Every number names the command that produces it.
+- [x] D.9 — **`PROJECT.json`** ✅ Schema-1 card at the repo root. `links.live` is `null`, `status` is `in-development`, and `honest` is populated. Every `metrics[].source` points at a file that exists.
+- [x] D.10 — **`docs/evidence/gates.json`** ✅ Not in the prompt; added because `metrics[].source` must point at a *data* artifact, and pointing a test count at `package.json` is a citation in name only. Records every gate result with the command and environment that produced it.
+- [x] D.11 — **Repo hygiene** ✅ `LICENSE` (all rights reserved, matching `package.json: UNLICENSED`); `repository` / `homepage` / `bugs` / `description` / `keywords` / `author` added; `.github/workflows/verify.yml` with three jobs (types-lint-tests-build, browser engines + offline, and the database layer against a `postgres:17` service container). GitHub description and topics are written into `PROJECT.json` under `github` for Bruno to apply — a repo's public metadata is an outward-facing change and was not made unilaterally (CLAUDE.md §8).
+- [x] D.13 — **A clean checkout would have deployed with no classifier, silently** ✅ **FIXED.** `public/models/*.tflite` is gitignored (5MB, reproducible from a URL), and unlike `public/litert-wasm/` — which `prebuild` regenerates — nothing called `fetch:model` automatically. Proven rather than inferred: deleting the model and running `pnpm build` **succeeded**, shipping a `dist/models/` containing only a README. Vercel builds from git, so a deploy would have carried no model at all. The failure is silent by construction, because S7.11's graceful degradation is working as designed — the app falls back to the manual picker, so on-device classification would simply never have worked in production and **nothing would have said so**. Fixed by chaining `fetch-dev-model.mjs` into `prebuild`; it is idempotent (stats the destination, exits 0 with "already present"), so local builds cost nothing and only a clean CI checkout downloads. Both paths verified: absent → fetches 5,434,517 bytes into `dist/`; present → skips.
+  - Worth recording: this is the same shape as the four gates above. `pnpm build` exiting 0 was taken as "the build is deployable", and it could not have failed on this, because a missing optional asset is indistinguishable from an intentionally absent one to a build tool.
+  - Keeping the model same-origin is also what makes the service-worker cache path work, which is what `verify:offline` proves. PRD §7.1's `ml-models` Storage bucket — which **no migration creates** — would make it cross-origin, so that offline guarantee would need re-proving if the model ever moves there.
+- [x] D.12 — **Cross-session coordination** ✅ Sprint 21 was in flight in another session throughout. File boundaries were agreed explicitly, counts were held until that session declared the tree frozen, and each session re-derived the other's numbers rather than accepting them. Two claims were corrected in that exchange — the token-bearing table count (four expose rows publicly, of ten that carry a token) and a stale `text-tertiary` contrast figure. **Both were caught by the receiving session asking for the measurement rather than the summary**, which is the same discipline as the rest of this sprint, applied to a colleague instead of a gate.
+
+**Test criteria:** Every number in `README.md` is reproducible by the command named beside it. `PROJECT.json` validates against the schema and every `source` path resolves. Every relative link in the README resolves. The Mermaid diagram renders on GitHub. No claim of deployment, live URL, or classifier accuracy anywhere in public copy.
+
+### ✅ Sprint D — CLOSED (Aug 2026)
+
+**Verification evidence — re-derived against the frozen tree, none carried forward:**
+
+| Gate | Result |
+|---|---|
+| `pnpm test:run` | **334 tests / 33 files**, 0 failures |
+| `pnpm lint` | 0 errors, 0 warnings, 0 suppressions |
+| `pnpm build` | exit 0 — `tsc -b` across 3 projects + vite; precache 18 entries / 2,373.71 KiB |
+| `pnpm verify:db` | **27 migrations · 102 assertions · 0 failures** on PostgreSQL 17.11 (34 behavioural · 37 coverage-closure · 26 RLS · 5 Realtime) |
+| `pnpm verify:pwa` | **28/28** |
+| `pnpm verify:mobile` | **20** checks across real WebKit + Chromium device profiles |
+| `pnpm verify:offline` | **18** checks; model byte-identical at 5,434,517 bytes; 5 routes render from cache |
+| `pnpm bench:ai` | p50 **15ms** / p95 **22ms** vs a 3,000ms budget |
+| `pnpm verify:lighthouse` | mobile **68**/100/96/91 · desktop **96**/100/96/91 — **fails its own ≥90 gate on mobile, deliberately reported as a failure** |
+
+**As-shipped delta:**
+- **The owner gates were not assumed complete.** The instruction for this pass was to assume OG1–OG3 had landed. They have not, and a README claiming a live URL that 404s, a backend that returns NXDOMAIN, and a classifier accuracy figure with no classifier behind it would be the precise failure the August audit exists to eliminate. The README states the true position; `links.live` is `null`. Flipping each claim when a gate lands is a marked, small edit — that is what the Status section and the Owner-Gated Backlog link are for.
+- **No CI badge.** `.github/workflows/verify.yml` is committed but has never run, so its badge would render "no status". A badge that does not resolve is worse than no badge; it goes in after the first successful run.
+- **`bench:ai` and real-device checks are deliberately absent from CI.** A latency figure from a shared runner is noise, and no runner can tap Share → Add to Home Screen.
+- **Two devDependencies added outside the PRD stack** (CLAUDE.md §8): `lighthouse` and `chrome-launcher`, both verification-only, in the same category as the already-present `playwright`. Neither ships.
+- `docs/evidence/gates.json` was not in the brief. It exists so `PROJECT.json` metrics cite measured data rather than a document that quotes it.
+
+**Deferred:**
+- [⏭] Applying the GitHub repo description and topics — written into `PROJECT.json`; outward-facing, so Bruno's call (CLAUDE.md §8).
+- [⏭] A recorded terminal or interaction demo (the brief allows a GIF or asciinema cast). The four stills carry the product; a demo of a report flow is worth far more **once there is a backend to submit to**, so it belongs after OG1 rather than being faked now.
+- [⏭] Re-measuring the map route's Lighthouse Performance — headless Chrome software-rasterises Mapbox GL through SwiftShader, which measures the harness. Needs OG6.
+
+**What this sprint changes about the plan's own claims:**
+1. Every "0 TypeScript errors" gate recorded before Aug 2026 measured an empty file set (S21.10). `pnpm build` is the honest replacement, and it was **red** when this sprint began.
+2. S16.6's "gate met on every route that can be scored" was true on the desktop preset only. On mobile, Performance is 68 and the gate is **not** met.
+3. S1.9's navigation fallback shipped a configuration that broke five of seven routes in production while passing its own check.
+4. S7.2's model caching was correct, but nothing put the model into a deployable artifact — so OG3 would have produced a live site with no classifier and no error (D.13).
+
+**Notes:** This sprint claims no feature work. Everything it fixed was already marked `[x]` by an earlier sprint, and each fix is recorded above against the task that first claimed it.
+
+---
+
 ## Phase 5 — Integrations (Post-Revenue)
 
 High-level goals only — detailed sprint planning when Phase 4 is complete:
@@ -737,6 +979,7 @@ High-level goals only — detailed sprint planning when Phase 4 is complete:
 | **Supabase project deleted / ref invalid** | **Open — blocking** | `nexccbcmziiltysfcmzi` returns NXDOMAIN from two resolvers. Blocks acceptance for Sprints 8, 10–15, 17–20. Owner-gated re-provisioning; SQL is written and correct meanwhile. |
 | **Zero automated tests against a "no test, no merge" rule** | **Open** | CLAUDE.md §9 unmet since Sprint 3; 14+ untested units. Harness + backfill in S6.5.1–S6.5.2. |
 | **Anon key can delete any upvote; all notification emails world-readable** | **Open — security** | Two RLS policies named `_own` are `USING (true)`. Migration 015 in S6.5.10. |
+| **`reporter_token` harvestable from `reports` and `comments`, which re-opens the row above** | **Fixed 15 Aug 2026 — S21.9** | RLS is row-level; a public `SELECT` policy exposes every column, so 015's header-token scheme could be defeated by reading a token off the public map and replaying it. Proven by executing the full harvest→spoof→read-email→delete-upvote chain as `anon`. Fixed by column-level `REVOKE SELECT (reporter_token)` in migration 025. The lesson is in S21.9: the RLS tests asserted the attack payload and assumed its precondition. |
 | **Realtime silently delivers nothing** | **Open** | No `ALTER PUBLICATION supabase_realtime ADD TABLE reports`. The subscription connects and receives nothing, so the failure is invisible. Migration 014 in S6.5.9. |
 | **GPS failure is an unrecoverable dead end** | **Open** | `fallbackTriggered`/`setManualPosition` have zero consumers; submit stays disabled with no message. `LocationPicker` in S6.5.4. |
 | Sprint 7 latency budget unproven in-browser | Open | No published browser numbers exist for EfficientNet-Lite0 int8. S7.13 measures p50/p95 on real hardware before MOTION.md timings are locked. |
@@ -805,5 +1048,9 @@ Then: `supabase link`, apply all **15** migrations (13 existing + 014 Realtime +
 
 ### OG4 — Elasticsearch (Sprint 12) — recommend **defer**
 Elastic Cloud is ~$16/month for a PWA with no live users, and S12 is the heaviest infra in the plan. **Recommendation:** defer S12 and cover search with Postgres full-text (`tsvector` + GIN) — zero new infrastructure, no new spend, and sufficient at current scale; PRD Q5 already flags Typesense/Meilisearch as cheaper candidates. Elasticsearch's analytics aggregations only start to earn their keep at Phase 3 council-dashboard scale. **Decision is Bruno's** — it costs money.
+
+### OG10 — Legal content for the Terms page (S21.6)
+`src/constants/terms.ts` carries **12 `[PLACEHOLDER — …]` markers**. The substantive prohibitions PRD §13.4/§13.6 mandate are written and verified against the code; what is missing is the legal frame, which is not an engineering artefact and must not be invented: legal entity + ABN/ACN, postal address for notices, governing law and venue, pre-litigation dispute process, warranty disclaimer and limitation of liability (needs a qualified adviser, not a model), retention period, takedown/moderation contact, change-notice terms, effective date.
+**Needs Bruno:** the entity details, and a lawyer's pass over the disclaimer and liability clauses. **Built anyway:** the page, the route, the review-required banner, and tests asserting no company name, email, ABN or copyright line was fabricated. The app ships with the guidance PRD §13.4 requires either way — that part is not gated.
 
 ### OG5 — Resend API key (Sprint 13) · OG6 — Real device testing (iOS Safari + mid-range Android; needed to close S3.5–S3.7 and to measure S7.13's p50/p95) · OG7 — ABS council boundary data replacing the overlapping placeholder polygons · OG8 — `aethereum init` (creates a room; network side effect) · OG9 — Council pilot partner, which determines how much of Phase 3 matters.
