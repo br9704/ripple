@@ -17,6 +17,10 @@ pnpm install && pnpm dev      # front end is live at ripple-chi-bice.vercel.app,
                               # but with no backend behind it — see Status
 ```
 
+<p align="center">
+  Case study: <a href="https://brunojaamaa.dev/projects/ripple">brunojaamaa.dev/projects/ripple</a>
+</p>
+
 | Gate | Result | Command |
 |---|---|---|
 | Unit tests | **340** across 34 files | `pnpm test:run` |
