@@ -1,0 +1,111 @@
+name: verify
+
+# Every gate this repo claims in its README, run on every push.
+#
+# The gates are split into three jobs rather than one so a failure names itself:
+# a broken type is not a broken migration is not a broken service worker.
+#
+# Two gates are deliberately absent because they cannot be honest in CI:
+#   bench:ai         — a latency number from a shared CI runner is noise.
+#                      Run locally; see docs/evidence and MASTERPLAN S7.13.
+#   real-device PWA  — tapping Share → Add to Home Screen is irreducibly manual.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: types, lint, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: unit tests
+        run: pnpm test:run
+      - name: lint
+        run: pnpm lint
+      # `pnpm build` runs `tsc -b`, which is the real typecheck. `tsc --noEmit`
+      # against the root tsconfig checks nothing — it is a solution file with
+      # `"files": []` — and that is how a type error survived in the repo until
+      # Aug 2026. Do not "simplify" this back.
+      - name: typecheck and build
+        run: pnpm build
+      - name: PWA installability
+        run: pnpm verify:pwa
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  browser:
+    name: mobile engines and offline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: install browser engines
+        run: pnpm exec playwright install --with-deps chromium webkit
+      - run: pnpm build
+      # Real WebKit and real Chromium under real device descriptors — not Chrome
+      # wearing an iPhone user-agent.
+      - name: mobile browsers
+        run: pnpm verify:mobile
+      - name: fetch the development classifier
+        run: pnpm fetch:model
+      # Proves the service worker serves the app shell for every route, online
+      # and offline. This gate exists because navigateFallback pointed at
+      # offline.html and every route but `/` served the offline page to an
+      # online user — invisible to every static check we had.
+      - name: offline capability and SW routing
+        run: pnpm verify:offline
+
+  database:
+    name: migrations and RLS on real postgres
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: install postgres client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      # Applies every migration to a throwaway database, loads the seed, and
+      # runs the behavioural + RLS assertions — including attacking the schema
+      # as `anon` to prove the security fixes hold.
+      - name: verify database layer
+        run: ./scripts/verify-db.sh

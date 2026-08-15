@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "slug": "ripple",
+  "name": "RIPPLE",
+  "oneLiner": "Civic reporting PWA that classifies the photo on the phone, before it uploads",
+  "status": "in-development",
+  "role": "SOLO BUILD",
+  "year": "2026",
+  "updated": "2026-08-15",
+  "links": {
+    "github": "https://github.com/br9704/ripple",
+    "live": null,
+    "npm": null,
+    "huggingface": null,
+    "appstore": null
+  },
+  "stack": [
+    "typescript",
+    "react",
+    "vite",
+    "pwa",
+    "litert.js",
+    "tflite",
+    "webgpu",
+    "supabase",
+    "postgresql",
+    "deno",
+    "mapbox-gl",
+    "tailwind",
+    "zustand",
+    "vitest",
+    "playwright"
+  ],
+  "metrics": [
+    {
+      "value": "15 ms",
+      "label": "on-device inference, p50, against a 3,000 ms budget",
+      "source": "docs/evidence/gates.json"
+    },
+    {
+      "value": "102",
+      "label": "database assertions on real PostgreSQL 17, 0 failures",
+      "source": "docs/evidence/gates.json"
+    },
+    {
+      "value": "334",
+      "label": "unit tests, from zero five months earlier",
+      "source": "docs/evidence/gates.json"
+    },
+    {
+      "value": "28/28",
+      "label": "PWA installability criteria",
+      "source": "docs/evidence/gates.json"
+    },
+    {
+      "value": "68",
+      "label": "Lighthouse Performance on the mobile preset — below its own gate",
+      "source": "docs/evidence/lighthouse-summary.json"
+    }
+  ],
+  "headline": {
+    "claim": "Four of this project's own green checks could never have failed: a typecheck gate that checked zero files, a PWA regex that accepted either answer, RLS tests handed the credential they were meant to prove unobtainable, and a column REVOKE that silently cannot subtract from a table GRANT.",
+    "source": "README.md#how-it-was-built"
+  },
+  "honest": "Nothing is deployed and the Supabase project it was built against no longer resolves, so Storage, Auth, Edge Function deployment and Realtime delivery are unproven. The classifier pipeline is complete and benchmarked but runs on a generic ImageNet backbone, so no accuracy claim is made — and first load is ~7MB against a stated <5s-on-4G budget, which is why mobile Lighthouse Performance is 68 and fails the project's own gate.",
+  "media": {
+    "hero": "docs/media/map.png",
+    "demo": null,
+    "diagram": null,
+    "screenshots": [
+      "docs/media/map.png",
+      "docs/media/report.png",
+      "docs/media/feed.png",
+      "docs/media/offline.png"
+    ]
+  },
+  "built": {
+    "audit": "Twenty sprints were marked complete on the criterion 'TypeScript and ESLint pass with zero errors'; an audit measuring the repo against its own checkmarks found seven false subtask claims, zero test files against a 'no test, no merge' rule, and a Supabase backend that had been deleted.",
+    "repaired": [
+      "GPS failure was an unrecoverable dead end — the hook cleared its loading flag with latitude still null, leaving Submit permanently disabled with no error and no way forward",
+      "All eight Edge Function validation messages were unreachable; users saw 'Edge Function returned a non-2xx status code' instead of the real reason",
+      "Two RLS policies named _own were written USING (true) — any anonymous caller could delete any upvote, and every notification email was world-readable",
+      "reporter_token was world-readable even after that fix, because RLS is row-level and filters no columns; the harvest-then-replay chain succeeded end to end until column-level privileges landed",
+      "pnpm build was failing at HEAD on a type error, hidden because the gate ran `vite build` (skipping tsc -b) and `tsc --noEmit` against a root tsconfig with files: []",
+      "The service worker served the offline page to online users: navigateFallback pointed at offline.html and a workbox NavigationRoute matches every navigation, breaking every deep link",
+      "Three colour tokens were below the WCAG AA contrast floor in an app for reporting accessibility hazards — and the first fix changed nothing visible, because the palette is defined in three places",
+      "The offline queue only flushed while the user was on /report; rate limiting was localStorage theatre defeated by one devtools click"
+    ],
+    "measured": [
+      "Inference p50 15ms / p95 22ms with real LiteRT WASM against a real int8 .tflite in a real browser — against a 3,000ms budget",
+      "27 migrations and 102 assertions against a throwaway PostgreSQL 17.11, including attacks run as the anon role",
+      "Realtime read from a pgoutput replication slot directly: 13 frames, 1 INSERT, 2 UPDATE, 1 DELETE",
+      "Model resolves from Cache Storage byte-identical (5,434,517 bytes) with the network cut, and all five routes render from cache",
+      "Lighthouse on both presets — desktop 96, mobile 68 — which showed the 92 previously on record was a desktop number quoted without its form factor"
+    ],
+    "decisions": [
+      {
+        "what": "LiteRT.js over TensorFlow.js",
+        "why": "TF.js is frozen at 4.22.0 (Oct 2024). Reading @litertjs/core's own .d.ts showed CompiledModel.run(Tensor[]) and Tensor.fromTypedArray() are native, so preprocessing with Canvas removes TF.js outright rather than swapping it — Google's own quickstart would have reintroduced it purely for tensor plumbing."
+      },
+      {
+        "what": "Postgres full-text search instead of Elasticsearch",
+        "why": "A generated tsvector column cannot drift from its source, so the sync Edge Function, the nightly re-index and the proxy all cease to exist rather than being maintained — for a product with zero users and a $16/month bill. Deferred, not rejected; useSearch is backend-agnostic."
+      },
+      {
+        "what": "Classify on-device, before upload",
+        "why": "The photo never leaves the phone to be understood — only as evidence, and only after Submit. A privacy architecture first and a latency win second."
+      },
+      {
+        "what": "Category identity moved from colour to monospace glyph",
+        "why": "The design system permits one accent, so colour cannot encode ten categories — and it never did: two categories already shared a hex. Shape survives greyscale, colour blindness and low outdoor contrast."
+      },
+      {
+        "what": "Community consensus flags 'fixed', it does not set it",
+        "why": "Three confirmation photos set community_suggests_fixed and stop there. Consensus is evidence, not authority; the status belongs to the council."
+      }
+    ]
+  },
+  "ownerGated": [
+    "OG1 — re-provision Supabase, apply 27 migrations, deploy 6 Edge Functions, create the storage buckets",
+    "OG2 — training data for the fine-tuned civic classifier (~500 images/category across 10 categories)",
+    "OG3 — deploy to Vercel",
+    "OG4 — Elasticsearch (recommend continued deferral; it costs money and Postgres FTS covers the use case)",
+    "OG5 — Resend API key for status-change email",
+    "OG6 — real-device testing: iOS Safari install, OS camera confirmation, mid-range Android latency",
+    "OG7 — ABS council boundary polygons to replace the overlapping placeholders",
+    "OG9 — a council pilot partner"
+  ],
+  "github": {
+    "description": "Anonymous civic infrastructure reporting PWA. The photo is classified on the phone, before it uploads. Melbourne pilot.",
+    "topics": [
+      "civic-tech",
+      "pwa",
+      "on-device-ai",
+      "litert",
+      "tflite",
+      "webgpu",
+      "offline-first",
+      "supabase",
+      "postgresql",
+      "mapbox",
+      "react",
+      "typescript",
+      "privacy-by-design",
+      "row-level-security"
+    ]
+  },
+  "masterplan": "MASTERPLAN.md"
+}

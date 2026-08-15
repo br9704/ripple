@@ -1,337 +1,256 @@
-<p align="center">
-  <img src="public/favicon.svg" width="80" alt="Ripple logo" />
-</p>
-
 <h1 align="center">Ripple</h1>
 
 <p align="center">
-  <strong>Snap a problem. AI classifies it. The community upvotes it. The council fixes it.</strong>
+  <strong>Photograph a pothole. A classifier running on your phone files it — the image never leaves the device to be understood.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-in%20development-orange" alt="Status: In Development" />
-  <img src="https://img.shields.io/badge/sprints-20%2F20%20code--complete-blue" alt="Sprints: 20/20 code-complete" />
-  <img src="https://img.shields.io/badge/tests-169-brightgreen" alt="Tests: 169" />
-  <img src="https://img.shields.io/badge/pilot-Melbourne-ffb000" alt="Pilot: Melbourne" />
-  <img src="https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey" alt="License" />
+  <img src="docs/media/map.png" width="300" alt="Ripple's live community map on an iPhone 14: a dark Mapbox view of central Melbourne, the amber RIPPLE wordmark, and the bracketed [ REPORT ] capture control" />
 </p>
 
 <p align="center">
-  <a href="#the-problem">Problem</a> &middot;
-  <a href="#how-ripple-works">How It Works</a> &middot;
-  <a href="#tech-stack">Tech Stack</a> &middot;
-  <a href="#local-setup">Setup</a> &middot;
-  <a href="#documentation">Docs</a> &middot;
-  <a href="#current-status">Status</a>
+  <em>Captured from the production build by <code>pnpm capture:media</code> — real WebKit, iPhone 14 viewport, reduced motion.</em>
 </p>
-
----
-
-> **All twenty sprints are code-complete — and the app is not yet deployable.** Both halves of that sentence are load-bearing.
->
-> Every feature is written, typechecks, lints clean, and its pure logic is unit-tested (**169 tests**). But the Supabase project this was built against **no longer exists**, so nothing has been verified end-to-end against a real database, and the on-device classifier has no trained model yet. See [Current Status](#current-status) for exactly what is and isn't proven.
-
----
-
-## What is Ripple?
-
-Ripple is the civic reporting tool every city needs and no city has. It turns any smartphone into a three-second infrastructure reporter: photograph a pothole, broken streetlight, or accessibility hazard — AI classifies it, GPS captures the location, and the report appears on a live community map where neighbours can upvote it. Councils get a prioritised, geolocated, categorised dashboard of everything that needs attention.
-
-No accounts. No personal information. No council website. Just open the app, snap, and submit.
-
-## The Problem
-
-Citizens can see infrastructure problems. Councils have the budget to fix them. There is no effective bridge between seeing and fixing.
-
-Current council reporting portals fail because:
-- **15 minutes** average report time
-- Requires full name, address, phone number
-- No social proof — one person's complaint reads as noise
-- No feedback loop — citizens never learn if anything happened
-- Not mobile-optimised, language-inaccessible, buried on council websites
-
-The result: Melbourne receives ~47,000 reports per year through official channels. An estimated **150,000–200,000 issues are never reported.**
-
-## How Ripple Works
-
-1. **Open the app** — no account required. A full-viewport map shows every reported issue in your area.
-2. **Tap the camera** — the `[ ◉ REPORT ]` control, centre of screen. Snap a photo of the problem.
-3. **AI classifies it** — LiteRT.js runs an int8 `.tflite` model entirely on your phone. "Pothole (94%)" appears without a single byte of the photo leaving the device. If the classifier is unavailable for any reason, you pick a category and the report still goes through — a broken classifier never blocks a report.
-4. **GPS captures location** — reverse geocoded to a street address, council auto-detected from coordinates.
-5. **Submit** — the report appears on the community map immediately. Done in 3 seconds.
-6. **Community upvotes** — neighbours see the pin, tap "I see this too." Social proof drives council action.
-7. **Council fixes it** — prioritised dashboard shows what matters most. Status updates notify reporters.
-
-### Privacy by Design
-
-Privacy is a core architectural constraint, not an afterthought:
-
-- **Anonymous by default.** No name, email, address, or phone required. A random `reporter_token` (UUID in localStorage) is the only identifier — never linked to identity.
-- **AI runs on-device.** Photos are classified entirely client-side via LiteRT.js. No image data leaves the device for classification — only the compressed photo, and only after you tap Submit.
-- **GPS captured at report time only.** No continuous location tracking between sessions.
-- **No analytics or tracking libraries.** Zero third-party telemetry.
-- **No PII in logs.** Email addresses, names, and device identifiers are never logged.
-
-> For the full privacy specification, see [`PRD.md` Section 13](PRD.md).
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | React 18 + TypeScript (strict), Vite (PWA) |
-| **Styling** | Tailwind CSS v3 |
-| **Map** | Mapbox GL JS v3 (clustering, heatmap, geocoding) |
-| **AI/ML** | [LiteRT.js](https://github.com/google-ai-edge/LiteRT) + int8 `.tflite` (on-device classification, WebGPU with WASM fallback) |
-| **Search** | Postgres full-text (`tsvector` + GIN). Elasticsearch deferred — see [ADR](MASTERPLAN.md#architecture-decisions-log) |
-| **Backend** | Supabase — Postgres, Auth, Storage, Realtime, Edge Functions (Deno) |
-| **Email** | Resend (status notification transactional email) |
-| **Geocoding** | Mapbox Geocoding API (reverse geocode lat/lng → address) |
-| **Geo Utilities** | Turf.js (point-in-polygon council boundary detection) |
-| **Animations** | Framer Motion |
-| **Offline Queue** | IndexedDB (idb library) |
-| **State** | Zustand (where needed) |
-| **Deployment** | Vercel (CDN, preview URLs) |
-
----
-
-## Local Setup
-
-### Prerequisites
-
-- Node.js 20+
-- pnpm (`npm install -g pnpm`)
-- Supabase CLI (for local development and migrations)
-- A Supabase project (free tier works)
-- A Mapbox account (free tier sufficient)
-
-### Quick Start
 
 ```bash
-# 1. Clone
-git clone <repo-url>
-cd ripple
+pnpm install && pnpm dev      # there is no hosted instance yet — see Status
+```
 
-# 2. Install dependencies
+| Gate | Result | Command |
+|---|---|---|
+| Unit tests | **334** across 33 files | `pnpm test:run` |
+| Database | **27 migrations**, **102 assertions**, 0 failures, on real PostgreSQL 17 | `pnpm verify:db` |
+| On-device inference | **p50 15 ms · p95 22 ms** against a 3,000 ms budget | `pnpm bench:ai` |
+| Offline | model served **byte-identical** with the network cut; every route renders from cache | `pnpm verify:offline` |
+| Installability | **28/28** criteria | `pnpm verify:pwa` |
+| Mobile engines | 20 checks across real WebKit and Chromium device profiles | `pnpm verify:mobile` |
+| Lighthouse, mobile preset | A11y **100** · Best Practices **96** · SEO **91** · Perf **68** | `pnpm verify:lighthouse` |
+
+<p align="center">
+  <img src="https://img.shields.io/badge/status-not%20deployed-lightgrey" alt="Status: not deployed" />
+  <img src="https://img.shields.io/badge/tests-334-brightgreen" alt="334 tests" />
+  <img src="https://img.shields.io/badge/db%20assertions-102-brightgreen" alt="102 database assertions" />
+  <img src="https://img.shields.io/badge/PWA-28%2F28-blue" alt="28 of 28 PWA criteria" />
+  <img src="https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey" alt="License: All Rights Reserved" />
+</p>
+
+---
+
+## What it does
+
+Councils have the budget to fix broken infrastructure. Citizens can see what is broken. The bridge between the two is a council web form that takes about fifteen minutes and wants a full name, address and phone number — so most problems are simply never reported.
+
+Ripple is that bridge, rebuilt as a progressive web app with no accounts in it. You open a map of everything reported nearby, tap one control, photograph the problem, and submit. A random UUID in `localStorage` is the only identifier the system holds. There is no sign-up, no email requirement, and no way to link a report to a person.
+
+What makes three seconds possible is that **classification happens on the phone**. An int8 `.tflite` model runs under LiteRT.js — WebGPU where available, WASM and XNNPACK where not — and returns a category and a confidence before anything is uploaded. The photo is transmitted only after Submit, and only as evidence, never as something a server has to interpret. That is a privacy architecture first and a latency win second, but it is both: measured warm inference is 15 ms at p50 against a 3,000 ms budget.
+
+The model is treated as fallible on purpose, and the interface says so. Above 85% confidence the result card snaps in with a tick. Between 60 and 84% it types `> does this look right?` and asks. Below 60% it fans out two options and emphasises neither. If the model is missing, the runtime fails, or a browser advertises WebGPU support and then fails to compile, the app drops silently to a manual category picker — **a broken classifier never blocks a report**. Every override is recorded as `{ai_category, ai_confidence, final_category}`, which is what makes accuracy measurable later rather than merely asserted now.
+
+Around that sit the parts that make a report worth filing: a live Mapbox map with clustering and a weighted heatmap, "I see this too" upvoting that feeds a priority score, comment threads with flag-based moderation, before-and-after photo confirmation, and an RLS-scoped council dashboard with analytics and CSV export. Reports made with no signal queue in IndexedDB and submit on reconnect from anywhere in the app.
+
+The whole thing is one PWA. There is no React Native version, no Swift version, no Capacitor wrapper.
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph phone["On the phone — none of this needs a network"]
+        cam["Camera<br/>input type=file, capture=environment"]
+        pre["Canvas preprocess<br/>centre crop, never squash"]
+        rt["LiteRT.js<br/>WebGPU, falling back to WASM"]
+        mdl[("int8 .tflite<br/>Cache Storage, versioned URL")]
+        gps["Geolocation + Turf.js<br/>council from polygon"]
+        queue[("IndexedDB queue<br/>flushes on reconnect")]
+    end
+
+    subgraph edge["Supabase Edge Functions — Deno"]
+        submit["submit-report<br/>Zod, server-side rate limit, Storage upload"]
+        status["update-status<br/>scoped to the caller's own council"]
+        other["confirm-fix · send-notification<br/>assign-crew · weekly-digest"]
+    end
+
+    subgraph db["PostgreSQL — RLS is the security boundary"]
+        reports[("reports")]
+        trig["triggers<br/>priority · status history · badges"]
+        fts["tsvector + GIN<br/>full-text search"]
+        wal["logical replication<br/>supabase_realtime"]
+    end
+
+    surface["Live map · feed · council dashboard"]
+
+    cam --> pre --> rt
+    mdl -.-> rt
+    rt -->|category + confidence| submit
+    gps --> submit
+    cam -.->|no signal| queue -.->|reconnect| submit
+    submit --> reports
+    status --> reports
+    reports --> trig
+    reports --> fts
+    reports --> wal
+    wal -->|postgres_changes| surface
+    fts --> surface
+```
+
+Two decisions shaped most of the rest.
+
+**The classifier runs before the upload, not after it.** Google's own LiteRT quickstart routes inference through `@litertjs/tfjs-interop`, which drags TensorFlow.js back in purely to build tensors — and TF.js is frozen, its last release being `4.22.0` from October 2024. Reading `@litertjs/core`'s own type definitions showed that `CompiledModel.run(Tensor[])` and `Tensor.fromTypedArray()` are native, so preprocessing with the Canvas API removes TF.js outright rather than swapping it. `@tensorflow/tfjs` is not a dependency of this project.
+
+**Search shipped on Postgres, not Elasticsearch.** The plan specified an Elasticsearch index, a sync Edge Function, a nightly re-index and a proxy — roughly $16 a month and an entire second datastore for a product with zero users. A generated `tsvector` column with a GIN index covers the same use case, and the real engineering argument is that **a generated column cannot drift from its source**, so the sync pipeline and the re-index cease to exist rather than being maintained. Elasticsearch is deferred, not rejected; `useSearch` is deliberately backend-agnostic so the swap costs one file.
+
+## How it was built
+
+In March 2026 this repository reported twenty sprints complete. The completion criterion offered was "TypeScript and ESLint pass with zero errors" — which, for a codebase with no tests at all, measures compilation rather than correctness.
+
+An audit in August measured the repository against its own checkmarks instead of trusting them. Seven subtask claims were individually false. There were **zero test files**, against a `CLAUDE.md` rule reading "no test, no merge". The Supabase project the entire backend was written against returned NXDOMAIN from two independent public resolvers — and because Supabase keeps paused projects resolving, that meant deleted, not paused. Every "applied to production" claim in the plan described a database that no longer existed.
+
+What the repairs turned up was worse than the bookkeeping. GPS failure was an unrecoverable dead end: at the eight-second timeout the hook cleared its loading flag while latitude was still null, which rendered the location line as blank space and left Submit permanently disabled — no error, no way forward. All eight of the Edge Function's validation messages were unreachable, because `supabase-js` does not parse non-2xx bodies, so users saw the literal string "Edge Function returned a non-2xx status code" instead of "Note exceeds 140 character limit". The offline queue flushed only while the user happened to be sitting on `/report`. Rate limiting was `localStorage` theatre, defeated by one devtools click. And two RLS policies named `_own` were written `USING (true)`, meaning any anonymous caller could delete anyone's upvote and every stored notification email was world-readable.
+
+Then execution replaced assertion. A throwaway local PostgreSQL harness now applies every migration and attacks the result as `anon`, and it caught a real defect on its first run: migration 017 called `calculate_priority(NEW.id)` from a `BEFORE UPDATE` trigger, where the table still holds the old row — so the function re-read the status it was in the middle of replacing, and the status penalty never applied. That is precisely the bug the migration exists to fix, reintroduced one line below the comment describing it. Invisible to code review, and it would have been invisible in production too, in the direction that keeps resolved reports ranked as urgent on a council dashboard.
+
+Those two RLS policies were rewritten, and the fix was recorded as proven by attack. It was not. A later audit ran the whole chain rather than its second half and found `reports.reporter_token` world-readable — RLS is row-level, and a policy of `USING (true)` filters no columns. A token could be harvested off the public map, replayed as the `x-reporter-token` header, and used to read a stranger's notification email and delete their upvote. All four steps succeeded. The migration's own header comment asserted, in writing, that tokens were not handed out.
+
+Repairing it produced the sharpest detail in the repository. The obvious spelling — `REVOKE SELECT (reporter_token) ON reports FROM anon` — **does nothing** when a table-level `GRANT SELECT` already exists. Table-level and column-level privileges live in separate ACLs, and a column revoke cannot subtract from a table grant. It raises no error and reports success. Written that way, the migration, its comment, and the plan entry describing it would all have asserted a fix that did not exist, and nothing short of an after-the-fact attack would have noticed.
+
+This documentation pass ran the gates rather than reading them, and found three more. **`pnpm build` was broken at `HEAD`** — a type error in the LiteRT wrapper — because the recorded gate ran `npx vite build`, which skips `tsc -b`, and `npx tsc --noEmit` against the *root* `tsconfig.json`, which is a solution file containing `"files": []` and therefore typechecks zero files while exiting 0. **The service worker served the offline page to online users**: `navigateFallback` pointed at `/offline.html`, and a workbox `NavigationRoute` matches every navigation, so with the worker in control, every route but `/` returned "You're offline right now" over a working network. It hid because `/` matches the precached shell directly and because in-app link clicks issue no navigation request — leaving broken exactly the deep-link surface that shared reports and shareable filtered views exist to provide. And the **Lighthouse score on record was a desktop-preset number**; on the mobile preset this product actually targets, Performance is 68, not 92.
+
+Fixing the typecheck gate paid for itself within the hour: made real, it immediately caught seven errors that had been invisible, and the fix for *those* was to move tests into their own TypeScript project rather than grant the app Node types — because a component that imported `fs` would otherwise typecheck cleanly and fail only in a browser.
+
+The last one is the most on-the-nose. Measuring the palette against the background found three colour tokens below the WCAG AA contrast floor that `PRD.md` requires — in an app whose stated purpose includes reporting accessibility hazards. The first attempt at the fix changed nothing a user would ever see, because the palette is defined in three places and only one was edited. One of the failing values had already been found and fixed once before, in a different token, with the measurement still sitting in a comment beside it. And **Lighthouse scored Accessibility 100 throughout** — because it grades what is painted on the route it audits, and a declined report is not on the feed's first screen. That 100 is real, and it means "nothing failing was visible", not "nothing fails".
+
+Every one of these has the same shape. The RLS tests declared the attacker's token as a literal fixture, so they proved the attack failed without ever testing whether the credential could be obtained. The typecheck gate checked zero files. The PWA check used the regex `/navigateFallback|offline\.html/`, which accepts either answer and could therefore never detect the wrong one. A column revoke that cannot subtract from a table grant reports success either way. All four were green, and not one of them could have failed.
+
+The question worth asking of any gate is **what would this have to look like to fail?** If there is no answer, it is not a gate. The full record — every deferral with its reason, every as-shipped delta, and every claim that was corrected — is in [`MASTERPLAN.md`](MASTERPLAN.md). It is deliberately not a clean story.
+
+## Verification
+
+Nothing below is quoted from memory. Each row names the command that produces it, and every command is in `package.json`.
+
+| Command | What it proves |
+|---|---|
+| `pnpm test:run` | **334 tests across 33 files** — classification tiers at their exact boundaries, council detection including the overlap tie-break, CSV formula-injection escaping, contrast ratios computed from the files on disk, and the filter and sort predicates shared by map and feed so the two cannot disagree |
+| `pnpm lint` | 0 errors, 0 warnings, 0 blanket suppressions, under `strictTypeChecked` and `stylisticTypeChecked` type-aware linting, with rule triage documented in `eslint.config.js` |
+| `pnpm build` | `tsc -b` across three TypeScript projects, then Vite. Service worker emitted, 37 MB of LiteRT WASM correctly excluded from precache, no server-side secret name present in the bundle |
+| `pnpm verify:db` | **27 migrations** applied to a throwaway PostgreSQL 17.11, seed loaded, **102 assertions** — 34 behavioural, 37 coverage-closure, 26 RLS, 5 Realtime — 0 failures |
+| `pnpm verify:pwa` | **28/28** installability criteria: manifest, icons on disk, fetch handler, precache, navigation fallback bound to the app shell, pinch-zoom permitted, and the four `apple-*` tags iOS uses *instead of* the manifest |
+| `pnpm verify:mobile` | 20 checks under real iPhone 14 (WebKit) and Pixel 7 (Chromium) profiles: `capture="environment"` present, 64×64 shutter against a 60 pt minimum, zero horizontal overflow |
+| `pnpm verify:offline` | 18 checks. The model resolves from Cache Storage byte-identical — 5,434,517 bytes both ways — with the network cut, and all five routes render from cache rather than a browser error |
+| `pnpm bench:ai` | Real LiteRT WASM against a real EfficientNet-Lite0 int8 `.tflite` in a real browser |
+| `pnpm verify:lighthouse` | Both form factors, full reports written to [`docs/evidence/`](docs/evidence/) |
+
+### The security assertions, specifically
+
+Running as `anon` with RLS enforced, the suite first attempts to **harvest** a reporter token from every table that exposes its rows publicly, then attempts to replay whatever it got. The chain is asserted broken at the harvest, not at the replay — and before asserting that zero rows were harvested, the harness asserts those tables are **non-empty**, so the test cannot pass by having nothing to attack.
+
+Four of the ten tables carrying a reporter token expose their rows publicly; those four are protected by column-level privileges. The other six are covered by row policies — scoped to the caller's own token, or RLS-on-with-no-policies for the referral tables, where a readable code-to-token mapping would be a token dictionary. Each of those six is confirmed non-empty and still invisible to `anon`, because "returns nothing" proves nothing about an empty table.
+
+Proven this way: an attacker cannot obtain a reporter token, delete another token's upvote, read another token's notification email, forge comment authorship, or post as the council — while reports stay publicly readable, anonymous submission still works, and a user can still see their own upvote and notification settings.
+
+### On-device inference
+
+| | |
+|---|---|
+| accelerator | WebGPU, falling back to WASM/XNNPACK |
+| model | EfficientNet-Lite0 int8, 5.18 MB |
+| **inference p50** | **15 ms** |
+| **inference p95** | **22 ms** over 20 runs |
+| runtime load + compile | ~65 ms, once per session |
+| cold first-ever run | ~100 ms end to end |
+| MOTION.md budget | 3,000 ms |
+
+Measured on Apple Silicon with the WebGPU accelerator. **This is a lower bound, not a phone number.** Allowing a mid-range Android to be 20–30× slower puts the warm path near 300–660 ms, still inside budget — but a representative-hardware figure is not claimed until it is measured on representative hardware.
+
+### Lighthouse
+
+| Preset | Performance | Accessibility | Best Practices | SEO |
+|---|---|---|---|---|
+| **mobile** — 4G, Moto G Power class CPU | **68** | **100** | **96** | **91** |
+| desktop — unthrottled | 96 | 100 | 96 | 91 |
+
+Both runs are committed in full to [`docs/evidence/`](docs/evidence/). The mobile run is the one that counts for a 375px-first product, and it is **below the project's own ≥90 gate**, so `pnpm verify:lighthouse` exits non-zero. FCP is 4.7 s and LCP 5.6 s under 4G throttling; CLS is 0 and TBT is 0 ms on both presets, so this is transfer weight, not main-thread work — consistent with the first-load finding in Limitations. The desktop number is included because a single score with no form factor attached is how the earlier 92 came to be quoted as though it were the whole picture.
+
+The map route is not scored: headless Chrome software-rasterises Mapbox GL through SwiftShader, which measures the test harness rather than the app. That number needs a real phone.
+
+## Usage
+
+```bash
 pnpm install
-
-# 3. Configure environment
-cp .env.example .env.local
-# Edit .env.local with your Supabase URL, anon key, and Mapbox token
-
-# 4. Apply database migrations (requires Supabase CLI)
-supabase db push
-
-# 5. Start dev server
+cp .env.example .env.local        # Supabase URL and anon key, Mapbox token
 pnpm dev
 ```
 
-### Environment Variables
+The model is not in git — `public/models/*.tflite` is gitignored because it is 5 MB and reproducible from a URL. `pnpm build` fetches it via `prebuild`, so a clean checkout still produces a complete bundle; the fetch is idempotent and skips when the file is already there. `pnpm dev` does not, so a fresh dev server takes the designed fallback path to the manual category picker until you ask for the model:
 
-| Variable | Where | Description |
-|----------|-------|-------------|
-| `VITE_SUPABASE_URL` | `.env.local` | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | `.env.local` | Supabase anonymous/public key |
-| `VITE_MAPBOX_TOKEN` | `.env.local` | Mapbox GL JS access token |
-| `VITE_VAPID_PUBLIC_KEY` | `.env.local` | Web Push public key (optional; `npx web-push generate-vapid-keys`) |
-| `VAPID_PRIVATE_KEY` | Supabase secrets | Web Push private key — **never** `VITE_`-prefixed |
-| `RESEND_API_KEY` | Supabase secrets | Resend email API key (server-side only) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase secrets | Supabase admin key (server-side only) |
-
-> **Never commit secrets.** All client-side env vars use the `VITE_` prefix. Server-side secrets are set in the Supabase dashboard only.
-
----
-
-## Project Structure
-
-```
-ripple/
-├── src/
-│   ├── components/       # Reusable UI components
-│   ├── hooks/            # Custom React hooks (camera, GPS, AI, offline queue)
-│   ├── lib/              # Supabase client, Mapbox helpers, utilities
-│   ├── pages/            # Top-level route components
-│   ├── types/            # Shared TypeScript interfaces and type aliases
-│   ├── stores/           # Zustand state stores
-│   ├── constants/        # App constants (categories, thresholds, config)
-│   └── workers/          # Web Workers (offload heavy computation)
-├── supabase/
-│   ├── migrations/       # SQL migrations (001–011), applied sequentially
-│   ├── functions/        # Deno Edge Functions
-│   └── seed/             # Seed data scripts (Melbourne councils)
-├── PRD.md                # Product requirements document
-├── MASTERPLAN.md         # Sprint plan and progress tracker
-├── MOTION.md             # Binding animation specification
-├── CLAUDE.md             # Development agent instructions
-└── README.md             # You are here
+```bash
+pnpm fetch:model                  # real EfficientNet-Lite0 int8, 5.18 MB
+pnpm bench:ai
 ```
 
----
+The database layer verifies with no cloud account and no spend. It provisions a throwaway local PostgreSQL, applies every migration, loads the seed, and then attacks the result:
 
-## Database Schema
-
-```
-councils ──< council_boundaries
-    │
-    └──< reports ──< report_photos
-            │──< upvotes
-            │──< comments
-            │──< status_history
-            └──< user_notifications
-
-badges_earned (keyed by reporter_token)
+```bash
+brew install postgresql@17 && brew services start postgresql@17
+pnpm verify:db
 ```
 
-| Table | Purpose |
-|-------|---------|
-| `councils` | Council metadata — name, slug, contact email, dashboard status |
-| `council_boundaries` | GeoJSON polygons for council area detection (Turf.js) |
-| `reports` | **Core table** — category, location, status, priority score, upvote count |
-| `report_photos` | Photos linked to reports (original, additional, fix confirmation) |
-| `upvotes` | "I see this too" — one per user per report, enforced by UNIQUE constraint |
-| `comments` | Per-report discussion threads, flagging, auto-hide at 5 flags |
-| `status_history` | Audit trail: who changed what status, when, with notes |
-| `user_notifications` | Opt-in email/push notification subscriptions |
-| `badges_earned` | Achievement badges (keyed by reporter_token, no account required) |
+| Command | Purpose |
+|---|---|
+| `pnpm dev` · `pnpm build` · `pnpm preview` | Develop, build, serve the production build |
+| `pnpm test` · `pnpm test:run` · `pnpm coverage` | Vitest — watch, once, with coverage |
+| `pnpm verify` | Tests, lint, build, PWA, mobile engines, offline — the full local gate |
+| `pnpm verify:db` | Migrations, triggers, RLS and Realtime against real PostgreSQL |
+| `pnpm verify:lighthouse` | Both form factors; writes `docs/evidence/` |
+| `pnpm capture:media` | Regenerates `docs/media/` from the current build |
+| `pnpm fetch:model` · `pnpm bench:ai` | Fetch the development classifier, benchmark inference |
 
-All tables have **Row Level Security** enabled. Anonymous users can read and submit reports; only council staff (authenticated via JWT) can update report status.
+### Environment
 
----
+Every client-safe value carries the `VITE_` prefix and nothing else ever may. Server-side secrets live only in Supabase Edge Function secrets. The full table, with where each value comes from, is in [`.env.example`](.env.example).
 
-## Report Categories
+| Variable | Scope |
+|---|---|
+| `VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` | client |
+| `VITE_MAPBOX_TOKEN` | client — public by design; restrict by URL referrer in the Mapbox dashboard rather than trying to hide it |
+| `VITE_VAPID_PUBLIC_KEY` | client, optional (Web Push) |
+| `SUPABASE_SERVICE_ROLE_KEY` · `RESEND_API_KEY` · `VAPID_PRIVATE_KEY` | **server only** |
 
-| Category | Colour | Severity | Examples |
-|----------|--------|:--------:|---------|
-| Pothole / Road Damage | 🔴 Red | 2 | Potholes, cracked asphalt, sunken covers |
-| Broken Streetlight | 🟠 Orange | 3 | Dead streetlights, damaged poles |
-| Graffiti / Vandalism | 🟣 Purple | 1 | Graffiti on public property |
-| Damaged Signage | 🟠 Orange | 2 | Broken/graffiti-covered road signs |
-| Accessibility Hazard | 🔵 Blue | 2.5 | Broken curb cuts, missing tactile indicators |
-| Illegal Dumping | 🟤 Brown | 1 | Abandoned furniture, rubbish piles |
-| Water / Drainage | 🩵 Teal | 2 | Leaking hydrants, blocked drains |
-| Dangerous Tree | 🟢 Green | 3 | Fallen branches, leaning trees |
-| Damaged Footpath | 🟡 Amber | 2 | Cracked/uneven footpath, trip hazards |
-| Other Infrastructure | ⚪ Grey | 1 | Anything not fitting above |
+## Limitations
 
----
+**Nothing is deployed and the backend does not exist.** The Supabase project this was built against was deleted. Every schema-layer claim above is verified against local PostgreSQL, but Storage uploads, Edge Function deployment, Auth flows and Realtime *delivery* are managed services with no local stand-in. Those remain unproven, and the tasks depending on them are marked as such rather than as complete.
+
+**No accuracy claim is made for the classifier.** The pipeline is complete and benchmarked, but the model it ships with is a generic EfficientNet-Lite0 carrying **ImageNet's thousand classes, not Ripple's ten categories**. It proves the runtime loads, the cache works and the latency is real; its predictions are not civic-meaningful. A production build ships that model, so classification *runs* — it is simply not yet trustworthy, which is exactly why the confidence tiers and the one-tap override exist. The fine-tuned model needs roughly 500 images per category across ten categories. Until it lands, the ">70% correct without correction" target in the PRD is unmet and unmeasured, and swapping it in is a one-URL change by design, because the filename is versioned.
+
+**First load is heavier than the PRD budget.** The LiteRT WASM runtime is about 2 MB gzipped and the model about 5 MB, putting first load near 7 MB against a stated "<5 s on 4G". The original stack comparison counted model sizes only and omitted the runtime entirely. The mitigations are real — the model loads lazily, never blocks a report, and is cached after first use — but the budget is exceeded, and mobile Lighthouse Performance reflects it.
+
+**Council boundaries are placeholder bounding boxes**, not ABS polygons, and they overlap. Correctness no longer *depends* on row order — detection falls back to nearest centroid and the query is explicitly ordered — but attribution near a boundary is approximate until real data lands.
+
+**Accessibility is verified in the places it was measured, not everywhere.** Contrast is now computed from the files on disk and gated in CI, focus styles and screen-reader labels are in place, and map pins have a parallel keyboard-navigable list because a `<canvas>` has no accessibility tree. A full VoiceOver and TalkBack sweep needs a device and has not happened.
+
+**Some things are irreducibly manual.** No automation can tap Share → Add to Home Screen on a physical iPhone, confirm that the OS camera app actually opened, or measure frame rate on a mid-range Android. Everything that *determines* those outcomes is checked; the last tap is not.
+
+**Deliberately not built:** Elasticsearch (cost, deferred with a documented swap path); school-proximity clustering for council alerts (needs a POI dataset this schema does not have, and a proxy would produce alerts nobody could act on); a CRT and scanline treatment (wrong for a civic tool used outdoors one-handed, where legibility beats texture); native apps of any kind.
+
+## Status
+
+Every task in the plan is closed — 235 of 235 — and the tree is green: 334 tests, 0 lint errors, `pnpm build` exits 0, and 102 database assertions pass against real PostgreSQL. What is *not* claimed is that any of it has run in production, because it has not.
+
+What remains is owner-gated rather than unfinished: re-provisioning Supabase, deploying, training the civic classifier, sourcing ABS boundary data, and holding a phone. Each is named — with what was built anyway, so that it becomes a swap rather than a build — in the [Owner-Gated Backlog](MASTERPLAN.md#owner-gated-backlog--deferred-to-the-very-end).
+
+None of those blockers is cost. Supabase and Vercel both have free tiers that cover this comfortably; the only genuinely paid item in the plan was Elasticsearch, and Sprint 12 replaced it with Postgres full-text. What the gates actually need is account access, a training dataset, and a physical handset.
 
 ## Documentation
 
-| Document | Description | Link |
-|----------|-------------|------|
-| **Product Requirements** | Full feature specs, data models, personas, design system, privacy rules, UI screen specs | [`PRD.md`](PRD.md) |
-| **Implementation Plan** | Sprint-by-sprint breakdown with progress tracking, architecture decisions, and risk log | [`MASTERPLAN.md`](MASTERPLAN.md) |
-| **Animation Spec** | Binding motion specification — sequences, timings, per-surface rules, acceptance gates | [`MOTION.md`](MOTION.md) |
-| **Classifier** | How to produce and drop in the on-device model | [`public/models/README.md`](public/models/README.md) |
-| **Agent Instructions** | Coding standards, privacy rules, commit conventions, sprint protocol | [`CLAUDE.md`](CLAUDE.md) |
-| **Environment Template** | Required environment variables with descriptions | [`.env.example`](.env.example) |
-
----
-
-## Pilot City
-
-**Melbourne, Australia**
-
-| Council | Area |
-|---------|------|
-| City of Melbourne | CBD, Southbank, Carlton |
-| City of Yarra | Fitzroy, Collingwood, Richmond |
-| Moreland (Merri-bek) | Brunswick, Coburg |
-| Darebin | Northcote, Preston, Fairfield |
-| Port Phillip | St Kilda, South Melbourne, Albert Park |
-
-> Council boundary data sourced from ABS Mesh Block data. Boundary GeoJSON will be loaded in Sprint 2.
-
----
-
-## Roadmap
-
-All twenty sprints are **code-complete**. Acceptance for anything touching the database is blocked on re-provisioning Supabase — see [Current Status](#current-status).
-
-### Phase 0 — Foundation
-- [x] **Sprint 0–5:** Scaffolding, PWA infrastructure, Supabase schema, camera, GPS, report submission
-
-### Phase 1 — MVP
-- [x] **Sprint 6:** Live community map (Mapbox, clustering, Realtime)
-- [x] **Sprint 6.5:** Foundation Repair *(inserted Aug 2026)* — test harness from zero, plus nine defects the plan had marked complete
-- [x] **Sprint 6.6:** SIGNAL design migration *(inserted Aug 2026)*
-- [x] **Sprint 7:** On-device AI classification (LiteRT.js) — *pipeline complete, awaiting a trained model*
-- [x] **Sprint 8:** Community upvoting
-- [x] **Sprint 9:** Map filters & heatmap
-- [x] **Sprint 10:** Feed & My Reports
-- [x] **Sprint 11:** Report detail, status timeline, share
-- [x] **Sprint 12:** Full-text search — *Postgres FTS; Elasticsearch deliberately deferred*
-
-### Phase 2 — Community & Polish
-- [x] **Sprint 13:** Status tracking & opt-in notifications
-- [x] **Sprint 14:** Comment threads with moderation
-- [x] **Sprint 15:** "Fixed!" photo confirmation
-- [x] **Sprint 16:** Accessibility, error boundary, Web Push — *Lighthouse gate needs a deployed URL*
-
-### Phase 3 — Council Tools
-- [x] **Sprint 17:** Council dashboard — magic-link auth, RLS-scoped feed
-- [x] **Sprint 18:** Analytics, batch status updates, CSV export
-
-### Phase 4 — Gamification & Growth
-- [x] **Sprint 19:** Badges & opt-in leaderboard
-- [x] **Sprint 20:** Shareable filtered views
-
-> Full sprint detail, as-shipped deltas, and every deferral with its reason: [`MASTERPLAN.md`](MASTERPLAN.md)
-
----
-
-## Current Status
-
-**All twenty sprints are code-complete. Nothing is acceptance-verified.** Both halves matter, and conflating them is exactly the failure this project already had once.
-
-| | Aug 2026 |
+| Document | What is in it |
 |---|---|
-| Sprints code-complete | **20 / 20** (plus 6.5 and 6.6, inserted) |
-| Masterplan tasks | **220 complete · 0 open** |
-| Tests | **181** TS across 20 files, **46** SQL assertions, **28** PWA checks (from zero) |
-| Lint | 0 errors, 0 warnings, **0 suppressions** |
-| TypeScript | 0 errors, strict |
-| Migrations | 21 |
-| Edge Functions | 4 |
+| [`MASTERPLAN.md`](MASTERPLAN.md) | Sprint-by-sprint record, as-shipped deltas, every deferral with its reason, architecture decision log |
+| [`PRD.md`](PRD.md) | Feature specs, data models, personas, privacy rules, screen specs |
+| [`MOTION.md`](MOTION.md) | Binding animation specification — timings, per-surface rules, acceptance gates |
+| [`CLAUDE.md`](CLAUDE.md) | Engineering contract: standards, privacy rules, sprint protocol |
+| [`public/models/README.md`](public/models/README.md) | How to produce and drop in the classifier |
+| [`docs/evidence/`](docs/evidence/) | Committed Lighthouse reports, both form factors |
 
-### What is proven
+## License · Author
 
-- `pnpm tsc --noEmit`, `pnpm lint`, `pnpm test` — **181 tests**, zero lint errors under `strictTypeChecked` type-aware linting
-- `pnpm build` — valid service worker, 37MB LiteRT WASM correctly excluded from precache, no server-side secret in the bundle
-- **`pnpm verify:db`** — all **21 migrations** applied to a real PostgreSQL 17, seed loaded, **46 behavioural + RLS assertions** passing. Running as `anon` with RLS enforced, an attacker provably cannot delete another user's upvote, read another user's notification email, harvest reporter tokens, or post as the council.
-- **`pnpm verify:pwa`** — **28/28** installability criteria: manifest, icons on disk, service worker with fetch handler and precache, navigation fallback, pinch-zoom permitted, and the four `apple-*` tags iOS uses instead of the manifest.
-- **Lighthouse** (against `vite preview`) — Performance **92**, Accessibility **100**, Best Practices **96**, SEO **91**
-- **`pnpm verify:mobile`** — real WebKit (iPhone 14) and Chromium (Pixel 7) device profiles: `capture="environment"` present, 64×64 shutter against the 60pt minimum, no horizontal overflow, iOS install meta tags
-- **`pnpm verify:offline`** — model cached **byte-identical** and served with the network cut
-- **`pnpm bench:ai`** — real LiteRT inference: **p50 15ms, p95 22ms**, cold start 204ms, against a 3,000ms budget
+All rights reserved — see [`LICENSE`](LICENSE). The code is public to read, not to reuse.
 
-That last one caught a real bug the moment it first ran — a `BEFORE UPDATE` trigger recomputing a priority score from the status it was in the middle of replacing. Invisible to code review; caught in seconds by execution.
-
-### What is not proven, and why
-
-**The Supabase project this was built against no longer exists** — its ref returns NXDOMAIN. The *schema layer* is now verified locally (see above), but Storage uploads, Edge Function deployment, Auth flows and Realtime delivery are Supabase-managed services with no local stand-in, so those remain unproven. Tasks depending on them stay deferred or partial in the masterplan, never complete.
-
-**The classifier runs, but on a generic model.** `pnpm fetch:model` pulls a real EfficientNet-Lite0 int8 `.tflite` (5.2MB — within 6% of the estimate), which proves the runtime, the timing and the offline cache. Its labels are ImageNet's, not Ripple's ten categories, so **no accuracy claim is made** until the fine-tuned civic model lands.
-
-**First load is heavier than the PRD budget.** Measured: the LiteRT WASM runtime is ~2MB gzipped, and with a ~5MB model that puts first load near 7MB against PRD §10.1's "<5s on 4G". Recorded honestly in the masterplan rather than discovered later.
-
-### To make it real
-
-1. Re-provision Supabase → apply 21 migrations, deploy 4 Edge Functions, create the `reports` and `ml-models` buckets
-2. Deploy to Vercel
-3. Train and drop in the classifier (`public/models/README.md` has the recipe)
-4. Hold a phone: tap Share → Add to Home Screen, confirm the OS camera app opens, and capture a mid-range-Android latency figure. `verify:pwa` and `verify:mobile` confirm nothing in the build blocks any of it.
-
-
----
-
-## Contributing
-
-This project is under active development by [Bruno Jaamaa](https://github.com/br9704). Development follows the sprint plan in [`MASTERPLAN.md`](MASTERPLAN.md) with coding standards defined in [`CLAUDE.md`](CLAUDE.md).
-
----
-
-## License
-
-All rights reserved. Copyright Bruno Jaamaa 2026.
+Built by [Bruno Jaamaa](https://brunojaamaa.dev) · [@br9704](https://github.com/br9704)

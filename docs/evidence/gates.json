@@ -1,0 +1,113 @@
+{
+  "$comment": "Measured gate results. Every figure here was produced by running the named command against the frozen tree on the stated date — none is carried forward from a document. Regenerate by running the commands and updating this file; do not edit a number here without re-running its command.",
+  "measuredOn": "2026-08-15",
+  "measuredAgainst": "local frozen tree, main, post-Sprint-21",
+  "environment": {
+    "platform": "darwin arm64 (Apple Silicon)",
+    "node": "24.12.0",
+    "postgres": "17.11 (Homebrew)",
+    "lighthouse": "13.4.1"
+  },
+  "gates": [
+    {
+      "id": "tests",
+      "command": "pnpm test:run",
+      "result": { "tests": 334, "files": 33, "failures": 0 }
+    },
+    {
+      "id": "lint",
+      "command": "pnpm lint",
+      "result": { "errors": 0, "warnings": 0, "suppressions": 0 },
+      "note": "strictTypeChecked + stylisticTypeChecked, type-aware."
+    },
+    {
+      "id": "build",
+      "command": "pnpm build",
+      "result": {
+        "exitCode": 0,
+        "typescriptProjects": 3,
+        "precacheEntries": 18,
+        "precacheKiB": 2373.71,
+        "initialChunkKB": 671.06,
+        "initialChunkGzipKB": 199.97,
+        "codeSplitMapboxKB": 1665.92
+      },
+      "note": "tsc -b then vite build. A bare `tsc --noEmit` against the root tsconfig checks zero files — see tsconfig.json."
+    },
+    {
+      "id": "database",
+      "command": "pnpm verify:db",
+      "result": {
+        "migrations": 27,
+        "assertions": 102,
+        "failures": 0,
+        "split": { "behavioural": 34, "coverageClosure": 37, "rls": 26, "realtime": 5 },
+        "postgres": "17.11"
+      }
+    },
+    {
+      "id": "realtime",
+      "command": "pnpm verify:db",
+      "result": { "frames": 13, "inserts": 1, "updates": 2, "deletes": 1 },
+      "note": "Read from a pgoutput replication slot — the same protocol Supabase consumes. Skips explicitly, and reports SKIPPED rather than PASS, when wal_level is not logical."
+    },
+    {
+      "id": "pwa",
+      "command": "pnpm verify:pwa",
+      "result": { "criteria": 28, "passed": 28 }
+    },
+    {
+      "id": "mobile",
+      "command": "pnpm verify:mobile",
+      "result": {
+        "checks": 20,
+        "engines": ["WebKit (iPhone 14 profile)", "Chromium (Pixel 7 profile)"],
+        "shutterPx": 64,
+        "minimumTargetPt": 60,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "id": "offline",
+      "command": "pnpm verify:offline",
+      "result": {
+        "checks": 18,
+        "modelBytesOnline": 5434517,
+        "modelBytesOffline": 5434517,
+        "byteIdentical": true,
+        "routesRenderingFromCache": 5
+      }
+    },
+    {
+      "id": "inference",
+      "command": "pnpm bench:ai",
+      "result": {
+        "accelerator": "webgpu",
+        "model": "EfficientNet-Lite0 int8",
+        "modelMB": 5.18,
+        "p50Ms": 15,
+        "p95Ms": 22,
+        "runs": 20,
+        "budgetMs": 3000
+      },
+      "note": "Apple Silicon with WebGPU. A LOWER BOUND, not a mid-range-Android figure. No representative-hardware claim is made."
+    },
+    {
+      "id": "lighthouse",
+      "command": "pnpm verify:lighthouse",
+      "route": "/feed",
+      "result": {
+        "mobile": { "performance": 68, "accessibility": 100, "bestPractices": 96, "seo": 91 },
+        "desktop": { "performance": 96, "accessibility": 100, "bestPractices": 96, "seo": 91 }
+      },
+      "note": "The mobile preset is the gated one and is BELOW the project's own >=90 performance gate, so the command exits non-zero. Accessibility 100 grades what is painted on the audited route; it is not proof that nothing fails. Full reports in lighthouse-feed-mobile.json and lighthouse-feed-desktop.json.",
+      "gateMet": false
+    }
+  ],
+  "notProven": [
+    "Nothing is deployed. The referenced Supabase project returns NXDOMAIN.",
+    "Storage uploads, Edge Function deployment, Auth flows and Realtime delivery are managed services with no local stand-in.",
+    "No classifier accuracy claim: the pipeline runs on a generic ImageNet-classed backbone, not a civic fine-tune.",
+    "Frame rate on a mid-range Android, the physical Add to Home Screen tap, and confirmation that the OS camera app opens."
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "route": "/feed",
+  "gate": {
+    "minimum": 90,
+    "appliedTo": "mobile"
+  },
+  "runs": {
+    "mobile": {
+      "label": "mobile (4G, Moto G Power class CPU)",
+      "formFactor": "mobile",
+      "lighthouseVersion": "13.4.1",
+      "fetchTime": "2026-08-15T09:32:12.424Z",
+      "scores": {
+        "performance": 68,
+        "accessibility": 100,
+        "best-practices": 96,
+        "seo": 91
+      },
+      "metrics": {
+        "firstContentfulPaint": "4.7 s",
+        "largestContentfulPaint": "5.6 s",
+        "totalBlockingTime": "0 ms",
+        "cumulativeLayoutShift": "0",
+        "speedIndex": "4.7 s"
+      }
+    },
+    "desktop": {
+      "label": "desktop (no throttling)",
+      "formFactor": "desktop",
+      "lighthouseVersion": "13.4.1",
+      "fetchTime": "2026-08-15T09:32:19.768Z",
+      "scores": {
+        "performance": 96,
+        "accessibility": 100,
+        "best-practices": 96,
+        "seo": 91
+      },
+      "metrics": {
+        "firstContentfulPaint": "0.9 s",
+        "largestContentfulPaint": "1.3 s",
+        "totalBlockingTime": "0 ms",
+        "cumulativeLayoutShift": "0",
+        "speedIndex": "0.9 s"
+      }
+    }
+  },
+  "note": "Scored against `/feed` on the production build served by a static server. The map route is not scored: headless Chrome software-rasterises Mapbox GL, which measures SwiftShader rather than the app — see MASTERPLAN S16.6. The mobile run is the gated one; a 375px-first PWA is judged on the mobile preset."
+}
