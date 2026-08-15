@@ -28,6 +28,7 @@ pnpm install && pnpm dev      # front end is live at ripple-chi-bice.vercel.app,
 | Lighthouse, mobile preset | A11y **100** · Best Practices **96** · SEO **91** · Perf **68** | `pnpm verify:lighthouse` |
 
 <p align="center">
+  <a href="https://github.com/br9704/ripple/actions/workflows/verify.yml"><img src="https://github.com/br9704/ripple/actions/workflows/verify.yml/badge.svg?branch=main" alt="verify workflow status" /></a>
   <img src="https://img.shields.io/badge/status-front%20end%20live%20%C2%B7%20no%20backend-orange" alt="Status: front end live, no backend" />
   <img src="https://img.shields.io/badge/tests-334-brightgreen" alt="334 tests" />
   <img src="https://img.shields.io/badge/db%20assertions-102-brightgreen" alt="102 database assertions" />
@@ -176,9 +177,12 @@ The map route is not scored: headless Chrome software-rasterises Mapbox GL throu
 
 ```bash
 pnpm install
+pnpm test:run                     # 334 tests, no configuration needed
 cp .env.example .env.local        # Supabase URL and anon key, Mapbox token
 pnpm dev
 ```
+
+Tests need no setup: `.env.test` is committed with deliberately non-resolving placeholder values, because a suite that only runs for the person who wrote it is not a verified suite. That was not true until CI said so — on a clean clone this repo produced 318 tests and a failure, not 334.
 
 The model is not in git — `public/models/*.tflite` is gitignored because it is 5 MB and reproducible from a URL. `pnpm build` fetches it via `prebuild`, so a clean checkout still produces a complete bundle; the fetch is idempotent and skips when the file is already there. `pnpm dev` does not, so a fresh dev server takes the designed fallback path to the manual category picker until you ask for the model:
 

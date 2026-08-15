@@ -16,6 +16,18 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Placeholder client values, committed on purpose and identical to `.env.test`.
+#
+# `src/lib/supabase.ts` throws at module init without these, so a build made
+# without them produces a bundle that renders nothing — which is how the first
+# CI runs reported "file input not present on the report flow" against a page
+# that had in fact crashed on boot. They are not secrets: the anon key is public
+# by design (PRD §10.3), and these particular values resolve to nothing at all.
+env:
+  VITE_SUPABASE_URL: http://localhost:54321
+  VITE_SUPABASE_ANON_KEY: test-anon-key-not-a-real-credential
+  VITE_MAPBOX_TOKEN: pk.test-token-not-a-real-credential
+
 jobs:
   build-and-test:
     name: types, lint, tests, build

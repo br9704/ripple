@@ -18,3 +18,9 @@ public/litert-wasm/dist/
 public/litert-wasm/wasm-utils/
 .vercel
 .env*
+
+# ...except the test placeholders, which are committed on purpose. They carry no
+# secret and resolve to nothing; without them `pnpm test:run` fails on a clean
+# clone, because src/lib/supabase.ts throws at module init. See Sprint D.14.
+!.env.test
+!.env.example
