@@ -13,7 +13,8 @@
 </p>
 
 ```bash
-pnpm install && pnpm dev      # there is no hosted instance yet — see Status
+pnpm install && pnpm dev      # front end is live at ripple-chi-bice.vercel.app,
+                              # but with no backend behind it — see Status
 ```
 
 | Gate | Result | Command |
@@ -27,7 +28,7 @@ pnpm install && pnpm dev      # there is no hosted instance yet — see Status
 | Lighthouse, mobile preset | A11y **100** · Best Practices **96** · SEO **91** · Perf **68** | `pnpm verify:lighthouse` |
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-not%20deployed-lightgrey" alt="Status: not deployed" />
+  <img src="https://img.shields.io/badge/status-front%20end%20live%20%C2%B7%20no%20backend-orange" alt="Status: front end live, no backend" />
   <img src="https://img.shields.io/badge/tests-334-brightgreen" alt="334 tests" />
   <img src="https://img.shields.io/badge/db%20assertions-102-brightgreen" alt="102 database assertions" />
   <img src="https://img.shields.io/badge/PWA-28%2F28-blue" alt="28 of 28 PWA criteria" />
@@ -216,7 +217,9 @@ Every client-safe value carries the `VITE_` prefix and nothing else ever may. Se
 
 ## Limitations
 
-**Nothing is deployed and the backend does not exist.** The Supabase project this was built against was deleted. Every schema-layer claim above is verified against local PostgreSQL, but Storage uploads, Edge Function deployment, Auth flows and Realtime *delivery* are managed services with no local stand-in. Those remain unproven, and the tasks depending on them are marked as such rather than as complete.
+**The front end is deployed; the backend does not exist.** [ripple-chi-bice.vercel.app](https://ripple-chi-bice.vercel.app) serves the real build — the PWA installs, the map renders, the offline shell works, and the on-device classifier loads its 5,434,517-byte model from the CDN. **Nothing that reads or writes data works.** The Supabase project this was built against was deleted and has deliberately not been re-provisioned, so reports do not load or submit. Every schema-layer claim above is verified against local PostgreSQL, but Storage uploads, Edge Function deployment, Auth flows and Realtime *delivery* are managed services with no local stand-in. Those remain unproven, and the tasks depending on them are marked as such rather than as complete.
+
+Two deploy-only defects surfaced the moment it was live, both invisible to every local gate. The build shipped **no classifier** from a clean checkout — the model is gitignored and nothing fetched it, so `pnpm build` exited 0 on an incomplete bundle; it is fetched in `prebuild` now. And **seven of eight routes returned 404**, because there was no `vercel.json` and the CDN looked for a file at `/feed`. Both hid for the same reason: `vite preview` implements history fallback itself, in-app `<Link>` navigation issues no network request, and once the service worker installs it serves the shell anyway — so only cold loads and shared links broke. Which is to say: only strangers.
 
 **No accuracy claim is made for the classifier.** The pipeline is complete and benchmarked, but the model it ships with is a generic EfficientNet-Lite0 carrying **ImageNet's thousand classes, not Ripple's ten categories**. It proves the runtime loads, the cache works and the latency is real; its predictions are not civic-meaningful. A production build ships that model, so classification *runs* — it is simply not yet trustworthy, which is exactly why the confidence tiers and the one-tap override exist. The fine-tuned model needs roughly 500 images per category across ten categories. Until it lands, the ">70% correct without correction" target in the PRD is unmet and unmeasured, and swapping it in is a one-URL change by design, because the filename is versioned.
 
@@ -232,9 +235,9 @@ Every client-safe value carries the `VITE_` prefix and nothing else ever may. Se
 
 ## Status
 
-Every task in the plan is closed — 235 of 235 — and the tree is green: 334 tests, 0 lint errors, `pnpm build` exits 0, and 102 database assertions pass against real PostgreSQL. What is *not* claimed is that any of it has run in production, because it has not.
+Every task in the plan is closed — 250 of 250 — and the tree is green: 334 tests, 0 lint errors, `pnpm build` exits 0, and 102 database assertions pass against real PostgreSQL. The front end is live at [ripple-chi-bice.vercel.app](https://ripple-chi-bice.vercel.app). What is *not* claimed is that the data layer has run in production, because it has not — there is no backend behind that URL.
 
-What remains is owner-gated rather than unfinished: re-provisioning Supabase, deploying, training the civic classifier, sourcing ABS boundary data, and holding a phone. Each is named — with what was built anyway, so that it becomes a swap rather than a build — in the [Owner-Gated Backlog](MASTERPLAN.md#owner-gated-backlog--deferred-to-the-very-end).
+What remains is owner-gated rather than unfinished: re-provisioning Supabase, training the civic classifier, sourcing ABS boundary data, filling in the Terms page's twelve legal placeholders, and holding a phone. Each is named — with what was built anyway, so that it becomes a swap rather than a build — in the [Owner-Gated Backlog](MASTERPLAN.md#owner-gated-backlog--deferred-to-the-very-end).
 
 None of those blockers is cost. Supabase and Vercel both have free tiers that cover this comfortably; the only genuinely paid item in the plan was Elasticsearch, and Sprint 12 replaced it with Postgres full-text. What the gates actually need is account access, a training dataset, and a physical handset.
 

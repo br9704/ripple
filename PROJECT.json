@@ -9,7 +9,7 @@
   "updated": "2026-08-15",
   "links": {
     "github": "https://github.com/br9704/ripple",
-    "live": null,
+    "live": "https://ripple-chi-bice.vercel.app",
     "npm": null,
     "huggingface": null,
     "appstore": null
@@ -62,7 +62,7 @@
     "claim": "Four of this project's own green checks could never have failed: a typecheck gate that checked zero files, a PWA regex that accepted either answer, RLS tests handed the credential they were meant to prove unobtainable, and a column REVOKE that silently cannot subtract from a table GRANT.",
     "source": "README.md#how-it-was-built"
   },
-  "honest": "Nothing is deployed and the Supabase project it was built against no longer resolves, so Storage, Auth, Edge Function deployment and Realtime delivery are unproven. The classifier pipeline is complete and benchmarked but runs on a generic ImageNet backbone, so no accuracy claim is made — and first load is ~7MB against a stated <5s-on-4G budget, which is why mobile Lighthouse Performance is 68 and fails the project's own gate.",
+  "honest": "The front end is deployed and the PWA, map, offline shell and on-device classifier all work at the live URL — but there is no backend behind it. The Supabase project it was built against no longer resolves and has deliberately not been re-provisioned, so nothing that reads or writes data functions: reports do not load or submit, and Storage, Auth, Edge Function deployment and Realtime delivery are all unproven. The database layer itself is verified by execution against a local PostgreSQL 17 (27 migrations, 102 assertions, 0 failures); what is unverified is specifically what Supabase-the-service adds on top. The classifier pipeline is complete and benchmarked but runs on a generic ImageNet backbone, so no accuracy claim is made — and first load is ~7MB against a stated <5s-on-4G budget, which is why mobile Lighthouse Performance is 68 and fails the project's own gate.",
   "media": {
     "hero": "docs/media/map.png",
     "demo": null,
@@ -119,7 +119,7 @@
   "ownerGated": [
     "OG1 — re-provision Supabase, apply 27 migrations, deploy 6 Edge Functions, create the storage buckets",
     "OG2 — training data for the fine-tuned civic classifier (~500 images/category across 10 categories)",
-    "OG3 — deploy to Vercel",
+    "OG10 — legal content for the Terms page: 12 placeholders (entity, ABN, governing law, liability). Nothing was invented.",
     "OG4 — Elasticsearch (recommend continued deferral; it costs money and Postgres FTS covers the use case)",
     "OG5 — Resend API key for status-change email",
     "OG6 — real-device testing: iOS Safari install, OS camera confirmation, mid-range Android latency",

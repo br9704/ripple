@@ -10,7 +10,7 @@
 
 | Metric | Session start | Now |
 |---|---|---|
-| Tasks `[x]` | 79 (several false) | **235** |
+| Tasks `[x]` | 79 (several false) | **250** |
 | Tasks `[ ]` / `[~]` / `[⏭️]` / `[🔒]` | 92 open | **0** |
 | Tests | **0** | **334 / 33 files** |
 | Lint | 1 suppression | **0 errors, 0 warnings, 0 suppressions** |
@@ -849,6 +849,21 @@ S8.1–S8.4 are written, typecheck clean and lint clean. **S8.5–S8.7 cannot be
 
 - [x] S21.12 — **Camera FAB overlapped the install banner and the map counter pill at 375px.** Found by the parallel documentation session. The FAB sits at `bottom-[72px]` with `z-50`; `InstallBanner` and the `MapPage` counter pill both landed underneath it on the 375px viewport this product is designed for first (CLAUDE.md §4). Fixed by moving the banner to `bottom-[196px]` and the pill to `bottom-[144px]`.
 
+- [x] S21.14 — **Two defects that only exist once deployed.** Bruno authorised a Vercel deploy on 15 Aug 2026 (Supabase deliberately declined — he has five active projects and a sixth would likely have billed him, so the deploy is front end only). Both defects below were invisible to every local gate, and both were found by making requests against the live URL rather than by trusting a green build.
+
+  1. **`pnpm build` shipped no classifier.** `public/models/*.tflite` is gitignored and, unlike the WASM runtime, nothing fetched it at build time. Proven by deleting the model to simulate what git hands Vercel and building: it **exited 0** with `dist/models/` containing only a README. A build tool cannot distinguish a missing optional asset from a deliberately absent one, so "build succeeded" was read as "deployable". Fixed by chaining `fetch-dev-model.mjs` into `prebuild`; the script is idempotent, so local builds skip and only a clean checkout downloads. Verified in production: the model serves at **5,434,517 bytes, byte-identical to local**.
+
+  2. **Seven of eight routes returned 404.** There was no `vercel.json`, so the CDN looked for a file at `/feed`, found none, and 404'd before React Router ever loaded. Only `/` worked.
+
+  **Why the second one is the more interesting failure, and the reason it belongs in this file rather than a commit message:** three separate mechanisms hid it, and each is a thing that normally *helps*. `vite preview` and the dev server implement history fallback themselves, so every local check passed. In-app `<Link>` navigation uses the History API and issues no network request, so clicking through the entire app never touched it. And once the service worker installs, *its* `navigateFallback` serves the shell — so a returning visitor is fine and the bug disappears for exactly the person most likely to look for it.
+
+  What broke was cold loads and shared links: a report permalink, one of Sprint 20's shareable filtered map views, the PWA launching from the home screen. That is the identical blast radius as S21.11, one layer down — the service worker had the same bug three days earlier, at the worker instead of the CDN. **The deep-link surface that Sprints 11 and 20 exist to provide has now been broken twice, by two different layers, and neither time did any gate notice**, because every gate arrives with a warm cache and a running dev server. Fixed with a `rewrites` catch-all; verified by requesting all eight routes (all 200, all serving the shell) and confirming static assets still win (model, `sw.js`, manifest, `offline.html`, icons, `robots.txt` — correct content types and byte counts), since rewrites run after Vercel's filesystem check.
+
+  **A self-inflicted third:** the first `vercel.json` carried `_comment` keys explaining the rewrite. `vercel.json` validates against a strict schema and rejects unknown properties, so the deploy **failed outright**. JSON has no comments and this file tolerates no substitute — which is why the reasoning lives here instead. Cache-Control is pinned in the same file: `sw.js` `must-revalidate` (a stale worker pins users to an old shell, CLAUDE.md §4), the versioned model `immutable`.
+
+  ⏭️ **Deliberately not done — Supabase (OG1 stands).** Five active projects already exist on the account; the free tier covers two. A sixth was a spending decision and therefore Bruno's, and he declined it. The consequence is stated plainly rather than glossed: **the deployed app has no backend.** Reports do not load or submit. `PROJECT.json` and the README both say so, and `links.live` points at a URL described as front-end-only.
+
+  ⏭️ **Owner action outstanding: restrict `VITE_MAPBOX_TOKEN` by URL referrer** in the Mapbox dashboard. It is in the client bundle by design (PRD §10.3) and now sits on a public URL, where it is scrapeable and billable. This is the one item in the entire project that can actually cost money unattended — a sharper risk than any of the owner gates it sits beside.
 
 #### Sprint 21 — close (15 Aug 2026)
 
